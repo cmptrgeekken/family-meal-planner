@@ -1,17 +1,4 @@
-export const mealCategories = [
-  "Pasta",
-  "Rice/Bowls",
-  "Breakfast",
-  "Sandwich/Snack",
-  "Chicken",
-  "Ground Meat",
-  "Premium",
-  "Fun/Zero-Cook",
-] as const;
-
 export const groceryGroups = ["protein", "carb", "veg", "fruit", "extras"] as const;
-
-export const storeTags = ["Costco", "Cub", "Other"] as const;
 
 export const costTiers = ["budget", "standard", "premium"] as const;
 
@@ -20,9 +7,7 @@ export const weekdayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Frid
 export const planSlotNames = ["Dinner"] as const;
 export const defaultPlanSlotName = "Dinner";
 
-export type MealCategory = (typeof mealCategories)[number];
 export type GroceryGroup = (typeof groceryGroups)[number];
-export type StoreTag = (typeof storeTags)[number];
 export type CostTier = (typeof costTiers)[number];
 export type WeekdayName = (typeof weekdayNames)[number];
 export type PlanSlotName = (typeof planSlotNames)[number];
@@ -30,7 +15,8 @@ export type PlanSlotName = (typeof planSlotNames)[number];
 export type MealIngredient = {
   name: string;
   group: GroceryGroup;
-  storeTag?: StoreTag;
+  storeTag?: string;
+  storeTagSlug?: string;
   quantityLabel?: string;
 };
 
@@ -38,7 +24,7 @@ export type Meal = {
   id: string;
   slug?: string;
   name: string;
-  category: MealCategory;
+  category: string;
   categorySlug?: string;
   costTier: CostTier;
   kidFavorite: boolean;
@@ -68,7 +54,7 @@ export type GroceryListItem = {
   name: string;
   group: GroceryGroup;
   quantityLabels: string[];
-  storeTags: StoreTag[];
+  storeTags: string[];
   usedInMeals: string[];
 };
 
@@ -79,6 +65,12 @@ export type WeeklyPlan = {
 };
 
 export type MealCategoryRecord = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export type StoreTagRecord = {
   id: string;
   name: string;
   slug: string;

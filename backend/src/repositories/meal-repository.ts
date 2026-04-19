@@ -1,27 +1,29 @@
-import { CostTier, IngredientType, StoreTag, type Prisma } from "@prisma/client";
+import { CostTier, IngredientType, type Prisma } from "@prisma/client";
 
 import type {
   CostTier as DomainCostTier,
   GroceryGroup,
   Meal,
-  MealCategory,
   MealIngredient,
-  StoreTag as DomainStoreTag,
 } from "../domain/models.js";
 import { prisma } from "../config/prisma.js";
 import { throwIfUniqueConstraintError } from "./prisma-error-utils.js";
 
-const mealInclude = {
+const mealWithStoreInclude = {
   category: true,
   ingredients: {
     include: {
-      ingredient: true,
+      ingredient: {
+        include: {
+          storeTag: true,
+        },
+      },
     },
   },
 } satisfies Prisma.MealInclude;
 
 type MealRecord = Prisma.MealGetPayload<{
-  include: typeof mealInclude;
+  include: typeof mealWithStoreInclude;
 }>;
 
 function mapIngredientType(type: IngredientType): GroceryGroup {
@@ -36,17 +38,6 @@ function mapIngredientType(type: IngredientType): GroceryGroup {
       return "fruit";
     case IngredientType.EXTRA:
       return "extras";
-  }
-}
-
-function mapStoreTag(tag: StoreTag): DomainStoreTag {
-  switch (tag) {
-    case StoreTag.COSTCO:
-      return "Costco";
-    case StoreTag.CUB:
-      return "Cub";
-    case StoreTag.OTHER:
-      return "Other";
   }
 }
 
@@ -66,7 +57,7 @@ function mapMeal(record: MealRecord): Meal {
     id: record.id,
     slug: record.slug,
     name: record.name,
-    category: record.category.name as MealCategory,
+    category: record.category.name,
     categorySlug: record.category.slug,
     costTier: mapCostTier(record.costTier),
     kidFavorite: record.kidFavorite,
@@ -75,7 +66,8 @@ function mapMeal(record: MealRecord): Meal {
     ingredients: record.ingredients.map((item) => ({
       name: item.ingredient.name,
       group: mapIngredientType(item.ingredient.type),
-      storeTag: mapStoreTag(item.ingredient.storeTag),
+      storeTag: item.ingredient.storeTag?.name,
+      storeTagSlug: item.ingredient.storeTag?.slug,
       quantityLabel: item.quantityLabel ?? undefined,
     })),
   };
@@ -83,7 +75,7 @@ function mapMeal(record: MealRecord): Meal {
 
 export async function listMeals() {
   const meals = await prisma.meal.findMany({
-    include: mealInclude,
+    include: mealWithStoreInclude,
     orderBy: {
       name: "asc",
     },
@@ -95,7 +87,7 @@ export async function listMeals() {
 export async function getMealById(mealId: string) {
   const meal = await prisma.meal.findUnique({
     where: { id: mealId },
-    include: mealInclude,
+    include: mealWithStoreInclude,
   });
 
   return meal ? mapMeal(meal) : null;
@@ -104,7 +96,7 @@ export async function getMealById(mealId: string) {
 export async function getMealBySlug(slug: string) {
   const meal = await prisma.meal.findUnique({
     where: { slug },
-    include: mealInclude,
+    include: mealWithStoreInclude,
   });
 
   return meal ? mapMeal(meal) : null;
@@ -147,34 +139,33 @@ function mapDomainGroup(group: MealIngredient["group"]) {
   }
 }
 
-function mapDomainStoreTag(tag?: DomainStoreTag) {
-  switch (tag) {
-    case "Costco":
-      return StoreTag.COSTCO;
-    case "Cub":
-      return StoreTag.CUB;
-    case "Other":
-    case undefined:
-      return StoreTag.OTHER;
-  }
-}
-
 async function syncMealIngredients(tx: Prisma.TransactionClient, mealId: string, ingredients: MealIngredient[]) {
   await tx.mealIngredient.deleteMany({
     where: { mealId },
   });
 
   for (const ingredient of ingredients) {
+    const storeTagOption =
+      ingredient.storeTagSlug
+        ? await tx.storeTagOption.findUnique({
+            where: { slug: ingredient.storeTagSlug },
+          })
+        : ingredient.storeTag
+          ? await tx.storeTagOption.findFirst({
+              where: { name: ingredient.storeTag },
+            })
+          : null;
+
     const savedIngredient = await tx.ingredient.upsert({
       where: { name: ingredient.name },
       update: {
         type: mapDomainGroup(ingredient.group),
-        storeTag: mapDomainStoreTag(ingredient.storeTag),
+        storeTagId: storeTagOption?.id ?? null,
       },
       create: {
         name: ingredient.name,
         type: mapDomainGroup(ingredient.group),
-        storeTag: mapDomainStoreTag(ingredient.storeTag),
+        storeTagId: storeTagOption?.id ?? null,
       },
     });
 
@@ -209,14 +200,14 @@ export async function createMeal(input: UpsertMealInput) {
           lowEffort: input.lowEffort,
           notes: input.notes,
         },
-        include: mealInclude,
+        include: mealWithStoreInclude,
       });
 
       await syncMealIngredients(tx, meal.id, input.ingredients);
 
       const savedMeal = await tx.meal.findUniqueOrThrow({
         where: { id: meal.id },
-        include: mealInclude,
+        include: mealWithStoreInclude,
       });
 
       return mapMeal(savedMeal);
@@ -264,7 +255,7 @@ export async function updateMeal(mealId: string, input: UpsertMealInput) {
 
       const savedMeal = await tx.meal.findUniqueOrThrow({
         where: { id: mealId },
-        include: mealInclude,
+        include: mealWithStoreInclude,
       });
 
       return mapMeal(savedMeal);

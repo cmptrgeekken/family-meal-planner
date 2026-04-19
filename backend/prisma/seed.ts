@@ -1,4 +1,4 @@
-import { PrismaClient, CostTier, IngredientType, StoreTag } from "@prisma/client";
+import { PrismaClient, CostTier, IngredientType } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -13,6 +13,12 @@ const categories = [
   { name: "Fun/Zero-Cook", slug: "fun-zero-cook" },
 ];
 
+const storeTags = [
+  { name: "Costco", slug: "costco" },
+  { name: "Cub", slug: "cub" },
+  { name: "Other", slug: "other" },
+];
+
 const meals = [
   {
     name: "Chicken Quesadillas",
@@ -23,10 +29,10 @@ const meals = [
     lowEffort: true,
     notes: "Add peppers and black beans for a parent upgrade.",
     ingredients: [
-      { name: "Chicken", type: IngredientType.PROTEIN, storeTag: StoreTag.COSTCO, quantityLabel: "1 pack" },
-      { name: "Tortillas", type: IngredientType.CARB, storeTag: StoreTag.OTHER, quantityLabel: "1 package" },
-      { name: "Shredded Cheese", type: IngredientType.EXTRA, storeTag: StoreTag.COSTCO, quantityLabel: "1 bag" },
-      { name: "Bell Peppers", type: IngredientType.VEG, storeTag: StoreTag.CUB, quantityLabel: "2 peppers" },
+      { name: "Chicken", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 pack" },
+      { name: "Tortillas", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 package" },
+      { name: "Shredded Cheese", type: IngredientType.EXTRA, storeTagSlug: "costco", quantityLabel: "1 bag" },
+      { name: "Bell Peppers", type: IngredientType.VEG, storeTagSlug: "cub", quantityLabel: "2 peppers" },
     ],
   },
   {
@@ -38,10 +44,10 @@ const meals = [
     lowEffort: false,
     notes: "Serve with a quick salad on the side.",
     ingredients: [
-      { name: "Spaghetti", type: IngredientType.CARB, storeTag: StoreTag.OTHER, quantityLabel: "1 box" },
-      { name: "Ground Beef", type: IngredientType.PROTEIN, storeTag: StoreTag.COSTCO, quantityLabel: "1 pound" },
-      { name: "Marinara Sauce", type: IngredientType.EXTRA, storeTag: StoreTag.OTHER, quantityLabel: "1 jar" },
-      { name: "Romaine", type: IngredientType.VEG, storeTag: StoreTag.CUB, quantityLabel: "1 head" },
+      { name: "Spaghetti", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 box" },
+      { name: "Ground Beef", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 pound" },
+      { name: "Marinara Sauce", type: IngredientType.EXTRA, storeTagSlug: "other", quantityLabel: "1 jar" },
+      { name: "Romaine", type: IngredientType.VEG, storeTagSlug: "cub", quantityLabel: "1 head" },
     ],
   },
   {
@@ -53,9 +59,9 @@ const meals = [
     lowEffort: true,
     notes: "Add berries or yogurt to round it out.",
     ingredients: [
-      { name: "Eggs", type: IngredientType.PROTEIN, storeTag: StoreTag.COSTCO, quantityLabel: "1 dozen" },
-      { name: "Bread", type: IngredientType.CARB, storeTag: StoreTag.OTHER, quantityLabel: "1 loaf" },
-      { name: "Berries", type: IngredientType.FRUIT, storeTag: StoreTag.CUB, quantityLabel: "1 clamshell" },
+      { name: "Eggs", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 dozen" },
+      { name: "Bread", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 loaf" },
+      { name: "Berries", type: IngredientType.FRUIT, storeTagSlug: "cub", quantityLabel: "1 clamshell" },
     ],
   },
   {
@@ -67,10 +73,10 @@ const meals = [
     lowEffort: false,
     notes: "Use air fryer potatoes for an easier version.",
     ingredients: [
-      { name: "Ground Beef", type: IngredientType.PROTEIN, storeTag: StoreTag.COSTCO, quantityLabel: "2 pounds" },
-      { name: "Potatoes", type: IngredientType.CARB, storeTag: StoreTag.COSTCO, quantityLabel: "1 bag" },
-      { name: "Lettuce", type: IngredientType.VEG, storeTag: StoreTag.OTHER, quantityLabel: "1 head" },
-      { name: "Pickles", type: IngredientType.EXTRA, storeTag: StoreTag.OTHER, quantityLabel: "1 jar" },
+      { name: "Ground Beef", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "2 pounds" },
+      { name: "Potatoes", type: IngredientType.CARB, storeTagSlug: "costco", quantityLabel: "1 bag" },
+      { name: "Lettuce", type: IngredientType.VEG, storeTagSlug: "other", quantityLabel: "1 head" },
+      { name: "Pickles", type: IngredientType.EXTRA, storeTagSlug: "other", quantityLabel: "1 jar" },
     ],
   },
 ];
@@ -81,6 +87,14 @@ async function seed() {
       where: { slug: category.slug },
       update: { name: category.name },
       create: category,
+    });
+  }
+
+  for (const storeTag of storeTags) {
+    await prisma.storeTagOption.upsert({
+      where: { slug: storeTag.slug },
+      update: { name: storeTag.name },
+      create: storeTag,
     });
   }
 
@@ -115,16 +129,20 @@ async function seed() {
     });
 
     for (const ingredient of meal.ingredients) {
+      const storeTag = await prisma.storeTagOption.findUnique({
+        where: { slug: ingredient.storeTagSlug },
+      });
+
       const savedIngredient = await prisma.ingredient.upsert({
         where: { name: ingredient.name },
         update: {
           type: ingredient.type,
-          storeTag: ingredient.storeTag,
+          storeTagId: storeTag?.id ?? null,
         },
         create: {
           name: ingredient.name,
           type: ingredient.type,
-          storeTag: ingredient.storeTag,
+          storeTagId: storeTag?.id ?? null,
         },
       });
 

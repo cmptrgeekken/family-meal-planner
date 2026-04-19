@@ -20,7 +20,8 @@ const mealParamsSchema = z.object({
 const ingredientSchema = z.object({
   name: z.string().min(1),
   group: z.enum(["protein", "carb", "veg", "fruit", "extras"]),
-  storeTag: z.enum(["Costco", "Cub", "Other"]).optional(),
+  storeTag: z.string().min(1).optional(),
+  storeTagSlug: z.string().min(1).optional(),
   quantityLabel: z.string().min(1).optional(),
 });
 
