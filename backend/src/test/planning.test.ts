@@ -1,7 +1,28 @@
 import { describe, expect, it } from "vitest";
 
+import type { Meal } from "../domain/models.js";
 import { validateWeeklyPlan } from "../domain/planning.js";
-import { listMeals } from "../services/meal-catalog.js";
+
+const meals: Meal[] = [
+  {
+    id: "spaghetti-night",
+    name: "Spaghetti Night",
+    category: "Pasta",
+    costTier: "budget",
+    kidFavorite: true,
+    lowEffort: false,
+    ingredients: [],
+  },
+  {
+    id: "burger-bowls",
+    name: "Burger Bowls",
+    category: "Ground Meat",
+    costTier: "premium",
+    kidFavorite: false,
+    lowEffort: false,
+    ingredients: [],
+  },
+];
 
 describe("validateWeeklyPlan", () => {
   it("flags a repeated meal in the same week", () => {
@@ -13,7 +34,7 @@ describe("validateWeeklyPlan", () => {
           { day: "Thursday", mealId: "spaghetti-night" },
         ],
       },
-      listMeals(),
+      meals,
     );
 
     expect(issues.some((issue) => issue.code === "duplicate_meal")).toBe(true);
@@ -28,7 +49,7 @@ describe("validateWeeklyPlan", () => {
           { day: "Friday", mealId: "burger-bowls" },
         ],
       },
-      listMeals(),
+      meals,
     );
 
     expect(issues.some((issue) => issue.code === "premium_limit_exceeded")).toBe(true);

@@ -27,22 +27,34 @@ enum CostTier {
   PREMIUM
 }
 
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  meals     Meal[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Meal {
   id           String           @id @default(cuid())
   name         String
-  category     String
+  slug         String           @unique
+  categoryId   String
+  category     Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   costTier     CostTier
   kidFavorite  Boolean          @default(false)
   lowEffort    Boolean          @default(false)
   notes        String?
   ingredients  MealIngredient[]
+  planMeals    WeeklyPlanMeal[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 }
 
 model Ingredient {
   id          String           @id @default(cuid())
-  name        String
+  name        String           @unique
   type        IngredientType
   storeTag    StoreTag         @default(OTHER)
   meals       MealIngredient[]
@@ -62,7 +74,7 @@ model MealIngredient {
 
 model WeeklyPlan {
   id            String           @id @default(cuid())
-  weekStartDate DateTime
+  weekStartDate DateTime         @unique
   meals         WeeklyPlanMeal[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
@@ -75,4 +87,6 @@ model WeeklyPlanMeal {
   dayOfWeek    Int
   weeklyPlan   WeeklyPlan @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
   meal         Meal       @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  @@unique([weeklyPlanId, dayOfWeek])
 }

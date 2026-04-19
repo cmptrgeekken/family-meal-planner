@@ -1,11 +1,15 @@
 import { Router } from "express";
 
-import { listMealCategories } from "../services/meal-catalog.js";
+import { listMealCategories } from "../repositories/meal-repository.js";
+import { asyncHandler } from "./async-handler.js";
 
 export const categoriesRouter = Router();
 
-categoriesRouter.get("/", (_request, response) => {
-  response.json({
-    categories: listMealCategories(),
-  });
-});
+categoriesRouter.get(
+  "/",
+  asyncHandler(async (_request, response) => {
+    response.json({
+      categories: await listMealCategories(),
+    });
+  }),
+);
