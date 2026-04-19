@@ -17,6 +17,19 @@ const mealParamsSchema = z.object({
   mealId: z.string().min(1),
 });
 
+const mealListQuerySchema = z.object({
+  categorySlug: z.string().min(1).optional(),
+  storeTagSlug: z.string().min(1).optional(),
+  kidFavorite: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional(),
+  lowEffort: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional(),
+});
+
 const ingredientSchema = z.object({
   name: z.string().min(1),
   group: z.enum(["protein", "carb", "veg", "fruit", "extras"]),
@@ -38,9 +51,10 @@ const mealSchema = z.object({
 
 mealsRouter.get(
   "/",
-  asyncHandler(async (_request, response) => {
+  asyncHandler(async (request, response) => {
+    const query = mealListQuerySchema.parse(request.query);
     response.json({
-      meals: await listMeals(),
+      meals: await listMeals(query),
     });
   }),
 );

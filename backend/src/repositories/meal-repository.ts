@@ -26,6 +26,13 @@ type MealRecord = Prisma.MealGetPayload<{
   include: typeof mealWithStoreInclude;
 }>;
 
+type MealListFilters = {
+  categorySlug?: string;
+  storeTagSlug?: string;
+  kidFavorite?: boolean;
+  lowEffort?: boolean;
+};
+
 function mapIngredientType(type: IngredientType): GroceryGroup {
   switch (type) {
     case IngredientType.PROTEIN:
@@ -73,8 +80,26 @@ function mapMeal(record: MealRecord): Meal {
   };
 }
 
-export async function listMeals() {
+export async function listMeals(filters: MealListFilters = {}) {
   const meals = await prisma.meal.findMany({
+    where: {
+      ...(filters.categorySlug ? { category: { slug: filters.categorySlug } } : {}),
+      ...(filters.storeTagSlug
+        ? {
+            ingredients: {
+              some: {
+                ingredient: {
+                  storeTag: {
+                    slug: filters.storeTagSlug,
+                  },
+                },
+              },
+            },
+          }
+        : {}),
+      ...(typeof filters.kidFavorite === "boolean" ? { kidFavorite: filters.kidFavorite } : {}),
+      ...(typeof filters.lowEffort === "boolean" ? { lowEffort: filters.lowEffort } : {}),
+    },
     include: mealWithStoreInclude,
     orderBy: {
       name: "asc",

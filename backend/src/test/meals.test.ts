@@ -13,6 +13,29 @@ describe("meal routes", () => {
     expect(response.body.meals.some((meal: { name: string }) => meal.name === "Chicken Quesadillas")).toBe(true);
   });
 
+  it("filters meals by category slug", async () => {
+    const app = createApp();
+    const response = await request(app).get("/api/meals?categorySlug=pasta");
+
+    expect(response.status).toBe(200);
+    expect(response.body.meals.length).toBeGreaterThan(0);
+    expect(response.body.meals.every((meal: { categorySlug?: string }) => meal.categorySlug === "pasta")).toBe(true);
+  });
+
+  it("filters meals by store tag slug and flags", async () => {
+    const app = createApp();
+    const response = await request(app).get("/api/meals?storeTagSlug=costco&kidFavorite=true");
+
+    expect(response.status).toBe(200);
+    expect(response.body.meals.length).toBeGreaterThan(0);
+    expect(response.body.meals.every((meal: { kidFavorite: boolean }) => meal.kidFavorite)).toBe(true);
+    expect(
+      response.body.meals.every((meal: { ingredients: Array<{ storeTagSlug?: string }> }) =>
+        meal.ingredients.some((ingredient) => ingredient.storeTagSlug === "costco"),
+      ),
+    ).toBe(true);
+  });
+
   it("creates and fetches a new meal", async () => {
     const app = createApp();
     const uniqueSuffix = Date.now().toString();
