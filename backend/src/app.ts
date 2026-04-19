@@ -4,6 +4,7 @@ import express from "express";
 import { getEnv } from "./config/env.js";
 import { apiRouter } from "./routes/api.js";
 import { healthRouter } from "./routes/health.js";
+import { HttpError } from "./routes/http-error.js";
 
 export function createApp() {
   const env = getEnv();
@@ -28,10 +29,11 @@ export function createApp() {
   app.use("/api", apiRouter);
 
   app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
+    const statusCode = error instanceof HttpError ? error.statusCode : 500;
     const message = error instanceof Error ? error.message : "Unknown server error";
 
-    response.status(500).json({
-      error: "internal_server_error",
+    response.status(statusCode).json({
+      error: statusCode === 500 ? "internal_server_error" : "request_failed",
       message,
     });
   });

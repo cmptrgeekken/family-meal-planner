@@ -1,15 +1,108 @@
 import { Router } from "express";
+import { z } from "zod";
 
-import { listMealCategories } from "../repositories/meal-repository.js";
+import {
+  createCategory,
+  deleteCategory,
+  getCategoryById,
+  listCategories,
+  updateCategory,
+} from "../repositories/category-repository.js";
 import { asyncHandler } from "./async-handler.js";
+import { HttpError } from "./http-error.js";
 
 export const categoriesRouter = Router();
+
+const categorySchema = z.object({
+  name: z.string().min(1),
+  slug: z.string().min(1),
+});
+
+const categoryParamsSchema = z.object({
+  categoryId: z.string().min(1),
+});
 
 categoriesRouter.get(
   "/",
   asyncHandler(async (_request, response) => {
     response.json({
-      categories: await listMealCategories(),
+      categories: await listCategories(),
     });
+  }),
+);
+
+categoriesRouter.get(
+  "/:categoryId",
+  asyncHandler(async (request, response) => {
+    const params = categoryParamsSchema.parse(request.params);
+    const category = await getCategoryById(params.categoryId);
+
+    if (!category) {
+      throw new HttpError(404, "Category not found.");
+    }
+
+    response.json({ category });
+  }),
+);
+
+categoriesRouter.post(
+  "/",
+  asyncHandler(async (request, response) => {
+    const parsed = categorySchema.safeParse(request.body);
+
+    if (!parsed.success) {
+      response.status(400).json({
+        error: "invalid_request",
+        message: "Category payload is invalid.",
+        details: parsed.error.flatten(),
+      });
+      return;
+    }
+
+    const category = await createCategory(parsed.data);
+    response.status(201).json({ category });
+  }),
+);
+
+categoriesRouter.put(
+  "/:categoryId",
+  asyncHandler(async (request, response) => {
+    const params = categoryParamsSchema.parse(request.params);
+    const parsed = categorySchema.safeParse(request.body);
+
+    if (!parsed.success) {
+      response.status(400).json({
+        error: "invalid_request",
+        message: "Category payload is invalid.",
+        details: parsed.error.flatten(),
+      });
+      return;
+    }
+
+    const category = await updateCategory(params.categoryId, parsed.data);
+
+    if (!category) {
+      throw new HttpError(404, "Category not found.");
+    }
+
+    response.json({ category });
+  }),
+);
+
+categoriesRouter.delete(
+  "/:categoryId",
+  asyncHandler(async (request, response) => {
+    const params = categoryParamsSchema.parse(request.params);
+    const result = await deleteCategory(params.categoryId);
+
+    if (!result.deleted) {
+      if (result.reason === "not_found") {
+        throw new HttpError(404, "Category not found.");
+      }
+
+      throw new HttpError(409, "Category cannot be deleted because it is used by one or more meals.");
+    }
+
+    response.status(204).send();
   }),
 );
