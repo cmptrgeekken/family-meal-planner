@@ -1,0 +1,396 @@
+:root {
+  color-scheme: light;
+  font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+  --bg: #f4efe6;
+  --surface: rgba(255, 252, 247, 0.92);
+  --surface-strong: #fffaf3;
+  --border: rgba(112, 78, 44, 0.15);
+  --text: #1f1b18;
+  --muted: #6f655d;
+  --accent: #c45f2d;
+  --accent-soft: #f4c8a0;
+  --accent-green: #6e8d67;
+  --accent-blue: #557c99;
+  --shadow: 0 18px 50px rgba(64, 38, 16, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(255, 210, 150, 0.85), transparent 28%),
+    radial-gradient(circle at top right, rgba(179, 214, 195, 0.85), transparent 24%),
+    linear-gradient(180deg, #f8f2e8 0%, #efe7dc 100%);
+}
+
+button,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-shell {
+  min-height: 100vh;
+  width: min(100%, 72rem);
+  margin: 0 auto;
+  padding: 1rem 1rem 5.5rem;
+}
+
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.1rem 0 1.5rem;
+}
+
+.app-header h1 {
+  margin: 0.2rem 0 0;
+  font-size: clamp(2rem, 8vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  max-width: 11ch;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.header-badge {
+  align-self: flex-start;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.screen-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.section-card {
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+}
+
+.section-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.15rem 1.15rem 0;
+}
+
+.section-card-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.section-card-header p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.section-card-body {
+  padding: 1rem 1.15rem 1.15rem;
+}
+
+.primary-button {
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent) 0%, #df7e3f 100%);
+  color: white;
+  padding: 0.8rem 1.05rem;
+  font-weight: 700;
+  box-shadow: 0 12px 24px rgba(196, 95, 45, 0.22);
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 0.85rem;
+  transform: translateX(-50%);
+  width: min(calc(100% - 1rem), 44rem);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.45rem;
+  padding: 0.55rem;
+  background: rgba(255, 250, 243, 0.86);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+
+.nav-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: flex-start;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0.7rem;
+  border-radius: 1rem;
+  color: var(--muted);
+}
+
+.nav-pill small {
+  color: inherit;
+  font-size: 0.7rem;
+}
+
+.nav-pill-active {
+  background: var(--surface-strong);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px rgba(196, 95, 45, 0.15);
+}
+
+.day-stack,
+.filter-stack,
+.grocery-group-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.day-card,
+.meal-card,
+.grocery-item,
+.mini-panel,
+.empty-state,
+.status-message {
+  border: 1px solid var(--border);
+  border-radius: 1.15rem;
+  background: var(--surface-strong);
+}
+
+.day-card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.95rem;
+}
+
+.day-card select,
+.filter-stack select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.95rem;
+  background: white;
+  min-height: 3rem;
+  padding: 0.8rem 0.9rem;
+}
+
+.day-card-copy {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.day-label {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.slot-pill,
+.pill-muted,
+.pill-cost,
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  border: 1px solid var(--border);
+}
+
+.slot-pill,
+.pill-muted {
+  background: rgba(110, 141, 103, 0.08);
+  color: var(--accent-green);
+}
+
+.pill-cost-budget {
+  background: rgba(110, 141, 103, 0.12);
+  color: var(--accent-green);
+}
+
+.pill-cost-standard {
+  background: rgba(85, 124, 153, 0.12);
+  color: var(--accent-blue);
+}
+
+.pill-cost-premium {
+  background: rgba(196, 95, 45, 0.12);
+  color: var(--accent);
+}
+
+.meal-chip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.preview-grid,
+.reference-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.mini-panel,
+.empty-state,
+.status-message {
+  padding: 1rem;
+}
+
+.mini-panel h3,
+.empty-state h3 {
+  margin: 0 0 0.45rem;
+}
+
+.mini-panel p,
+.empty-state p,
+.status-message p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.status-error {
+  background: rgba(209, 77, 77, 0.08);
+}
+
+.status-success {
+  background: rgba(110, 141, 103, 0.08);
+}
+
+.status-info {
+  background: rgba(85, 124, 153, 0.08);
+}
+
+.plain-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.filter-chip {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.filter-chip-active {
+  background: rgba(196, 95, 45, 0.12);
+  color: var(--accent);
+}
+
+.meal-card-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.meal-card,
+.grocery-item {
+  padding: 1rem;
+}
+
+.meal-card h3,
+.grocery-item strong {
+  margin: 0;
+}
+
+.meal-card p,
+.grocery-item p {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.meal-card-topline,
+.meal-card-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
+}
+
+.meal-card-flags span,
+.muted-text {
+  color: var(--muted);
+}
+
+.grocery-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (min-width: 820px) {
+  .app-shell {
+    padding: 1.5rem 1.5rem 1.5rem;
+  }
+
+  .app-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .screen-layout {
+    grid-template-columns: 1.25fr 0.95fr;
+    align-items: start;
+  }
+
+  .preview-grid,
+  .reference-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .meal-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bottom-nav {
+    position: sticky;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    width: 100%;
+    margin-top: 1rem;
+  }
+}

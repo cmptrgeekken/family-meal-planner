@@ -3,79 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Family Meal Planner</title>
     <meta
       name="description"
-      content="A self-hosted family meal planner for weekly planning and grocery list generation."
+      content="Family Meal Planner: a mobile-first self-hosted weekly planner with grocery list generation."
     />
-    <style>
-      :root {
-        color-scheme: light;
-        font-family: "Segoe UI", sans-serif;
-        background: #f7f4ee;
-        color: #1f2937;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background:
-          radial-gradient(circle at top left, #f8d7a3 0%, transparent 35%),
-          radial-gradient(circle at bottom right, #b8d9c8 0%, transparent 30%),
-          #f7f4ee;
-      }
-
-      main {
-        width: min(720px, calc(100% - 2rem));
-        padding: 2rem;
-        border-radius: 24px;
-        background: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 20px 60px rgba(31, 41, 55, 0.12);
-      }
-
-      h1 {
-        margin-top: 0;
-        font-size: clamp(2rem, 5vw, 3rem);
-        line-height: 1.1;
-      }
-
-      p {
-        line-height: 1.6;
-      }
-
-      ul {
-        padding-left: 1.25rem;
-      }
-
-      code {
-        font-family: Consolas, monospace;
-      }
-    </style>
+    <title>Family Meal Planner</title>
   </head>
   <body>
-    <main>
-      <h1>Family Meal Planner</h1>
-      <p>
-        Initial repository structure is in place. The next step is scaffolding the
-        React application shell and connecting it to a Node API.
-      </p>
-      <p>Planned MVP focus:</p>
-      <ul>
-        <li>meal management</li>
-        <li>kid-friendly weekly meal picking</li>
-        <li>weekly planning</li>
-        <li>grocery list generation</li>
-      </ul>
-      <p>
-        See <code>docs/prd-v1.md</code> for product direction and <code>AGENTS.md</code>
-        for working agreements.
-      </p>
-    </main>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
-</html>
+  </html>
