@@ -2,6 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 
 import { buildGroceryList } from "../domain/grocery.js";
+import { defaultPlanSlotName, planSlotNames, weekdayNames } from "../domain/models.js";
+import { normalizeWeeklyPlanSelections } from "../domain/plan-slots.js";
 import { validateWeeklyPlan } from "../domain/planning.js";
 import { listMeals } from "../repositories/meal-repository.js";
 import {
@@ -11,7 +13,6 @@ import {
 } from "../repositories/weekly-plan-repository.js";
 import { asyncHandler } from "./async-handler.js";
 import { HttpError } from "./http-error.js";
-import { weekdayNames } from "../domain/models.js";
 import { weekdayToIndex } from "../domain/weekdays.js";
 
 const previewSchema = z.object({
@@ -19,6 +20,7 @@ const previewSchema = z.object({
   selections: z.array(
     z.object({
       day: z.enum(weekdayNames),
+      slot: z.enum(planSlotNames).optional().default(defaultPlanSlotName),
       mealId: z.string().min(1),
     }),
   ),
@@ -83,12 +85,16 @@ weeklyPlansRouter.post(
     }
 
     const preview = parsed.data;
+    const normalizedPreview = {
+      ...preview,
+      selections: normalizeWeeklyPlanSelections(preview.selections),
+    };
     const meals = await listMeals();
-    const validationIssues = validateWeeklyPlan(preview, meals);
-    const groceryList = buildGroceryList(preview, meals);
+    const validationIssues = validateWeeklyPlan(normalizedPreview, meals);
+    const groceryList = buildGroceryList(normalizedPreview, meals);
 
     response.json({
-      preview,
+      preview: normalizedPreview,
       validationIssues,
       groceryList,
       persisted: false,
@@ -114,7 +120,10 @@ weeklyPlansRouter.put(
       return;
     }
 
-    const weeklyPlan = parsed.data;
+    const weeklyPlan = {
+      ...parsed.data,
+      selections: normalizeWeeklyPlanSelections(parsed.data.selections),
+    };
     const meals = await listMeals();
     const validationIssues = validateWeeklyPlan(weeklyPlan, meals);
 

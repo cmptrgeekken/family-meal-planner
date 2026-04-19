@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma.js";
-import type { WeeklyPlan } from "../domain/models.js";
+import { defaultPlanSlotName, type WeeklyPlan } from "../domain/models.js";
 import { indexToWeekday } from "../domain/weekdays.js";
 
 export async function upsertWeeklyPlanPreview(weekStartDate: Date, selections: { dayOfWeek: number; mealId: string }[]) {
@@ -50,6 +50,7 @@ export async function getWeeklyPlanByWeekStartDate(weekStartDate: Date): Promise
     weekStartDate: weeklyPlan.weekStartDate.toISOString(),
     selections: weeklyPlan.meals.map((selection) => ({
       day: indexToWeekday(selection.dayOfWeek),
+      slot: defaultPlanSlotName,
       mealId: selection.mealId,
     })),
   };
@@ -75,6 +76,7 @@ export async function listRecentWeeklyPlans(limit = 8): Promise<WeeklyPlan[]> {
     weekStartDate: weeklyPlan.weekStartDate.toISOString(),
     selections: weeklyPlan.meals.map((selection) => ({
       day: indexToWeekday(selection.dayOfWeek),
+      slot: defaultPlanSlotName,
       mealId: selection.mealId,
     })),
   }));

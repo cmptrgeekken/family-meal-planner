@@ -36,8 +36,8 @@ describe("buildGroceryList", () => {
       {
         weekStartDate: "2026-04-20",
         selections: [
-          { day: "Monday", mealId: "spaghetti-night" },
-          { day: "Tuesday", mealId: "burger-bowls" },
+          { day: "Monday", slot: "Dinner", mealId: "spaghetti-night" },
+          { day: "Tuesday", slot: "Dinner", mealId: "burger-bowls" },
         ],
       },
       meals,

@@ -17,11 +17,15 @@ export const costTiers = ["budget", "standard", "premium"] as const;
 
 export const weekdayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
+export const planSlotNames = ["Dinner"] as const;
+export const defaultPlanSlotName = "Dinner";
+
 export type MealCategory = (typeof mealCategories)[number];
 export type GroceryGroup = (typeof groceryGroups)[number];
 export type StoreTag = (typeof storeTags)[number];
 export type CostTier = (typeof costTiers)[number];
 export type WeekdayName = (typeof weekdayNames)[number];
+export type PlanSlotName = (typeof planSlotNames)[number];
 
 export type MealIngredient = {
   name: string;
@@ -45,6 +49,7 @@ export type Meal = {
 
 export type WeeklyPlanMealInput = {
   day: WeekdayName;
+  slot: PlanSlotName;
   mealId: string;
 };
 
@@ -54,7 +59,7 @@ export type WeeklyPlanPreview = {
 };
 
 export type PlanValidationIssue = {
-  code: "duplicate_meal" | "premium_limit_exceeded" | "unknown_meal";
+  code: "duplicate_meal" | "premium_limit_exceeded" | "unknown_meal" | "duplicate_day_slot";
   message: string;
   mealId?: string;
 };

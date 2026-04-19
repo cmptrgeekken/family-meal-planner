@@ -17,6 +17,7 @@ describe("weekly plan routes", () => {
 
     expect(previewResponse.status).toBe(200);
     expect(previewResponse.body.persisted).toBe(false);
+    expect(previewResponse.body.preview.selections[0].slot).toBe("Dinner");
 
     const fetchResponse = await request(app).get(`/api/weekly-plans/${weekStartDate}`);
 
@@ -47,9 +48,30 @@ describe("weekly plan routes", () => {
     expect(fetchResponse.status).toBe(200);
     expect(fetchResponse.body.weeklyPlan.weekStartDate).toContain("2026-04-27");
     expect(fetchResponse.body.weeklyPlan.selections).toEqual([
-      { day: "Monday", mealId: spaghettiNight.id },
-      { day: "Tuesday", mealId: breakfastForDinner.id },
+      { day: "Monday", slot: "Dinner", mealId: spaghettiNight.id },
+      { day: "Tuesday", slot: "Dinner", mealId: breakfastForDinner.id },
     ]);
+  });
+
+  it("rejects two selections for the same day and slot", async () => {
+    const app = createApp();
+    const mealsResponse = await request(app).get("/api/meals");
+    const spaghettiNight = mealsResponse.body.meals.find((meal: { slug?: string }) => meal.slug === "spaghetti-night");
+    const breakfastForDinner = mealsResponse.body.meals.find(
+      (meal: { slug?: string }) => meal.slug === "breakfast-for-dinner",
+    );
+
+    const response = await request(app).put("/api/weekly-plans/2026-06-08").send({
+      selections: [
+        { day: "Monday", mealId: spaghettiNight.id },
+        { day: "Monday", mealId: breakfastForDinner.id },
+      ],
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.validationIssues.some((issue: { code: string }) => issue.code === "duplicate_day_slot")).toBe(
+      true,
+    );
   });
 
   it("lists recent weekly plans", async () => {

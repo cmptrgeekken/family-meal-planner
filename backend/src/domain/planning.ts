@@ -18,9 +18,23 @@ export function validateWeeklyPlan(
   const issues: PlanValidationIssue[] = [];
   const mealMap = new Map(meals.map((meal) => [meal.id, meal]));
   const repeatCount = new Map<string, number>();
+  const occupiedDaySlots = new Set<string>();
   let premiumSelections = 0;
 
   for (const selection of preview.selections) {
+    const daySlotKey = `${selection.day}:${selection.slot}`;
+
+    if (occupiedDaySlots.has(daySlotKey)) {
+      issues.push({
+        code: "duplicate_day_slot",
+        mealId: selection.mealId,
+        message: `The ${selection.slot} slot on ${selection.day} already has a planned meal.`,
+      });
+      continue;
+    }
+
+    occupiedDaySlots.add(daySlotKey);
+
     const meal = mealMap.get(selection.mealId);
 
     if (!meal) {

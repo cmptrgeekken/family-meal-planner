@@ -30,8 +30,8 @@ describe("validateWeeklyPlan", () => {
       {
         weekStartDate: "2026-04-20",
         selections: [
-          { day: "Monday", mealId: "spaghetti-night" },
-          { day: "Thursday", mealId: "spaghetti-night" },
+          { day: "Monday", slot: "Dinner", mealId: "spaghetti-night" },
+          { day: "Thursday", slot: "Dinner", mealId: "spaghetti-night" },
         ],
       },
       meals,
@@ -45,13 +45,28 @@ describe("validateWeeklyPlan", () => {
       {
         weekStartDate: "2026-04-20",
         selections: [
-          { day: "Monday", mealId: "burger-bowls" },
-          { day: "Friday", mealId: "burger-bowls" },
+          { day: "Monday", slot: "Dinner", mealId: "burger-bowls" },
+          { day: "Friday", slot: "Dinner", mealId: "burger-bowls" },
         ],
       },
       meals,
     );
 
     expect(issues.some((issue) => issue.code === "premium_limit_exceeded")).toBe(true);
+  });
+
+  it("flags duplicate use of the same day and slot", () => {
+    const issues = validateWeeklyPlan(
+      {
+        weekStartDate: "2026-04-20",
+        selections: [
+          { day: "Monday", slot: "Dinner", mealId: "spaghetti-night" },
+          { day: "Monday", slot: "Dinner", mealId: "burger-bowls" },
+        ],
+      },
+      meals,
+    );
+
+    expect(issues.some((issue) => issue.code === "duplicate_day_slot")).toBe(true);
   });
 });
