@@ -44,4 +44,17 @@ describe("category routes", () => {
 
     expect(deleteResponse.status).toBe(409);
   });
+
+  it("returns a conflict when creating a duplicate category slug", async () => {
+    const app = createApp();
+
+    const response = await request(app).post("/api/categories").send({
+      name: "Chicken Clone",
+      slug: "chicken",
+    });
+
+    expect(response.status).toBe(409);
+    expect(response.body.error).toBe("conflict");
+    expect(response.body.field).toBe("Category slug");
+  });
 });

@@ -9,6 +9,7 @@ import type {
   StoreTag as DomainStoreTag,
 } from "../domain/models.js";
 import { prisma } from "../config/prisma.js";
+import { throwIfUniqueConstraintError } from "./prisma-error-utils.js";
 
 const mealInclude = {
   category: true,
@@ -188,79 +189,91 @@ async function syncMealIngredients(tx: Prisma.TransactionClient, mealId: string,
 }
 
 export async function createMeal(input: UpsertMealInput) {
-  return prisma.$transaction(async (tx) => {
-    const category = await tx.category.findUnique({
-      where: { slug: input.categorySlug },
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const category = await tx.category.findUnique({
+        where: { slug: input.categorySlug },
+      });
+
+      if (!category) {
+        return null;
+      }
+
+      const meal = await tx.meal.create({
+        data: {
+          name: input.name,
+          slug: input.slug,
+          categoryId: category.id,
+          costTier: mapDomainCostTier(input.costTier),
+          kidFavorite: input.kidFavorite,
+          lowEffort: input.lowEffort,
+          notes: input.notes,
+        },
+        include: mealInclude,
+      });
+
+      await syncMealIngredients(tx, meal.id, input.ingredients);
+
+      const savedMeal = await tx.meal.findUniqueOrThrow({
+        where: { id: meal.id },
+        include: mealInclude,
+      });
+
+      return mapMeal(savedMeal);
     });
-
-    if (!category) {
-      return null;
-    }
-
-    const meal = await tx.meal.create({
-      data: {
-        name: input.name,
-        slug: input.slug,
-        categoryId: category.id,
-        costTier: mapDomainCostTier(input.costTier),
-        kidFavorite: input.kidFavorite,
-        lowEffort: input.lowEffort,
-        notes: input.notes,
-      },
-      include: mealInclude,
+  } catch (error) {
+    throwIfUniqueConstraintError(error, {
+      slug: "Meal slug",
     });
-
-    await syncMealIngredients(tx, meal.id, input.ingredients);
-
-    const savedMeal = await tx.meal.findUniqueOrThrow({
-      where: { id: meal.id },
-      include: mealInclude,
-    });
-
-    return mapMeal(savedMeal);
-  });
+  }
 }
 
 export async function updateMeal(mealId: string, input: UpsertMealInput) {
-  return prisma.$transaction(async (tx) => {
-    const existingMeal = await tx.meal.findUnique({
-      where: { id: mealId },
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const existingMeal = await tx.meal.findUnique({
+        where: { id: mealId },
+      });
+
+      if (!existingMeal) {
+        return null;
+      }
+
+      const category = await tx.category.findUnique({
+        where: { slug: input.categorySlug },
+      });
+
+      if (!category) {
+        return null;
+      }
+
+      await tx.meal.update({
+        where: { id: mealId },
+        data: {
+          name: input.name,
+          slug: input.slug,
+          categoryId: category.id,
+          costTier: mapDomainCostTier(input.costTier),
+          kidFavorite: input.kidFavorite,
+          lowEffort: input.lowEffort,
+          notes: input.notes,
+        },
+      });
+
+      await syncMealIngredients(tx, mealId, input.ingredients);
+
+      const savedMeal = await tx.meal.findUniqueOrThrow({
+        where: { id: mealId },
+        include: mealInclude,
+      });
+
+      return mapMeal(savedMeal);
     });
-
-    if (!existingMeal) {
-      return null;
-    }
-
-    const category = await tx.category.findUnique({
-      where: { slug: input.categorySlug },
+  } catch (error) {
+    throwIfUniqueConstraintError(error, {
+      slug: "Meal slug",
     });
-
-    if (!category) {
-      return null;
-    }
-
-    await tx.meal.update({
-      where: { id: mealId },
-      data: {
-        name: input.name,
-        slug: input.slug,
-        categoryId: category.id,
-        costTier: mapDomainCostTier(input.costTier),
-        kidFavorite: input.kidFavorite,
-        lowEffort: input.lowEffort,
-        notes: input.notes,
-      },
-    });
-
-    await syncMealIngredients(tx, mealId, input.ingredients);
-
-    const savedMeal = await tx.meal.findUniqueOrThrow({
-      where: { id: mealId },
-      include: mealInclude,
-    });
-
-    return mapMeal(savedMeal);
-  });
+  }
 }
 
 export async function deleteMeal(mealId: string) {

@@ -4,6 +4,25 @@ import { describe, expect, it } from "vitest";
 import { createApp } from "../app.js";
 
 describe("weekly plan routes", () => {
+  it("does not persist a plan through the preview endpoint", async () => {
+    const app = createApp();
+    const weekStartDate = "2026-06-01";
+    const mealsResponse = await request(app).get("/api/meals");
+    const spaghettiNight = mealsResponse.body.meals.find((meal: { slug?: string }) => meal.slug === "spaghetti-night");
+
+    const previewResponse = await request(app).post("/api/weekly-plans/preview").send({
+      weekStartDate,
+      selections: [{ day: "Monday", mealId: spaghettiNight.id }],
+    });
+
+    expect(previewResponse.status).toBe(200);
+    expect(previewResponse.body.persisted).toBe(false);
+
+    const fetchResponse = await request(app).get(`/api/weekly-plans/${weekStartDate}`);
+
+    expect(fetchResponse.status).toBe(404);
+  });
+
   it("persists and retrieves a weekly plan by week start date", async () => {
     const app = createApp();
     const weekStartDate = "2026-04-27";

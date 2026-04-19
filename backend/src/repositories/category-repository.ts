@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma.js";
 import type { MealCategoryRecord } from "../domain/models.js";
+import { throwIfUniqueConstraintError } from "./prisma-error-utils.js";
 
 type UpsertCategoryInput = {
   name: string;
@@ -33,14 +34,20 @@ export async function getCategoryById(categoryId: string) {
 }
 
 export async function createCategory(input: UpsertCategoryInput) {
-  const category = await prisma.category.create({
-    data: {
-      name: input.name,
-      slug: input.slug,
-    },
-  });
+  try {
+    const category = await prisma.category.create({
+      data: {
+        name: input.name,
+        slug: input.slug,
+      },
+    });
 
-  return mapCategory(category);
+    return mapCategory(category);
+  } catch (error) {
+    throwIfUniqueConstraintError(error, {
+      slug: "Category slug",
+    });
+  }
 }
 
 export async function updateCategory(categoryId: string, input: UpsertCategoryInput) {
@@ -52,15 +59,21 @@ export async function updateCategory(categoryId: string, input: UpsertCategoryIn
     return null;
   }
 
-  const category = await prisma.category.update({
-    where: { id: categoryId },
-    data: {
-      name: input.name,
-      slug: input.slug,
-    },
-  });
+  try {
+    const category = await prisma.category.update({
+      where: { id: categoryId },
+      data: {
+        name: input.name,
+        slug: input.slug,
+      },
+    });
 
-  return mapCategory(category);
+    return mapCategory(category);
+  } catch (error) {
+    throwIfUniqueConstraintError(error, {
+      slug: "Category slug",
+    });
+  }
 }
 
 export async function deleteCategory(categoryId: string) {

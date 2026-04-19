@@ -53,4 +53,22 @@ describe("meal routes", () => {
 
     expect(deleteResponse.status).toBe(409);
   });
+
+  it("returns a conflict when creating a duplicate meal slug", async () => {
+    const app = createApp();
+
+    const response = await request(app).post("/api/meals").send({
+      name: "Spaghetti Clone",
+      slug: "spaghetti-night",
+      categorySlug: "pasta",
+      costTier: "budget",
+      kidFavorite: true,
+      lowEffort: true,
+      ingredients: [{ name: "Clone Pasta", group: "carb", quantityLabel: "1 box", storeTag: "Other" }],
+    });
+
+    expect(response.status).toBe(409);
+    expect(response.body.error).toBe("conflict");
+    expect(response.body.field).toBe("Meal slug");
+  });
 });

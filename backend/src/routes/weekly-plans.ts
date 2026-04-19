@@ -87,20 +87,11 @@ weeklyPlansRouter.post(
     const validationIssues = validateWeeklyPlan(preview, meals);
     const groceryList = buildGroceryList(preview, meals);
 
-    if (validationIssues.length === 0) {
-      await upsertWeeklyPlanPreview(
-        new Date(preview.weekStartDate),
-        preview.selections.map((selection) => ({
-          mealId: selection.mealId,
-          dayOfWeek: weekdayToIndex(selection.day),
-        })),
-      );
-    }
-
     response.json({
       preview,
       validationIssues,
       groceryList,
+      persisted: false,
     });
   }),
 );
