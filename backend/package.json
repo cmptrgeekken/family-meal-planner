@@ -12,8 +12,9 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "tsx prisma/seed.ts",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "node ./scripts/run-tests.mjs",
+    "test:unit": "vitest run",
+    "test:watch": "node ./scripts/run-tests.mjs --watch",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

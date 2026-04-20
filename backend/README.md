@@ -20,6 +20,12 @@ Current starter stack:
 
 Keep business rules explicit and testable. Logic such as repeat limits, premium-meal limits, cost balancing, and grocery aggregation should not live only in route handlers.
 
+## Test Workflow
+
+- `npm test` starts the dedicated `db-test` container, applies migrations, seeds test data, runs the backend suite, and stops `db-test` afterward.
+- `npm run test:watch` follows the same lifecycle, but leaves Vitest in watch mode until you exit it.
+- `npm run test:unit` runs Vitest directly without Docker orchestration. This is useful only when the database is already prepared or a test file does not need persistence.
+
 ## Initial API Surface
 
 - `GET /health`: liveness and environment information
