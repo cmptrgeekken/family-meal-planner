@@ -17,8 +17,8 @@ describe("store tag routes", () => {
     const uniqueSuffix = Date.now().toString();
 
     const createResponse = await request(app).post("/api/store-tags").send({
-      name: `Test Store ${uniqueSuffix}`,
-      slug: `test-store-${uniqueSuffix}`,
+      name: `TEST__Store ${uniqueSuffix}`,
+      slug: `test-artifact-store-${uniqueSuffix}`,
     });
 
     expect(createResponse.status).toBe(201);
@@ -26,17 +26,17 @@ describe("store tag routes", () => {
     const storeTagId = createResponse.body.storeTag.id;
 
     const updateResponse = await request(app).put(`/api/store-tags/${storeTagId}`).send({
-      name: `Updated Test Store ${uniqueSuffix}`,
-      slug: `updated-test-store-${uniqueSuffix}`,
+      name: `Updated TEST__Store ${uniqueSuffix}`,
+      slug: `updated-test-artifact-store-${uniqueSuffix}`,
     });
 
     expect(updateResponse.status).toBe(200);
-    expect(updateResponse.body.storeTag.slug).toBe(`updated-test-store-${uniqueSuffix}`);
+    expect(updateResponse.body.storeTag.slug).toBe(`updated-test-artifact-store-${uniqueSuffix}`);
 
     const fetchResponse = await request(app).get(`/api/store-tags/${storeTagId}`);
 
     expect(fetchResponse.status).toBe(200);
-    expect(fetchResponse.body.storeTag.name).toContain("Updated Test Store");
+    expect(fetchResponse.body.storeTag.name).toContain("Updated TEST__Store");
 
     const deleteResponse = await request(app).delete(`/api/store-tags/${storeTagId}`);
 

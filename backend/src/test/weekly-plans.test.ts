@@ -6,7 +6,7 @@ import { createApp } from "../app.js";
 describe("weekly plan routes", () => {
   it("does not persist a plan through the preview endpoint", async () => {
     const app = createApp();
-    const weekStartDate = "2026-06-01";
+    const weekStartDate = "2099-06-01";
     const mealsResponse = await request(app).get("/api/meals");
     const spaghettiNight = mealsResponse.body.meals.find((meal: { slug?: string }) => meal.slug === "spaghetti-night");
 
@@ -26,7 +26,7 @@ describe("weekly plan routes", () => {
 
   it("persists and retrieves a weekly plan by week start date", async () => {
     const app = createApp();
-    const weekStartDate = "2026-04-27";
+    const weekStartDate = "2099-04-27";
     const mealsResponse = await request(app).get("/api/meals");
     const spaghettiNight = mealsResponse.body.meals.find((meal: { slug?: string }) => meal.slug === "spaghetti-night");
     const breakfastForDinner = mealsResponse.body.meals.find(
@@ -46,7 +46,7 @@ describe("weekly plan routes", () => {
     const fetchResponse = await request(app).get(`/api/weekly-plans/${weekStartDate}`);
 
     expect(fetchResponse.status).toBe(200);
-    expect(fetchResponse.body.weeklyPlan.weekStartDate).toContain("2026-04-27");
+    expect(fetchResponse.body.weeklyPlan.weekStartDate).toContain("2099-04-27");
     expect(fetchResponse.body.weeklyPlan.selections).toEqual([
       { day: "Monday", slot: "Dinner", mealId: spaghettiNight.id },
       { day: "Tuesday", slot: "Dinner", mealId: breakfastForDinner.id },
@@ -61,7 +61,7 @@ describe("weekly plan routes", () => {
       (meal: { slug?: string }) => meal.slug === "breakfast-for-dinner",
     );
 
-    const response = await request(app).put("/api/weekly-plans/2026-06-08").send({
+    const response = await request(app).put("/api/weekly-plans/2099-06-08").send({
       selections: [
         { day: "Monday", mealId: spaghettiNight.id },
         { day: "Monday", mealId: breakfastForDinner.id },

@@ -40,26 +40,26 @@ describe("meal routes", () => {
     const app = createApp();
     const uniqueSuffix = Date.now().toString();
     const createResponse = await request(app).post("/api/meals").send({
-      name: `Test Rice Bowl ${uniqueSuffix}`,
-      slug: `test-rice-bowl-${uniqueSuffix}`,
+      name: `TEST__Rice Bowl ${uniqueSuffix}`,
+      slug: `test-artifact-meal-${uniqueSuffix}`,
       categorySlug: "rice-bowls",
       costTier: "standard",
       kidFavorite: false,
       lowEffort: true,
       notes: "A test meal.",
       ingredients: [
-        { name: `Rice ${uniqueSuffix}`, group: "carb", quantityLabel: "1 bag", storeTag: "Costco" },
-        { name: `Chicken Thighs ${uniqueSuffix}`, group: "protein", quantityLabel: "2 pounds", storeTag: "Cub" },
+        { name: `TEST__Rice ${uniqueSuffix}`, group: "carb", quantityLabel: "1 bag", storeTag: "Costco" },
+        { name: `TEST__Chicken Thighs ${uniqueSuffix}`, group: "protein", quantityLabel: "2 pounds", storeTag: "Cub" },
       ],
     });
 
     expect(createResponse.status).toBe(201);
-    expect(createResponse.body.meal.name).toContain("Test Rice Bowl");
+    expect(createResponse.body.meal.name).toContain("TEST__Rice Bowl");
 
     const fetchResponse = await request(app).get(`/api/meals/${createResponse.body.meal.id}`);
 
     expect(fetchResponse.status).toBe(200);
-    expect(fetchResponse.body.meal.slug).toBe(`test-rice-bowl-${uniqueSuffix}`);
+    expect(fetchResponse.body.meal.slug).toBe(`test-artifact-meal-${uniqueSuffix}`);
     expect(fetchResponse.body.meal.ingredients).toHaveLength(2);
   });
 
@@ -68,7 +68,7 @@ describe("meal routes", () => {
     const mealsResponse = await request(app).get("/api/meals");
     const spaghettiNight = mealsResponse.body.meals.find((meal: { slug?: string }) => meal.slug === "spaghetti-night");
 
-    await request(app).put("/api/weekly-plans/2026-05-04").send({
+    await request(app).put("/api/weekly-plans/2099-05-04").send({
       selections: [{ day: "Monday", mealId: spaghettiNight.id }],
     });
 

@@ -9,8 +9,8 @@ describe("category routes", () => {
     const uniqueSuffix = Date.now().toString();
 
     const createResponse = await request(app).post("/api/categories").send({
-      name: `Test Category ${uniqueSuffix}`,
-      slug: `test-category-${uniqueSuffix}`,
+      name: `TEST__Category ${uniqueSuffix}`,
+      slug: `test-artifact-category-${uniqueSuffix}`,
     });
 
     expect(createResponse.status).toBe(201);
@@ -18,17 +18,17 @@ describe("category routes", () => {
     const categoryId = createResponse.body.category.id;
 
     const updateResponse = await request(app).put(`/api/categories/${categoryId}`).send({
-      name: `Updated Test Category ${uniqueSuffix}`,
-      slug: `updated-test-category-${uniqueSuffix}`,
+      name: `Updated TEST__Category ${uniqueSuffix}`,
+      slug: `updated-test-artifact-category-${uniqueSuffix}`,
     });
 
     expect(updateResponse.status).toBe(200);
-    expect(updateResponse.body.category.slug).toBe(`updated-test-category-${uniqueSuffix}`);
+    expect(updateResponse.body.category.slug).toBe(`updated-test-artifact-category-${uniqueSuffix}`);
 
     const fetchResponse = await request(app).get(`/api/categories/${categoryId}`);
 
     expect(fetchResponse.status).toBe(200);
-    expect(fetchResponse.body.category.name).toContain("Updated Test Category");
+    expect(fetchResponse.body.category.name).toContain("Updated TEST__Category");
 
     const deleteResponse = await request(app).delete(`/api/categories/${categoryId}`);
 

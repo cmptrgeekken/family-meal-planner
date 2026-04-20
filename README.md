@@ -57,6 +57,12 @@ This repository is currently in the initial project-setup stage. The goal of thi
 - Add tests alongside behavior as implementation begins.
 - Use Docker-oriented local development from the start, even if the first version is simple.
 
+## Local Databases
+
+- The app database runs at `localhost:5432` by default and uses `POSTGRES_DB`.
+- The test database runs at `localhost:5433` by default and uses `POSTGRES_TEST_DB`.
+- Backend tests force Prisma onto `TEST_DATABASE_URL` so test artifacts cannot leak into the app database.
+
 ## Next Likely Steps
 
 1. Scaffold the frontend app shell and design tokens.

@@ -1,4 +1,4 @@
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001";
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001").replace(/\/$/, "");
 
 export type ApiCategory = {
   id: string;
@@ -53,8 +53,12 @@ export type ApiGroceryListItem = {
   usedInMeals: string[];
 };
 
+function apiUrl(path: string) {
+  return `${apiBaseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 async function fetchJson<T>(path: string) {
-  const response = await fetch(`${apiBaseUrl}${path}`);
+  const response = await fetch(apiUrl(path));
 
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
@@ -64,11 +68,11 @@ async function fetchJson<T>(path: string) {
 }
 
 export function getCategories() {
-  return fetchJson<{ categories: ApiCategory[] }>("/api/categories");
+  return fetchJson<{ categories: ApiCategory[] }>("/categories");
 }
 
 export function getStoreTags() {
-  return fetchJson<{ storeTags: ApiStoreTag[] }>("/api/store-tags");
+  return fetchJson<{ storeTags: ApiStoreTag[] }>("/store-tags");
 }
 
 export function getMeals(filters?: {
@@ -86,11 +90,11 @@ export function getMeals(filters?: {
 
   const query = params.toString();
 
-  return fetchJson<{ meals: ApiMeal[] }>(`/api/meals${query ? `?${query}` : ""}`);
+  return fetchJson<{ meals: ApiMeal[] }>(`/meals${query ? `?${query}` : ""}`);
 }
 
 export function previewWeeklyPlan(payload: { weekStartDate: string; selections: Array<{ day: string; mealId: string }> }) {
-  return fetch(`${apiBaseUrl}/api/weekly-plans/preview`, {
+  return fetch(apiUrl("/weekly-plans/preview"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
