@@ -11,6 +11,7 @@ describe("meal routes", () => {
     expect(response.status).toBe(200);
     expect(response.body.meals.length).toBeGreaterThan(0);
     expect(response.body.meals.some((meal: { name: string }) => meal.name === "Chicken Quesadillas")).toBe(true);
+    expect(response.body.meals.some((meal: { categoryIconId?: string }) => meal.categoryIconId === "160")).toBe(true);
   });
 
   it("filters meals by category slug", async () => {

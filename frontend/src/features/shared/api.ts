@@ -1,9 +1,24 @@
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001").replace(/\/$/, "");
 
+export type IconManifestEntry = {
+  id: string;
+  name: string;
+  slug: string;
+  confidence: "high" | "medium" | "low";
+};
+
+export type IconManifest = {
+  schemaVersion: number;
+  assetBasePath: string;
+  description: string;
+  icons: IconManifestEntry[];
+};
+
 export type ApiCategory = {
   id: string;
   name: string;
   slug: string;
+  iconId?: string;
 };
 
 export type ApiStoreTag = {
@@ -26,6 +41,7 @@ export type ApiMeal = {
   name: string;
   category: string;
   categorySlug: string;
+  categoryIconId?: string;
   costTier: "budget" | "standard" | "premium";
   kidFavorite: boolean;
   lowEffort: boolean;
@@ -67,8 +83,36 @@ async function fetchJson<T>(path: string) {
   return (await response.json()) as T;
 }
 
+export function getIconManifest() {
+  return fetch("/icons/manifest.json").then(async (response) => {
+    if (!response.ok) {
+      throw new Error(`Icon manifest request failed: ${response.status}`);
+    }
+
+    return (await response.json()) as IconManifest;
+  });
+}
+
 export function getCategories() {
   return fetchJson<{ categories: ApiCategory[] }>("/categories");
+}
+
+export function updateCategory(categoryId: string, payload: { name: string; slug: string; iconId?: string | null }) {
+  return fetch(apiUrl(`/categories/${categoryId}`), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }).then(async (response) => {
+    const data = (await response.json()) as { category: ApiCategory; message?: string };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Category update failed: ${response.status}`);
+    }
+
+    return data;
+  });
 }
 
 export function getStoreTags() {

@@ -34,12 +34,19 @@ body {
 }
 
 button,
-select {
+select,
+input,
+a {
   font: inherit;
 }
 
 button {
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .app-shell {
@@ -136,7 +143,7 @@ button {
   transform: translateX(-50%);
   width: min(calc(100% - 1rem), 44rem);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 0.45rem;
   padding: 0.55rem;
   background: rgba(255, 250, 243, 0.86);
@@ -157,6 +164,7 @@ button {
   padding: 0.7rem;
   border-radius: 1rem;
   color: var(--muted);
+  text-decoration: none;
 }
 
 .nav-pill small {
@@ -172,6 +180,7 @@ button {
 
 .day-stack,
 .filter-stack,
+.magnet-controls,
 .grocery-group-list {
   display: grid;
   gap: 0.85rem;
@@ -195,13 +204,26 @@ button {
 }
 
 .day-card select,
-.filter-stack select {
+.filter-stack select,
+.field-grid input {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 0.95rem;
   background: white;
   min-height: 3rem;
   padding: 0.8rem 0.9rem;
+}
+
+.field-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.field-grid label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.88rem;
 }
 
 .day-card-copy {
@@ -234,6 +256,16 @@ button {
 .pill-muted {
   background: rgba(110, 141, 103, 0.08);
   color: var(--accent-green);
+}
+
+.category-pill {
+  gap: 0.35rem;
+}
+
+.category-pill img {
+  width: 1.25rem;
+  height: 1.25rem;
+  object-fit: contain;
 }
 
 .pill-cost-budget {
@@ -303,6 +335,67 @@ button {
   gap: 0.45rem;
 }
 
+.category-icon-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.category-icon-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.category-icon-preview {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: #fff8ed;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.category-icon-preview img {
+  width: 2.2rem;
+  height: 2.2rem;
+  object-fit: contain;
+}
+
+.category-icon-copy {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.category-icon-row label {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.category-icon-row select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: white;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.8rem;
+  color: var(--text);
+}
+
 .toggle-row {
   display: flex;
   flex-wrap: wrap;
@@ -360,6 +453,113 @@ button {
   align-items: center;
 }
 
+.magnet-screen {
+  grid-template-columns: 1fr;
+}
+
+.magnet-category-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.magnet-category-option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.95rem;
+  background: var(--surface-strong);
+  font-weight: 700;
+}
+
+.magnet-category-option input {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--accent);
+}
+
+.magnet-preview {
+  overflow: auto;
+  padding: 1rem;
+  border: 1px dashed rgba(112, 78, 44, 0.28);
+  border-radius: 1rem;
+  background:
+    linear-gradient(45deg, rgba(112, 78, 44, 0.05) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(112, 78, 44, 0.05) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(112, 78, 44, 0.05) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(112, 78, 44, 0.05) 75%);
+  background-size: 1.25rem 1.25rem;
+  background-position:
+    0 0,
+    0 0.625rem,
+    0.625rem -0.625rem,
+    -0.625rem 0;
+}
+
+.magnet-preview svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  filter: drop-shadow(0 12px 28px rgba(64, 38, 16, 0.16));
+}
+
+@media (min-width: 620px) {
+  .field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.icon-library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.75rem, 1fr));
+  gap: 0.85rem;
+}
+
+.icon-library-card {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: center;
+  min-height: 12rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 1.15rem;
+  background: var(--surface-strong);
+}
+
+.icon-library-card img {
+  width: 5.5rem;
+  height: 5.5rem;
+  object-fit: contain;
+}
+
+.icon-library-card p {
+  margin: 0;
+  text-align: center;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.icon-library-meta {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.icon-confidence-medium {
+  border-color: rgba(216, 154, 34, 0.7);
+}
+
+.icon-confidence-low {
+  border-color: rgba(196, 86, 86, 0.7);
+}
+
 @media (min-width: 820px) {
   .app-shell {
     padding: 1.5rem 1.5rem 1.5rem;
@@ -383,6 +583,15 @@ button {
 
   .meal-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .magnet-screen {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+
+  .magnet-screen .section-card:first-child,
+  .magnet-screen .section-card:last-child {
+    grid-column: 1 / -1;
   }
 
   .bottom-nav {

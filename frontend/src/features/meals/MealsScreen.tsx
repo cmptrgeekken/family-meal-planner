@@ -88,7 +88,10 @@ export function MealsScreen() {
           {mealsQuery.data?.meals.map((meal) => (
             <article key={meal.id} className="meal-card">
               <div className="meal-card-topline">
-                <span className="pill-muted">{meal.category}</span>
+                <span className="pill-muted category-pill">
+                  {meal.categoryIconId ? <img src={`/icons/${meal.categoryIconId}.svg`} alt="" /> : null}
+                  {meal.category}
+                </span>
                 <span className={`pill-cost pill-cost-${meal.costTier}`}>{meal.costTier}</span>
               </div>
               <h3>{meal.name}</h3>

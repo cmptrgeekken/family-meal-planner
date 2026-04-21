@@ -3,14 +3,14 @@ import { CostTier, IngredientType, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const categories = [
-  { name: "Pasta", slug: "pasta" },
-  { name: "Rice/Bowls", slug: "rice-bowls" },
-  { name: "Breakfast", slug: "breakfast" },
-  { name: "Sandwich/Snack", slug: "sandwich-snack" },
-  { name: "Chicken", slug: "chicken" },
-  { name: "Ground Meat", slug: "ground-meat" },
-  { name: "Premium", slug: "premium" },
-  { name: "Fun/Zero-Cook", slug: "fun-zero-cook" },
+  { name: "Pasta", slug: "pasta", iconId: "168" },
+  { name: "Rice/Bowls", slug: "rice-bowls", iconId: "115" },
+  { name: "Breakfast", slug: "breakfast", iconId: "71" },
+  { name: "Sandwich/Snack", slug: "sandwich-snack", iconId: "79" },
+  { name: "Chicken", slug: "chicken", iconId: "160" },
+  { name: "Ground Meat", slug: "ground-meat", iconId: "158" },
+  { name: "Premium", slug: "premium", iconId: "178" },
+  { name: "Fun/Zero-Cook", slug: "fun-zero-cook", iconId: "50" },
 ];
 
 const storeTags = [
@@ -85,7 +85,7 @@ async function seed() {
   for (const category of categories) {
     await prisma.category.upsert({
       where: { slug: category.slug },
-      update: { name: category.name },
+      update: { name: category.name, iconId: category.iconId },
       create: category,
     });
   }

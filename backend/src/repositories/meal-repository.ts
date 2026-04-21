@@ -66,6 +66,7 @@ function mapMeal(record: MealRecord): Meal {
     name: record.name,
     category: record.category.name,
     categorySlug: record.category.slug,
+    categoryIconId: record.category.iconId ?? undefined,
     costTier: mapCostTier(record.costTier),
     kidFavorite: record.kidFavorite,
     lowEffort: record.lowEffort,

@@ -5,13 +5,15 @@ import { throwIfUniqueConstraintError } from "./prisma-error-utils.js";
 type UpsertCategoryInput = {
   name: string;
   slug: string;
+  iconId?: string | null;
 };
 
-function mapCategory(category: { id: string; name: string; slug: string }): MealCategoryRecord {
+function mapCategory(category: { id: string; name: string; slug: string; iconId: string | null }): MealCategoryRecord {
   return {
     id: category.id,
     name: category.name,
     slug: category.slug,
+    iconId: category.iconId ?? undefined,
   };
 }
 
@@ -39,6 +41,7 @@ export async function createCategory(input: UpsertCategoryInput) {
       data: {
         name: input.name,
         slug: input.slug,
+        iconId: input.iconId ?? null,
       },
     });
 
@@ -65,6 +68,7 @@ export async function updateCategory(categoryId: string, input: UpsertCategoryIn
       data: {
         name: input.name,
         slug: input.slug,
+        iconId: input.iconId ?? null,
       },
     });
 

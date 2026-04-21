@@ -11,24 +11,29 @@ describe("category routes", () => {
     const createResponse = await request(app).post("/api/categories").send({
       name: `TEST__Category ${uniqueSuffix}`,
       slug: `test-artifact-category-${uniqueSuffix}`,
+      iconId: "42",
     });
 
     expect(createResponse.status).toBe(201);
+    expect(createResponse.body.category.iconId).toBe("42");
 
     const categoryId = createResponse.body.category.id;
 
     const updateResponse = await request(app).put(`/api/categories/${categoryId}`).send({
       name: `Updated TEST__Category ${uniqueSuffix}`,
       slug: `updated-test-artifact-category-${uniqueSuffix}`,
+      iconId: "71",
     });
 
     expect(updateResponse.status).toBe(200);
     expect(updateResponse.body.category.slug).toBe(`updated-test-artifact-category-${uniqueSuffix}`);
+    expect(updateResponse.body.category.iconId).toBe("71");
 
     const fetchResponse = await request(app).get(`/api/categories/${categoryId}`);
 
     expect(fetchResponse.status).toBe(200);
     expect(fetchResponse.body.category.name).toContain("Updated TEST__Category");
+    expect(fetchResponse.body.category.iconId).toBe("71");
 
     const deleteResponse = await request(app).delete(`/api/categories/${categoryId}`);
 

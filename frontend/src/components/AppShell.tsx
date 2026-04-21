@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type AppTab = "plan" | "meals" | "grocery" | "settings";
+import type { AppTab } from "../app/App";
 
 type AppShellProps = {
   activeTab: AppTab;
@@ -8,11 +8,12 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-const tabs: Array<{ id: AppTab; label: string; description: string }> = [
-  { id: "plan", label: "Plan", description: "Weekly dinner flow" },
-  { id: "meals", label: "Meals", description: "Browse and filter" },
-  { id: "grocery", label: "Grocery", description: "Shopping preview" },
-  { id: "settings", label: "Settings", description: "Reference data" },
+const tabs: Array<{ id: AppTab; label: string; description: string; href: string }> = [
+  { id: "plan", label: "Plan", description: "Weekly dinner flow", href: "/plan" },
+  { id: "meals", label: "Meals", description: "Browse and filter", href: "/meals" },
+  { id: "grocery", label: "Grocery", description: "Shopping preview", href: "/grocery" },
+  { id: "magnets", label: "Magnets", description: "SVG exports", href: "/magnets" },
+  { id: "settings", label: "Settings", description: "Reference data", href: "/settings" },
 ];
 
 export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
@@ -30,16 +31,19 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
 
       <nav className="bottom-nav" aria-label="Primary">
         {tabs.map((tab) => (
-          <button
+          <a
             key={tab.id}
-            type="button"
+            href={tab.href}
             className={tab.id === activeTab ? "nav-pill nav-pill-active" : "nav-pill"}
-            onClick={() => onTabChange(tab.id)}
+            onClick={(event) => {
+              event.preventDefault();
+              onTabChange(tab.id);
+            }}
             aria-current={tab.id === activeTab ? "page" : undefined}
           >
             <span>{tab.label}</span>
             <small>{tab.description}</small>
-          </button>
+          </a>
         ))}
       </nav>
     </div>

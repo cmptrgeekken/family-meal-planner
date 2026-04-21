@@ -26,6 +26,7 @@ export type Meal = {
   name: string;
   category: string;
   categorySlug?: string;
+  categoryIconId?: string;
   costTier: CostTier;
   kidFavorite: boolean;
   lowEffort: boolean;
@@ -68,6 +69,7 @@ export type MealCategoryRecord = {
   id: string;
   name: string;
   slug: string;
+  iconId?: string;
 };
 
 export type StoreTagRecord = {

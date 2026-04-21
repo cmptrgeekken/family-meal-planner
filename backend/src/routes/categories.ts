@@ -16,6 +16,7 @@ export const categoriesRouter = Router();
 const categorySchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1),
+  iconId: z.string().min(1).nullable().optional(),
 });
 
 const categoryParamsSchema = z.object({

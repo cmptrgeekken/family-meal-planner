@@ -1,0 +1,781 @@
+{
+  "schemaVersion": 1,
+  "assetBasePath": "/icons",
+  "description": "First-pass proposed names for curated meal-planner icon assets. Paths can be derived as /icons/{id}.svg and /icons/{id}.png.",
+  "icons": [
+    {
+      "id": "2",
+      "name": "Ice Cream Sundae",
+      "slug": "ice-cream-sundae",
+      "confidence": "high"
+    },
+    {
+      "id": "4",
+      "name": "Wrapped Candy",
+      "slug": "wrapped-candy",
+      "confidence": "high"
+    },
+    {
+      "id": "6",
+      "name": "Whipped Cream Dessert",
+      "slug": "whipped-cream-dessert",
+      "confidence": "high"
+    },
+    {
+      "id": "12",
+      "name": "Crumble Dessert",
+      "slug": "crumble-dessert",
+      "confidence": "high"
+    },
+    {
+      "id": "14",
+      "name": "Jello",
+      "slug": "jello",
+      "confidence": "high"
+    },
+    {
+      "id": "16",
+      "name": "Iced Drink",
+      "slug": "iced-drink",
+      "confidence": "high"
+    },
+    {
+      "id": "17",
+      "name": "Popsicle",
+      "slug": "popsicle",
+      "confidence": "high"
+    },
+    {
+      "id": "20",
+      "name": "Sprinkle Donut",
+      "slug": "sprinkle-donut",
+      "confidence": "high"
+    },
+    {
+      "id": "22",
+      "name": "Cup With Straw",
+      "slug": "cup-with-straw",
+      "confidence": "high"
+    },
+    {
+      "id": "23",
+      "name": "Twin Popsicle",
+      "slug": "twin-popsicle",
+      "confidence": "high"
+    },
+    {
+      "id": "28",
+      "name": "Soda Cup",
+      "slug": "soda-cup",
+      "confidence": "high"
+    },
+    {
+      "id": "32",
+      "name": "Frosted Donut",
+      "slug": "frosted-donut",
+      "confidence": "high"
+    },
+    {
+      "id": "34",
+      "name": "Striped Candy",
+      "slug": "striped-candy",
+      "confidence": "high"
+    },
+    {
+      "id": "36",
+      "name": "Cupcake",
+      "slug": "cupcake",
+      "confidence": "high"
+    },
+    {
+      "id": "42",
+      "name": "Ramen Bowl",
+      "slug": "ramen-bowl",
+      "confidence": "high"
+    },
+    {
+      "id": "44",
+      "name": "Waffle",
+      "slug": "waffle",
+      "confidence": "high"
+    },
+    {
+      "id": "46",
+      "name": "Pretzel",
+      "slug": "pretzel",
+      "confidence": "high"
+    },
+    {
+      "id": "48",
+      "name": "Kiwi Slice",
+      "slug": "kiwi-slice",
+      "confidence": "high"
+    },
+    {
+      "id": "50",
+      "name": "Chocolate Bar",
+      "slug": "chocolate-bar",
+      "confidence": "high"
+    },
+    {
+      "id": "53",
+      "name": "Cherries",
+      "slug": "cherries",
+      "confidence": "high"
+    },
+    {
+      "id": "55",
+      "name": "Pomegranate",
+      "slug": "pomegranate",
+      "confidence": "high"
+    },
+    {
+      "id": "57",
+      "name": "Pear",
+      "slug": "pear",
+      "confidence": "high"
+    },
+    {
+      "id": "71",
+      "name": "Pancake Stack",
+      "slug": "pancake-stack",
+      "confidence": "high"
+    },
+    {
+      "id": "73",
+      "name": "Bagel",
+      "slug": "bagel",
+      "confidence": "high"
+    },
+    {
+      "id": "75",
+      "name": "Dumpling",
+      "slug": "dumpling",
+      "confidence": "high"
+    },
+    {
+      "id": "77",
+      "name": "Taco",
+      "slug": "taco",
+      "confidence": "high"
+    },
+    {
+      "id": "79",
+      "name": "Toast",
+      "slug": "toast",
+      "confidence": "high"
+    },
+    {
+      "id": "94",
+      "name": "Sushi",
+      "slug": "sushi",
+      "confidence": "high"
+    },
+    {
+      "id": "98",
+      "name": "Fried Egg",
+      "slug": "fried-egg",
+      "confidence": "high"
+    },
+    {
+      "id": "103",
+      "name": "Pineapple",
+      "slug": "pineapple",
+      "confidence": "high"
+    },
+    {
+      "id": "105",
+      "name": "Grapes",
+      "slug": "grapes",
+      "confidence": "high"
+    },
+    {
+      "id": "107",
+      "name": "Lemon",
+      "slug": "lemon",
+      "confidence": "high"
+    },
+    {
+      "id": "111",
+      "name": "Tomato",
+      "slug": "tomato",
+      "confidence": "high"
+    },
+    {
+      "id": "115",
+      "name": "Rice Bowl",
+      "slug": "rice-bowl",
+      "confidence": "high"
+    },
+    {
+      "id": "117",
+      "name": "Soup Bowl",
+      "slug": "soup-bowl",
+      "confidence": "high"
+    },
+    {
+      "id": "132",
+      "name": "Olive",
+      "slug": "olive",
+      "confidence": "high"
+    },
+    {
+      "id": "134",
+      "name": "Mango Slice",
+      "slug": "mango-slice",
+      "confidence": "high"
+    },
+    {
+      "id": "136",
+      "name": "Milk Carton",
+      "slug": "milk-carton",
+      "confidence": "high"
+    },
+    {
+      "id": "140",
+      "name": "Apple Pie",
+      "slug": "apple-pie",
+      "confidence": "high"
+    },
+    {
+      "id": "146",
+      "name": "Butter Stick",
+      "slug": "butter-stick",
+      "confidence": "high"
+    },
+    {
+      "id": "148",
+      "name": "Sausage",
+      "slug": "sausage",
+      "confidence": "high"
+    },
+    {
+      "id": "150",
+      "name": "Bacon",
+      "slug": "bacon",
+      "confidence": "high"
+    },
+    {
+      "id": "152",
+      "name": "Cheese Wedge",
+      "slug": "cheese-wedge",
+      "confidence": "high"
+    },
+    {
+      "id": "156",
+      "name": "French Fries",
+      "slug": "french-fries",
+      "confidence": "high"
+    },
+    {
+      "id": "158",
+      "name": "Hamburger",
+      "slug": "hamburger",
+      "confidence": "high"
+    },
+    {
+      "id": "160",
+      "name": "Chicken Drumstick",
+      "slug": "chicken-drumstick",
+      "confidence": "high"
+    },
+    {
+      "id": "162",
+      "name": "Hot Dog",
+      "slug": "hot-dog",
+      "confidence": "high"
+    },
+    {
+      "id": "168",
+      "name": "Noodle Bowl",
+      "slug": "noodle-bowl",
+      "confidence": "high"
+    },
+    {
+      "id": "170",
+      "name": "Popcorn",
+      "slug": "popcorn",
+      "confidence": "high"
+    },
+    {
+      "id": "172",
+      "name": "Cracker",
+      "slug": "cracker",
+      "confidence": "high"
+    },
+    {
+      "id": "178",
+      "name": "Pizza Slice",
+      "slug": "pizza-slice",
+      "confidence": "high"
+    },
+    {
+      "id": "180",
+      "name": "Cinnamon Roll",
+      "slug": "cinnamon-roll",
+      "confidence": "high"
+    },
+    {
+      "id": "184",
+      "name": "Croissant",
+      "slug": "croissant",
+      "confidence": "high"
+    },
+    {
+      "id": "188",
+      "name": "Burrito Wrap",
+      "slug": "burrito-wrap",
+      "confidence": "high"
+    },
+    {
+      "id": "190",
+      "name": "Nachos Bowl",
+      "slug": "nachos-bowl",
+      "confidence": "high"
+    },
+    {
+      "id": "196",
+      "name": "Dip Bowl",
+      "slug": "dip-bowl",
+      "confidence": "high"
+    },
+    {
+      "id": "198",
+      "name": "Churros",
+      "slug": "churros",
+      "confidence": "high"
+    },
+    {
+      "id": "200",
+      "name": "Whipped Cream",
+      "slug": "whipped-cream",
+      "confidence": "high"
+    },
+    {
+      "id": "202",
+      "name": "Tofu",
+      "slug": "tofu",
+      "confidence": "high"
+    },
+    {
+      "id": "210",
+      "name": "Macaron",
+      "slug": "macaron",
+      "confidence": "high"
+    },
+    {
+      "id": "212",
+      "name": "Marshmallow",
+      "slug": "marshmallow",
+      "confidence": "high"
+    },
+    {
+      "id": "214",
+      "name": "Cashew",
+      "slug": "cashew",
+      "confidence": "high"
+    },
+    {
+      "id": "220",
+      "name": "Cotton Candy",
+      "slug": "cotton-candy",
+      "confidence": "high"
+    },
+    {
+      "id": "222",
+      "name": "Ice Cream Cone",
+      "slug": "ice-cream-cone",
+      "confidence": "high"
+    },
+    {
+      "id": "224",
+      "name": "Milkshake",
+      "slug": "milkshake",
+      "confidence": "high"
+    },
+    {
+      "id": "226",
+      "name": "Mochi",
+      "slug": "mochi",
+      "confidence": "high"
+    },
+    {
+      "id": "228",
+      "name": "Whipped Drink",
+      "slug": "whipped-drink",
+      "confidence": "high"
+    },
+    {
+      "id": "242",
+      "name": "Coconut",
+      "slug": "coconut",
+      "confidence": "high"
+    },
+    {
+      "id": "244",
+      "name": "Carrot",
+      "slug": "carrot",
+      "confidence": "high"
+    },
+    {
+      "id": "248",
+      "name": "Sandwich Cookie",
+      "slug": "sandwich-cookie-3",
+      "confidence": "high"
+    },
+    {
+      "id": "256",
+      "name": "Cereal Bowl",
+      "slug": "cereal-bowl",
+      "confidence": "high"
+    },
+    {
+      "id": "258",
+      "name": "Wafer Sticks",
+      "slug": "wafer-sticks",
+      "confidence": "high"
+    },
+    {
+      "id": "270",
+      "name": "Oatmeal Bowl",
+      "slug": "oatmeal-bowl",
+      "confidence": "high"
+    },
+    {
+      "id": "274",
+      "name": "Honey Dipper",
+      "slug": "honey-dipper",
+      "confidence": "high"
+    },
+    {
+      "id": "284",
+      "name": "Mango",
+      "slug": "mango",
+      "confidence": "high"
+    },
+    {
+      "id": "286",
+      "name": "Peach",
+      "slug": "peach",
+      "confidence": "high"
+    },
+    {
+      "id": "288",
+      "name": "Bitten Apple",
+      "slug": "bitten-apple",
+      "confidence": "high"
+    },
+    {
+      "id": "296",
+      "name": "Avocado",
+      "slug": "avocado",
+      "confidence": "high"
+    },
+    {
+      "id": "304",
+      "name": "Flan",
+      "slug": "flan",
+      "confidence": "high"
+    },
+    {
+      "id": "306",
+      "name": "Bell Pepper",
+      "slug": "bell-pepper",
+      "confidence": "high"
+    },
+    {
+      "id": "308",
+      "name": "Corn",
+      "slug": "corn",
+      "confidence": "high"
+    },
+    {
+      "id": "310",
+      "name": "Pea Pod",
+      "slug": "pea-pod",
+      "confidence": "high"
+    },
+    {
+      "id": "318",
+      "name": "Beet",
+      "slug": "beet",
+      "confidence": "high"
+    },
+    {
+      "id": "320",
+      "name": "Gingerbread Cookie",
+      "slug": "gingerbread-cookie",
+      "confidence": "high"
+    },
+    {
+      "id": "322",
+      "name": "Snowflake Cookie",
+      "slug": "snowflake-cookie",
+      "confidence": "high"
+    },
+    {
+      "id": "324",
+      "name": "Sweet Potato",
+      "slug": "sweet-potato",
+      "confidence": "high"
+    },
+    {
+      "id": "328",
+      "name": "Maple Leaf Cookie",
+      "slug": "maple-leaf-cookie",
+      "confidence": "high"
+    },
+    {
+      "id": "330",
+      "name": "Cappuccino",
+      "slug": "cappuccino",
+      "confidence": "high"
+    },
+    {
+      "id": "332",
+      "name": "Hot Tea",
+      "slug": "hot-tea",
+      "confidence": "high"
+    },
+    {
+      "id": "336",
+      "name": "Tea Cup",
+      "slug": "tea-cup",
+      "confidence": "high"
+    },
+    {
+      "id": "338",
+      "name": "Coffee Cup",
+      "slug": "coffee-cup",
+      "confidence": "high"
+    },
+    {
+      "id": "340",
+      "name": "Cocoa Mug",
+      "slug": "cocoa-mug",
+      "confidence": "high"
+    },
+    {
+      "id": "344",
+      "name": "Cookie",
+      "slug": "cookie",
+      "confidence": "high"
+    },
+    {
+      "id": "352",
+      "name": "Cake Cube",
+      "slug": "cake-cube",
+      "confidence": "high"
+    },
+    {
+      "id": "365",
+      "name": "Rice Ball",
+      "slug": "rice-ball",
+      "confidence": "high"
+    },
+    {
+      "id": "367",
+      "name": "Sushi Roll",
+      "slug": "sushi-roll",
+      "confidence": "high"
+    },
+    {
+      "id": "369",
+      "name": "Berry Bowl",
+      "slug": "berry-bowl",
+      "confidence": "high"
+    },
+    {
+      "id": "375",
+      "name": "Berry Tart",
+      "slug": "berry-tart",
+      "confidence": "high"
+    },
+    {
+      "id": "387",
+      "name": "Cake Slice",
+      "slug": "cake-slice",
+      "confidence": "high"
+    },
+    {
+      "id": "391",
+      "name": "Ice Cream Cup",
+      "slug": "ice-cream-cup",
+      "confidence": "high"
+    },
+    {
+      "id": "393",
+      "name": "Milk Bottle",
+      "slug": "milk-bottle",
+      "confidence": "high"
+    },
+    {
+      "id": "409",
+      "name": "Honey Bottle",
+      "slug": "honey-bottle",
+      "confidence": "high"
+    },
+    {
+      "id": "413",
+      "name": "Syrup",
+      "slug": "syrup",
+      "confidence": "high"
+    },
+    {
+      "id": "429",
+      "name": "Skewer",
+      "slug": "skewer",
+      "confidence": "high"
+    },
+    {
+      "id": "441",
+      "name": "Mint Leaves",
+      "slug": "mint-leaves",
+      "confidence": "high"
+    },
+    {
+      "id": "443",
+      "name": "Pie Slice",
+      "slug": "pie-slice",
+      "confidence": "high"
+    },
+    {
+      "id": "445",
+      "name": "Strawberry Cake Slice",
+      "slug": "strawberry-cake-slice",
+      "confidence": "high"
+    },
+    {
+      "id": "459",
+      "name": "Citrus Slice",
+      "slug": "citrus-slice",
+      "confidence": "high"
+    },
+    {
+      "id": "465",
+      "name": "Papaya",
+      "slug": "papaya",
+      "confidence": "high"
+    },
+    {
+      "id": "475",
+      "name": "Bitten Cookie",
+      "slug": "bitten-cookie",
+      "confidence": "high"
+    },
+    {
+      "id": "513",
+      "name": "Bubble Tea",
+      "slug": "bubble-tea",
+      "confidence": "high"
+    },
+    {
+      "id": "516",
+      "name": "Fried Shrimp",
+      "slug": "fried-shrimp",
+      "confidence": "high"
+    },
+    {
+      "id": "522",
+      "name": "Bento Box",
+      "slug": "bento-box",
+      "confidence": "high"
+    },
+    {
+      "id": "525",
+      "name": "Tofu Block",
+      "slug": "tofu-block",
+      "confidence": "high"
+    },
+    {
+      "id": "533",
+      "name": "Soup Spoon",
+      "slug": "soup-spoon",
+      "confidence": "high"
+    },
+    {
+      "id": "547",
+      "name": "Snack Bag",
+      "slug": "snack-bag",
+      "confidence": "high"
+    },
+    {
+      "id": "549",
+      "name": "Cucumber",
+      "slug": "cucumber",
+      "confidence": "high"
+    },
+    {
+      "id": "569",
+      "name": "Ravioli",
+      "slug": "ravioli",
+      "confidence": "high"
+    },
+    {
+      "id": "575",
+      "name": "Garlic",
+      "slug": "garlic",
+      "confidence": "high"
+    },
+    {
+      "id": "581",
+      "name": "Wrap",
+      "slug": "wrap",
+      "confidence": "high"
+    },
+    {
+      "id": "618",
+      "name": "Watermelon Slice",
+      "slug": "watermelon-slice",
+      "confidence": "high"
+    },
+    {
+      "id": "620",
+      "name": "Orange",
+      "slug": "orange-2",
+      "confidence": "high"
+    },
+    {
+      "id": "622",
+      "name": "Plum",
+      "slug": "plum",
+      "confidence": "high"
+    },
+    {
+      "id": "630",
+      "name": "Orange Slice",
+      "slug": "orange-slice",
+      "confidence": "high"
+    },
+    {
+      "id": "636",
+      "name": "Peanut",
+      "slug": "peanut",
+      "confidence": "high"
+    },
+    {
+      "id": "640",
+      "name": "Leafy Herb",
+      "slug": "leafy-herb",
+      "confidence": "high"
+    },
+    {
+      "id": "644",
+      "name": "Walnut",
+      "slug": "walnut",
+      "confidence": "high"
+    },
+    {
+      "id": "646",
+      "name": "Almond",
+      "slug": "almond",
+      "confidence": "high"
+    },
+    {
+      "id": "648",
+      "name": "Potato",
+      "slug": "potato",
+      "confidence": "high"
+    }
+  ]
+}
