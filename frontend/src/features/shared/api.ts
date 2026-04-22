@@ -66,6 +66,12 @@ export type ApiPlanSelection = {
   mealId: string;
 };
 
+export type ApiWeeklyPlan = {
+  id: string;
+  weekStartDate: string;
+  selections: ApiPlanSelection[];
+};
+
 export type ApiValidationIssue = {
   code: string;
   message: string;
@@ -228,6 +234,27 @@ export function deleteMeal(mealId: string) {
   });
 }
 
+export function getWeeklyPlan(weekStartDate: string) {
+  return fetch(apiUrl(`/weekly-plans/${weekStartDate}`)).then(async (response) => {
+    if (response.status === 404) {
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      weeklyPlan: ApiWeeklyPlan;
+      validationIssues: ApiValidationIssue[];
+      groceryList: ApiGroceryListItem[];
+      message?: string;
+    };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Weekly plan request failed: ${response.status}`);
+    }
+
+    return data;
+  });
+}
+
 export function previewWeeklyPlan(payload: { weekStartDate: string; selections: Array<{ day: string; mealId: string }> }) {
   return fetch(apiUrl("/weekly-plans/preview"), {
     method: "POST",
@@ -248,5 +275,32 @@ export function previewWeeklyPlan(payload: { weekStartDate: string; selections: 
     }
 
     return data;
+  });
+}
+
+export function saveWeeklyPlan(payload: { weekStartDate: string; selections: Array<{ day: string; mealId: string }> }) {
+  return fetch(apiUrl(`/weekly-plans/${payload.weekStartDate}`), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ selections: payload.selections }),
+  }).then(async (response) => {
+    const data = (await response.json()) as {
+      weeklyPlan?: ApiWeeklyPlan;
+      validationIssues?: ApiValidationIssue[];
+      groceryList?: ApiGroceryListItem[];
+      message?: string;
+    };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Weekly plan save failed: ${response.status}`);
+    }
+
+    return data as {
+      weeklyPlan: ApiWeeklyPlan;
+      validationIssues: ApiValidationIssue[];
+      groceryList: ApiGroceryListItem[];
+    };
   });
 }

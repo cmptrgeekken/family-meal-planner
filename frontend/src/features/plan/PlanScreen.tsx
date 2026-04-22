@@ -1,56 +1,88 @@
-import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { EmptyState } from "../../components/EmptyState";
 import { SectionCard } from "../../components/SectionCard";
 import { StatusMessage } from "../../components/StatusMessage";
-import { getMeals, previewWeeklyPlan, type ApiMeal } from "../shared/api";
+import { getMeals, getWeeklyPlan, previewWeeklyPlan, saveWeeklyPlan, type ApiMeal } from "../shared/api";
 
 const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
 export function PlanScreen() {
+  const queryClient = useQueryClient();
+  const weekStartDate = useMemo(getUpcomingMondayIso, []);
   const mealsQuery = useQuery({
     queryKey: ["meals", "plan-screen"],
     queryFn: () => getMeals({}),
   });
+  const savedPlanQuery = useQuery({
+    queryKey: ["weekly-plan", weekStartDate],
+    queryFn: () => getWeeklyPlan(weekStartDate),
+  });
   const meals = mealsQuery.data?.meals ?? [];
 
-  const [selections, setSelections] = useState<Record<(typeof weekdays)[number], string>>({
-    Monday: "",
-    Tuesday: "",
-    Wednesday: "",
-    Thursday: "",
-    Friday: "",
-    Saturday: "",
-    Sunday: "",
-  });
+  const [selections, setSelections] = useState<Record<(typeof weekdays)[number], string>>(getEmptySelections);
 
   const preview = useMutation({
     mutationFn: () =>
       previewWeeklyPlan({
-        weekStartDate: getUpcomingMondayIso(),
-        selections: weekdays
-          .filter((day) => selections[day])
-          .map((day) => ({ day, mealId: selections[day] as string })),
+        weekStartDate,
+        selections: getSelectedMeals(selections),
       }),
+  });
+  const savePlan = useMutation({
+    mutationFn: () =>
+      saveWeeklyPlan({
+        weekStartDate,
+        selections: getSelectedMeals(selections),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["weekly-plan", weekStartDate] });
+    },
   });
 
   const mealById = useMemo(() => new Map(meals.map((meal) => [meal.id, meal])), [meals]);
+  const hasSelections = weekdays.some((day) => selections[day]);
+  const feedbackData = preview.data ?? savePlan.data;
+
+  useEffect(() => {
+    if (!savedPlanQuery.data?.weeklyPlan) {
+      return;
+    }
+
+    const nextSelections = getEmptySelections();
+
+    for (const selection of savedPlanQuery.data.weeklyPlan.selections) {
+      nextSelections[selection.day] = selection.mealId;
+    }
+
+    setSelections(nextSelections);
+  }, [savedPlanQuery.data]);
 
   return (
     <div className="screen-layout">
       <SectionCard
         title="Weekly Plan"
-        subtitle="Build the week from a single phone-friendly surface, then preview grocery output before saving anything."
+        subtitle={`Build and save dinners for the week of ${weekStartDate}.`}
         actions={
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => preview.mutate()}
-            disabled={preview.isPending || meals.length === 0}
-          >
-            {preview.isPending ? "Previewing..." : "Preview Week"}
-          </button>
+          <div className="toggle-row">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => preview.mutate()}
+              disabled={preview.isPending || meals.length === 0 || !hasSelections}
+            >
+              {preview.isPending ? "Previewing..." : "Preview Week"}
+            </button>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => savePlan.mutate()}
+              disabled={savePlan.isPending || meals.length === 0 || !hasSelections}
+            >
+              {savePlan.isPending ? "Saving..." : "Save Week"}
+            </button>
+          </div>
         }
       >
         {mealsQuery.isLoading ? <p>Loading meals...</p> : null}
@@ -59,6 +91,17 @@ export function PlanScreen() {
             tone="error"
             title="Meals unavailable"
             message="The planner needs meal data from the backend before a week can be built."
+          />
+        ) : null}
+        {savedPlanQuery.isLoading ? <p>Checking for a saved plan...</p> : null}
+        {savePlan.isSuccess ? (
+          <StatusMessage tone="success" title="Week saved" message="This dinner plan is now persisted." />
+        ) : null}
+        {savePlan.isError ? (
+          <StatusMessage
+            tone="error"
+            title="Could not save week"
+            message={savePlan.error instanceof Error ? savePlan.error.message : "The weekly plan could not be saved."}
           />
         ) : null}
         {!mealsQuery.isLoading && meals.length === 0 ? (
@@ -119,15 +162,15 @@ export function PlanScreen() {
             message="The API could not preview the current selections. Check that the backend is running and seeded."
           />
         ) : null}
-        {preview.data ? (
+        {feedbackData ? (
           <div className="preview-grid">
             <div className="mini-panel">
               <h3>Validation</h3>
-              {preview.data.validationIssues.length === 0 ? (
+              {feedbackData.validationIssues.length === 0 ? (
                 <p>No rule violations in this preview.</p>
               ) : (
                 <ul className="plain-list">
-                  {preview.data.validationIssues.map((issue) => (
+                  {feedbackData.validationIssues.map((issue) => (
                     <li key={`${issue.code}-${issue.mealId ?? issue.message}`}>{issue.message}</li>
                   ))}
                 </ul>
@@ -135,11 +178,11 @@ export function PlanScreen() {
             </div>
             <div className="mini-panel">
               <h3>Grocery Snapshot</h3>
-              {preview.data.groceryList.length === 0 ? (
+              {feedbackData.groceryList.length === 0 ? (
                 <p>No grocery items generated yet.</p>
               ) : (
                 <ul className="plain-list">
-                  {preview.data.groceryList.slice(0, 8).map((item) => (
+                  {feedbackData.groceryList.slice(0, 8).map((item) => (
                     <li key={`${item.group}-${item.name}`}>
                       <strong>{item.name}</strong> <span className="muted-text">({item.group})</span>
                     </li>
@@ -152,6 +195,22 @@ export function PlanScreen() {
       </SectionCard>
     </div>
   );
+}
+
+function getEmptySelections() {
+  return {
+    Monday: "",
+    Tuesday: "",
+    Wednesday: "",
+    Thursday: "",
+    Friday: "",
+    Saturday: "",
+    Sunday: "",
+  };
+}
+
+function getSelectedMeals(selections: Record<(typeof weekdays)[number], string>) {
+  return weekdays.filter((day) => selections[day]).map((day) => ({ day, mealId: selections[day] as string }));
 }
 
 function MealSummaryChip({ meal }: { meal: ApiMeal }) {
