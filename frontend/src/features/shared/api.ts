@@ -97,6 +97,24 @@ export function getCategories() {
   return fetchJson<{ categories: ApiCategory[] }>("/categories");
 }
 
+export function createCategory(payload: { name: string; slug: string; iconId?: string | null }) {
+  return fetch(apiUrl("/categories"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }).then(async (response) => {
+    const data = (await response.json()) as { category: ApiCategory; message?: string };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Category create failed: ${response.status}`);
+    }
+
+    return data;
+  });
+}
+
 export function updateCategory(categoryId: string, payload: { name: string; slug: string; iconId?: string | null }) {
   return fetch(apiUrl(`/categories/${categoryId}`), {
     method: "PUT",
@@ -112,6 +130,19 @@ export function updateCategory(categoryId: string, payload: { name: string; slug
     }
 
     return data;
+  });
+}
+
+export function deleteCategory(categoryId: string) {
+  return fetch(apiUrl(`/categories/${categoryId}`), {
+    method: "DELETE",
+  }).then(async (response) => {
+    if (response.status === 204) {
+      return;
+    }
+
+    const data = (await response.json()) as { message?: string };
+    throw new Error(data.message ?? `Category delete failed: ${response.status}`);
   });
 }
 

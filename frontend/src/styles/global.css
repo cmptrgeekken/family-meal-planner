@@ -457,6 +457,42 @@ button:disabled {
   color: var(--text);
 }
 
+.category-editor-form {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.category-create-form {
+  margin: 0.85rem 0 1rem;
+  padding: 0.85rem;
+  border: 1px dashed rgba(112, 78, 44, 0.24);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.category-editor-form input,
+.category-editor-form select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: white;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.8rem;
+  color: var(--text);
+}
+
+.category-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.danger-button {
+  color: #a33d33;
+  border-color: rgba(163, 61, 51, 0.28);
+}
+
 .toggle-row {
   display: flex;
   flex-wrap: wrap;
