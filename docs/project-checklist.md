@@ -152,9 +152,9 @@ Priority order:
 - [x] PNG downloads are rasterized from the generated SVG at 300 DPI.
 - [x] Download controls are available without scrolling through the category list.
 - [x] Basic loading and error states exist for category, manifest, icon artwork, and PNG export failures.
-- [ ] Move SVG layout and export math out of `MagnetsScreen.tsx` into a dedicated utility module.
-- [ ] Add unit tests for row/column layout, inner/outer diameter behavior, label sizing, and sheet dimensions.
-- [ ] Add snapshot-style tests for generated SVG structure.
+- [x] Move SVG layout and export math out of `MagnetsScreen.tsx` into a dedicated utility module.
+- [x] Add unit tests for row/column layout, inner/outer diameter behavior, label sizing, and sheet dimensions.
+- [x] Add snapshot-style tests for generated SVG structure.
 - [ ] Add a browser-level test that verifies downloaded SVGs contain embedded icon data instead of `/icons/...` paths.
 - [ ] Add a browser-level test for PNG export success.
 - [ ] Decide whether labels should support wrapping, truncation, or dedicated short print labels.
@@ -177,7 +177,7 @@ Deferred export ideas:
 - [x] Dev/test scripts generate Prisma client before using it.
 - [x] Add focused frontend component or interaction tests.
 - [ ] Add E2E coverage for the highest-value flows.
-- [ ] Add regression tests for magnet export layout and download behavior.
+- [x] Add regression tests for magnet export layout and generated SVG structure. Browser-level download behavior remains open.
 - [ ] Add linting if the project standardizes on a linter.
 - [ ] Add CI once repository hosting/branch workflow is settled.
 
