@@ -1,57 +1,72 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { EmptyState } from "../../components/EmptyState";
 import { SectionCard } from "../../components/SectionCard";
-import { getMeals, previewWeeklyPlan } from "../shared/api";
+import { StatusMessage } from "../../components/StatusMessage";
+import { getWeeklyPlan } from "../shared/api";
 
 export function GroceryScreen() {
-  const mealsQuery = useQuery({
-    queryKey: ["meals", "grocery-screen"],
-    queryFn: () => getMeals({}),
+  const weekStartDate = useMemo(getUpcomingMondayIso, []);
+  const weeklyPlanQuery = useQuery({
+    queryKey: ["weekly-plan", weekStartDate, "grocery"],
+    queryFn: () => getWeeklyPlan(weekStartDate),
   });
-
-  const preview = useMutation({
-    mutationFn: async () => {
-      const meals = mealsQuery.data?.meals ?? [];
-      return previewWeeklyPlan({
-        weekStartDate: getUpcomingMondayIso(),
-        selections: meals.slice(0, 3).map((meal, index) => ({
-          day: ["Monday", "Tuesday", "Wednesday"][index] ?? "Monday",
-          mealId: meal.id,
-        })),
-      });
-    },
-  });
+  const groceryList = weeklyPlanQuery.data?.groceryList ?? [];
 
   return (
     <div className="screen-layout">
       <SectionCard
-        title="Grocery Preview"
-        subtitle="This screen will eventually become the practical shopping companion. For now it previews grouped items from a sample plan."
+        title="Grocery List"
+        subtitle={`Generated from the saved dinner plan for the week of ${weekStartDate}.`}
         actions={
-          <button type="button" className="primary-button" onClick={() => preview.mutate()} disabled={preview.isPending}>
-            {preview.isPending ? "Generating..." : "Generate Sample"}
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => void weeklyPlanQuery.refetch()}
+            disabled={weeklyPlanQuery.isFetching}
+          >
+            {weeklyPlanQuery.isFetching ? "Refreshing..." : "Refresh"}
           </button>
         }
       >
-        {preview.data ? (
+        {weeklyPlanQuery.isError ? (
+          <StatusMessage
+            tone="error"
+            title="Grocery list unavailable"
+            message="The saved weekly plan could not be loaded."
+          />
+        ) : null}
+        {weeklyPlanQuery.isLoading ? <p>Loading saved grocery list...</p> : null}
+        {!weeklyPlanQuery.isLoading && !weeklyPlanQuery.data ? (
+          <EmptyState
+            title="No saved week yet"
+            message="Save a weekly plan from the Plan screen, then come back here for the grocery list."
+          />
+        ) : null}
+        {weeklyPlanQuery.data && groceryList.length === 0 ? (
+          <EmptyState
+            title="No grocery items"
+            message="The saved week exists, but its selected meals do not have ingredients yet."
+          />
+        ) : null}
+        {groceryList.length > 0 ? (
           <div className="grocery-group-list">
-            {preview.data.groceryList.map((item) => (
+            {groceryList.map((item) => (
               <article key={`${item.group}-${item.name}`} className="grocery-item">
                 <div>
                   <strong>{item.name}</strong>
-                  <p>{item.group}</p>
+                  <p>
+                    {item.group}
+                    {item.quantityLabels.length > 0 ? ` - ${item.quantityLabels.join(", ")}` : ""}
+                  </p>
+                  <p className="muted-text">Used in: {item.usedInMeals.join(", ")}</p>
                 </div>
                 <small>{item.storeTags.join(", ") || "Unassigned store"}</small>
               </article>
             ))}
           </div>
-        ) : (
-          <EmptyState
-            title="No grocery preview yet"
-            message="Generate a sample preview to see how the backend grocery grouping reads in the mobile UI."
-          />
-        )}
+        ) : null}
       </SectionCard>
     </div>
   );
