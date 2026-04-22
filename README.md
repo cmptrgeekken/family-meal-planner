@@ -24,6 +24,7 @@ Important remaining work is tracked in [docs/project-checklist.md](docs/project-
 - Implementation checklist: [docs/project-checklist.md](docs/project-checklist.md)
 - Backend API contract: [docs/backend-api.md](docs/backend-api.md)
 - Environment variables: [docs/environment.md](docs/environment.md)
+- Backup and restore: [docs/backup-restore.md](docs/backup-restore.md)
 - Decision records: [docs/decisions/](docs/decisions/)
 - Backend notes: [backend/README.md](backend/README.md)
 - Frontend notes: [frontend/README.md](frontend/README.md)

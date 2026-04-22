@@ -41,7 +41,7 @@ Priority order:
 - [x] Backend test runner starts and stops an isolated test database.
 - [x] README documents local development prerequisites.
 - [ ] Add a first-class production/self-hosting guide.
-- [ ] Document backup and restore expectations for local PostgreSQL data.
+- [x] Document backup and restore expectations for local PostgreSQL data.
 - [x] Add environment variable reference documentation.
 
 ## Data Model And Persistence
@@ -190,5 +190,6 @@ Deferred export ideas:
 - [x] Project checklist exists.
 - [x] Keep API docs in sync with route changes.
 - [x] Add environment variable reference documentation.
+- [x] Document backup and restore expectations for local PostgreSQL data.
 - [ ] Add setup, deployment, backup, and troubleshooting docs as the self-hosting story matures.
 - [ ] Add manual QA notes for complex visual/export workflows.
