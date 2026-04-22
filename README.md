@@ -66,6 +66,12 @@ This repository is currently in the initial project-setup stage. The goal of thi
 
 ## Local Development
 
+Prerequisites:
+
+- Docker with Docker Compose available as either `docker compose` or `docker-compose`.
+- On Fedora, the Compose plugin is usually installed with `sudo dnf install docker-compose-plugin`.
+- Your user needs Docker daemon access. If `sudo docker run hello-world` works but `npm run dev` fails with a Docker socket permission error, run `sudo usermod -aG docker $USER`, then log out and back in or run `newgrp docker`.
+
 Run the full hot-reload stack from the repository root:
 
 ```bash

@@ -1,4 +1,6 @@
-import { CostTier, IngredientType, PrismaClient } from "@prisma/client";
+import prismaClient from "@prisma/client";
+
+const { CostTier, IngredientType, PrismaClient } = prismaClient;
 
 const prisma = new PrismaClient();
 

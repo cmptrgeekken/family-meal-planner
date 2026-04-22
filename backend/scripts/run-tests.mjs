@@ -1,47 +1,18 @@
-import { spawn } from "node:child_process";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { runCommand, runCompose } from "../../scripts/docker-compose.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const backendDir = path.resolve(scriptDir, "..");
 const repoRoot = path.resolve(backendDir, "..");
 const composeFilePath = path.join(repoRoot, "docker-compose.yml");
 const testDatabaseUrl = "postgresql://mealplanner:mealplanner@localhost:5433/family_meal_planner_test";
-
-function runCommand(command, args, options = {}) {
-  const executable = process.platform === "win32" && (command === "npm" || command === "npx") ? "cmd.exe" : command;
-  const commandArgs =
-    process.platform === "win32" && (command === "npm" || command === "npx")
-      ? ["/d", "/s", "/c", `${command}.cmd`, ...args]
-      : args;
-
-  return new Promise((resolve, reject) => {
-    const child = spawn(executable, commandArgs, {
-      cwd: backendDir,
-      stdio: "inherit",
-      ...options,
-    });
-
-    child.on("error", reject);
-    child.on("close", (code, signal) => {
-      if (signal) {
-        reject(new Error(`${command} exited from signal ${signal}`));
-        return;
-      }
-
-      if (code !== 0) {
-        reject(new Error(`${command} exited with code ${code ?? "unknown"}`));
-        return;
-      }
-
-      resolve();
-    });
-  });
-}
+let testDatabaseStarted = false;
 
 async function main() {
-  await runCommand("docker", ["compose", "-f", composeFilePath, "up", "-d", "--wait", "db-test"]);
+  await runCompose(["-f", composeFilePath, "up", "-d", "--wait", "db-test"], { cwd: backendDir });
+  testDatabaseStarted = true;
 
   const commandEnv = {
     ...process.env,
@@ -49,6 +20,7 @@ async function main() {
     DATABASE_URL: testDatabaseUrl,
   };
 
+  await runCommand("npx", ["prisma", "generate"], { env: commandEnv });
   await runCommand("npx", ["prisma", "migrate", "deploy"], { env: commandEnv });
   await runCommand("npm", ["run", "prisma:seed"], { env: commandEnv });
 
@@ -64,11 +36,16 @@ async function main() {
 
 try {
   await main();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : error);
+  process.exitCode = 1;
 } finally {
-  try {
-    await runCommand("docker", ["compose", "-f", composeFilePath, "stop", "db-test"]);
-  } catch (error) {
-    console.error(error);
-    process.exitCode = 1;
+  if (testDatabaseStarted) {
+    try {
+      await runCompose(["-f", composeFilePath, "stop", "db-test"], { cwd: backendDir });
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : error);
+      process.exitCode = 1;
+    }
   }
 }

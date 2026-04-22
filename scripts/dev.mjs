@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { getArgs, getExecutable, runCommand, runCompose } from "./docker-compose.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
@@ -14,41 +15,6 @@ const defaultApiBaseUrl = "http://localhost:3001/api";
 
 const childProcesses = new Set();
 let shuttingDown = false;
-
-function getExecutable(command) {
-  return process.platform === "win32" && (command === "npm" || command === "npx") ? "cmd.exe" : command;
-}
-
-function getArgs(command, args) {
-  return process.platform === "win32" && (command === "npm" || command === "npx")
-    ? ["/d", "/s", "/c", `${command}.cmd`, ...args]
-    : args;
-}
-
-function runCommand(command, args, options = {}) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(getExecutable(command), getArgs(command, args), {
-      cwd: repoRoot,
-      stdio: "inherit",
-      ...options,
-    });
-
-    child.on("error", reject);
-    child.on("close", (code, signal) => {
-      if (signal) {
-        reject(new Error(`${command} exited from signal ${signal}`));
-        return;
-      }
-
-      if (code !== 0) {
-        reject(new Error(`${command} exited with code ${code ?? "unknown"}`));
-        return;
-      }
-
-      resolve();
-    });
-  });
-}
 
 function startDevProcess(name, cwd, command, args, env) {
   const child = spawn(getExecutable(command), getArgs(command, args), {
@@ -93,21 +59,36 @@ const devEnv = {
   VITE_API_BASE_URL: process.env.VITE_API_BASE_URL ?? defaultApiBaseUrl,
 };
 
-console.log("Starting PostgreSQL dev database...");
-await runCommand("docker", ["compose", "-f", composeFilePath, "up", "-d", "--wait", "db"]);
+async function main() {
+  console.log("Starting PostgreSQL dev database...");
+  await runCompose(["-f", composeFilePath, "up", "-d", "--wait", "db"], { cwd: repoRoot });
 
-console.log("Applying database migrations...");
-await runCommand("npx", ["prisma", "migrate", "deploy"], {
-  cwd: backendDir,
-  env: devEnv,
-});
+  console.log("Generating Prisma client...");
+  await runCommand("npx", ["prisma", "generate"], {
+    cwd: backendDir,
+    env: devEnv,
+  });
 
-console.log("Seeding development data...");
-await runCommand("npm", ["run", "prisma:seed"], {
-  cwd: backendDir,
-  env: devEnv,
-});
+  console.log("Applying database migrations...");
+  await runCommand("npx", ["prisma", "migrate", "deploy"], {
+    cwd: backendDir,
+    env: devEnv,
+  });
 
-console.log("Starting API and UI hot-reload servers...");
-startDevProcess("Backend", backendDir, "npm", ["run", "dev"], devEnv);
-startDevProcess("Frontend", frontendDir, "npm", ["run", "dev"], devEnv);
+  console.log("Seeding development data...");
+  await runCommand("npm", ["run", "prisma:seed"], {
+    cwd: backendDir,
+    env: devEnv,
+  });
+
+  console.log("Starting API and UI hot-reload servers...");
+  startDevProcess("Backend", backendDir, "npm", ["run", "dev"], devEnv);
+  startDevProcess("Frontend", frontendDir, "npm", ["run", "dev"], devEnv);
+}
+
+try {
+  await main();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : error);
+  process.exitCode = 1;
+}
