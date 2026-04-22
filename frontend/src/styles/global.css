@@ -212,6 +212,10 @@ button:disabled {
   padding: 0.95rem;
 }
 
+.day-remove-button {
+  justify-self: start;
+}
+
 .day-card select,
 .filter-stack select,
 .field-grid input,

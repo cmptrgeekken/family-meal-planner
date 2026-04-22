@@ -23,7 +23,7 @@ Priority order:
 - [x] Add frontend meal create/edit/delete UI.
 - [x] Add parent-friendly ingredient editing inside meal management.
 - [x] Save weekly plans from the planning screen.
-- [ ] Add fast replace/remove meal actions on an existing weekly plan.
+- [x] Add fast replace/remove meal actions on an existing weekly plan.
 - [x] Generate grocery output from the current or saved weekly plan instead of sample meal selections.
 - [x] Add a phone-friendly shopping checklist experience.
 - [ ] Add child-friendly visual category/meal picking after custom categories are manageable.
@@ -98,7 +98,7 @@ Priority order:
 - [x] Planning domain logic and tests exist.
 - [x] Weekday/slot domain helpers exist.
 - [x] Save weekly plans from the planning screen.
-- [ ] Add fast replace/remove meal actions for existing weekly plans.
+- [x] Add fast replace/remove meal actions for existing weekly plans.
 - [ ] Add fast parent weekly planning workflow polish.
 - [ ] Add child-friendly visual meal picker/magnet board interactions.
 - [ ] Add non-drag accessible alternatives for assigning meals.

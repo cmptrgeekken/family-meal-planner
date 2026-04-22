@@ -69,6 +69,14 @@ export function PlanScreen() {
             <button
               type="button"
               className="secondary-button"
+              onClick={() => setSelections(getEmptySelections())}
+              disabled={!hasSelections || savePlan.isPending || preview.isPending}
+            >
+              Clear Week
+            </button>
+            <button
+              type="button"
+              className="secondary-button"
               onClick={() => preview.mutate()}
               disabled={preview.isPending || meals.length === 0 || !hasSelections}
             >
@@ -138,6 +146,20 @@ export function PlanScreen() {
                     ))}
                   </select>
                   {selectedMeal ? <MealSummaryChip meal={selectedMeal} /> : null}
+                  {selectedMeal ? (
+                    <button
+                      type="button"
+                      className="secondary-button day-remove-button"
+                      onClick={() =>
+                        setSelections((current) => ({
+                          ...current,
+                          [day]: "",
+                        }))
+                      }
+                    >
+                      Remove {day}
+                    </button>
+                  ) : null}
                 </label>
               );
             })}
