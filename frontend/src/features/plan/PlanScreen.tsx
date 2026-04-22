@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { EmptyState } from "../../components/EmptyState";
 import { SectionCard } from "../../components/SectionCard";
 import { StatusMessage } from "../../components/StatusMessage";
-import { getMeals, getWeeklyPlan, previewWeeklyPlan, saveWeeklyPlan, type ApiMeal } from "../shared/api";
+import { getCategories, getMeals, getWeeklyPlan, previewWeeklyPlan, saveWeeklyPlan, type ApiMeal } from "../shared/api";
 
 const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
@@ -15,13 +15,20 @@ export function PlanScreen() {
     queryKey: ["meals", "plan-screen"],
     queryFn: () => getMeals({}),
   });
+  const categoriesQuery = useQuery({
+    queryKey: ["categories", "plan-screen"],
+    queryFn: getCategories,
+  });
   const savedPlanQuery = useQuery({
     queryKey: ["weekly-plan", weekStartDate],
     queryFn: () => getWeeklyPlan(weekStartDate),
   });
   const meals = mealsQuery.data?.meals ?? [];
+  const categories = categoriesQuery.data?.categories ?? [];
 
   const [selections, setSelections] = useState<Record<(typeof weekdays)[number], string>>(getEmptySelections);
+  const [categorySelections, setCategorySelections] =
+    useState<Record<(typeof weekdays)[number], string>>(getEmptySelections);
 
   const preview = useMutation({
     mutationFn: () =>
@@ -42,6 +49,15 @@ export function PlanScreen() {
   });
 
   const mealById = useMemo(() => new Map(meals.map((meal) => [meal.id, meal])), [meals]);
+  const mealsByCategorySlug = useMemo(() => {
+    const map = new Map<string, ApiMeal[]>();
+
+    for (const meal of meals) {
+      map.set(meal.categorySlug, [...(map.get(meal.categorySlug) ?? []), meal]);
+    }
+
+    return map;
+  }, [meals]);
   const hasSelections = weekdays.some((day) => selections[day]);
   const feedbackData = preview.data ?? savePlan.data;
 
@@ -51,13 +67,27 @@ export function PlanScreen() {
     }
 
     const nextSelections = getEmptySelections();
+    const nextCategorySelections = getEmptySelections();
 
     for (const selection of savedPlanQuery.data.weeklyPlan.selections) {
       nextSelections[selection.day] = selection.mealId;
+      nextCategorySelections[selection.day] = mealById.get(selection.mealId)?.categorySlug ?? "";
     }
 
     setSelections(nextSelections);
-  }, [savedPlanQuery.data]);
+    setCategorySelections(nextCategorySelections);
+  }, [mealById, savedPlanQuery.data]);
+
+  function clearDay(day: (typeof weekdays)[number]) {
+    setSelections((current) => ({
+      ...current,
+      [day]: "",
+    }));
+    setCategorySelections((current) => ({
+      ...current,
+      [day]: "",
+    }));
+  }
 
   return (
     <div className="screen-layout">
@@ -69,7 +99,10 @@ export function PlanScreen() {
             <button
               type="button"
               className="secondary-button"
-              onClick={() => setSelections(getEmptySelections())}
+              onClick={() => {
+                setSelections(getEmptySelections());
+                setCategorySelections(getEmptySelections());
+              }}
               disabled={!hasSelections || savePlan.isPending || preview.isPending}
             >
               Clear Week
@@ -101,6 +134,13 @@ export function PlanScreen() {
             message="The planner needs meal data from the backend before a week can be built."
           />
         ) : null}
+        {categoriesQuery.isError ? (
+          <StatusMessage
+            tone="error"
+            title="Categories unavailable"
+            message="The planner needs category data before category-first planning can work."
+          />
+        ) : null}
         {savedPlanQuery.isLoading ? <p>Checking for a saved plan...</p> : null}
         {savePlan.isSuccess ? (
           <StatusMessage tone="success" title="Week saved" message="This dinner plan is now persisted." />
@@ -130,7 +170,30 @@ export function PlanScreen() {
                     <span className="slot-pill">Dinner</span>
                   </div>
                   <select
+                    value={categorySelections[day]}
+                    onChange={(event) => {
+                      const categorySlug = event.target.value;
+                      setCategorySelections((current) => ({
+                        ...current,
+                        [day]: categorySlug,
+                      }));
+                      setSelections((current) => ({
+                        ...current,
+                        [day]:
+                          categorySlug && mealById.get(current[day])?.categorySlug === categorySlug ? current[day] : "",
+                      }));
+                    }}
+                  >
+                    <option value="">Choose a category</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.slug}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
                     value={selections[day]}
+                    disabled={!categorySelections[day]}
                     onChange={(event) =>
                       setSelections((current) => ({
                         ...current,
@@ -138,8 +201,10 @@ export function PlanScreen() {
                       }))
                     }
                   >
-                    <option value="">Choose a meal</option>
-                    {meals.map((meal) => (
+                    <option value="">
+                      {categorySelections[day] ? "Choose a meal" : "Choose a category first"}
+                    </option>
+                    {(mealsByCategorySlug.get(categorySelections[day]) ?? []).map((meal) => (
                       <option key={meal.id} value={meal.id}>
                         {meal.name}
                       </option>
@@ -150,12 +215,7 @@ export function PlanScreen() {
                     <button
                       type="button"
                       className="secondary-button day-remove-button"
-                      onClick={() =>
-                        setSelections((current) => ({
-                          ...current,
-                          [day]: "",
-                        }))
-                      }
+                      onClick={() => clearDay(day)}
                     >
                       Remove {day}
                     </button>

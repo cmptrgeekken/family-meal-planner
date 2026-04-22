@@ -99,6 +99,7 @@ Priority order:
 - [x] Weekday/slot domain helpers exist.
 - [x] Save weekly plans from the planning screen.
 - [x] Add fast replace/remove meal actions for existing weekly plans.
+- [x] Add category-first meal narrowing for parent planning.
 - [ ] Add fast parent weekly planning workflow polish.
 - [ ] Add child-friendly visual meal picker/magnet board interactions.
 - [ ] Add non-drag accessible alternatives for assigning meals.
