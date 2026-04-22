@@ -689,6 +689,22 @@ button:disabled {
   text-align: right;
 }
 
+.grocery-diagnostics {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.grocery-diagnostics summary {
+  cursor: pointer;
+  color: var(--accent-blue);
+  font-weight: 700;
+}
+
+.grocery-diagnostics p {
+  margin-top: 0.35rem;
+}
+
 .grocery-item-checked {
   opacity: 0.62;
 }

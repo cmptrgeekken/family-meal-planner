@@ -110,6 +110,13 @@ export function GroceryScreen() {
                       {item.quantityLabels.length > 0 ? ` - ${item.quantityLabels.join(", ")}` : ""}
                     </p>
                     <p className="muted-text">Used in: {item.usedInMeals.join(", ")}</p>
+                    <details className="grocery-diagnostics">
+                      <summary>Why is this here?</summary>
+                      <p>
+                        Included because {item.usedInMeals.join(", ")} use {item.name}
+                        {item.quantityLabels.length > 0 ? ` (${item.quantityLabels.join(", ")})` : ""}.
+                      </p>
+                    </details>
                   </div>
                   <small className="grocery-store-tag">{item.storeTags.join(", ") || "Unassigned store"}</small>
                 </article>

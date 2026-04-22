@@ -116,7 +116,7 @@ Priority order:
 - [x] Generate grocery output from the current or saved weekly plan instead of sample meal selections.
 - [x] Add persistent shopping checklist state for real shopping use.
 - [x] Add stronger UX for real store use on phones.
-- [ ] Add diagnostics for why an item appears on the grocery list.
+- [x] Add diagnostics for why an item appears on the grocery list.
 
 ## Settings And Icon Assignment
 
