@@ -16,7 +16,7 @@ export function SectionCard({ title, subtitle, actions, className, children }: S
           <h2>{title}</h2>
           {subtitle ? <p>{subtitle}</p> : null}
         </div>
-        {actions ? <div>{actions}</div> : null}
+        {actions ? <div className="section-card-actions">{actions}</div> : null}
       </header>
       <div className="section-card-body">{children}</div>
     </section>

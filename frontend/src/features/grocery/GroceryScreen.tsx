@@ -51,7 +51,7 @@ export function GroceryScreen() {
         title="Grocery List"
         subtitle={`Generated from the saved dinner plan for the week of ${weekStartDate}. ${checkedCount}/${groceryList.length} checked.`}
         actions={
-          <div className="toggle-row">
+          <div className="toggle-row grocery-action-row">
             <button
               type="button"
               className="secondary-button"
@@ -92,37 +92,42 @@ export function GroceryScreen() {
           />
         ) : null}
         {groceryList.length > 0 ? (
-          <div className="grocery-group-list">
-            {groceryList.map((item) => {
-              const itemKey = getGroceryItemKey(item.group, item.name);
-              const isChecked = checkedItems.has(itemKey);
+          <>
+            <div className="grocery-progress-bar" aria-hidden="true">
+              <span style={{ width: `${groceryList.length === 0 ? 0 : (checkedCount / groceryList.length) * 100}%` }} />
+            </div>
+            <div className="grocery-group-list">
+              {groceryList.map((item) => {
+                const itemKey = getGroceryItemKey(item.group, item.name);
+                const isChecked = checkedItems.has(itemKey);
 
-              return (
-                <article key={itemKey} className={isChecked ? "grocery-item grocery-item-checked" : "grocery-item"}>
-                  <label className="shopping-check">
-                    <input type="checkbox" checked={isChecked} onChange={() => toggleCheckedItem(itemKey)} />
-                    <span className="sr-only">Mark {item.name} as shopped</span>
-                  </label>
-                  <div className="grocery-item-copy">
-                    <strong>{item.name}</strong>
-                    <p>
-                      {item.group}
-                      {item.quantityLabels.length > 0 ? ` - ${item.quantityLabels.join(", ")}` : ""}
-                    </p>
-                    <p className="muted-text">Used in: {item.usedInMeals.join(", ")}</p>
-                    <details className="grocery-diagnostics">
-                      <summary>Why is this here?</summary>
+                return (
+                  <article key={itemKey} className={isChecked ? "grocery-item grocery-item-checked" : "grocery-item"}>
+                    <label className="shopping-check">
+                      <input type="checkbox" checked={isChecked} onChange={() => toggleCheckedItem(itemKey)} />
+                      <span className="sr-only">Mark {item.name} as shopped</span>
+                    </label>
+                    <div className="grocery-item-copy">
+                      <strong>{item.name}</strong>
                       <p>
-                        Included because {item.usedInMeals.join(", ")} use {item.name}
-                        {item.quantityLabels.length > 0 ? ` (${item.quantityLabels.join(", ")})` : ""}.
+                        {item.group}
+                        {item.quantityLabels.length > 0 ? ` - ${item.quantityLabels.join(", ")}` : ""}
                       </p>
-                    </details>
-                  </div>
-                  <small className="grocery-store-tag">{item.storeTags.join(", ") || "Unassigned store"}</small>
-                </article>
-              );
-            })}
-          </div>
+                      <p className="muted-text">Used in: {item.usedInMeals.join(", ")}</p>
+                      <details className="grocery-diagnostics">
+                        <summary>Why is this here?</summary>
+                        <p>
+                          Included because {item.usedInMeals.join(", ")} use {item.name}
+                          {item.quantityLabels.length > 0 ? ` (${item.quantityLabels.join(", ")})` : ""}.
+                        </p>
+                      </details>
+                    </div>
+                    <small className="grocery-store-tag">{item.storeTags.join(", ") || "Unassigned store"}</small>
+                  </article>
+                );
+              })}
+            </div>
+          </>
         ) : null}
       </SectionCard>
     </div>

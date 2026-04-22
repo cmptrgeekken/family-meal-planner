@@ -36,7 +36,8 @@ body {
 button,
 select,
 input,
-a {
+a,
+textarea {
   font: inherit;
 }
 
@@ -126,6 +127,10 @@ button:disabled {
   padding: 1rem 1.15rem 1.15rem;
 }
 
+.section-card-actions {
+  width: 100%;
+}
+
 .primary-button {
   border: none;
   border-radius: 999px;
@@ -134,6 +139,7 @@ button:disabled {
   padding: 0.8rem 1.05rem;
   font-weight: 700;
   box-shadow: 0 12px 24px rgba(196, 95, 45, 0.22);
+  min-height: 2.8rem;
 }
 
 .secondary-button {
@@ -143,6 +149,7 @@ button:disabled {
   color: var(--text);
   padding: 0.8rem 1.05rem;
   font-weight: 700;
+  min-height: 2.8rem;
 }
 
 .bottom-nav {
@@ -212,6 +219,16 @@ button:disabled {
   padding: 0.95rem;
 }
 
+.plan-summary-bar {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(85, 124, 153, 0.18);
+  border-radius: 1rem;
+  background: rgba(85, 124, 153, 0.08);
+}
+
 .day-remove-button {
   justify-self: start;
 }
@@ -260,6 +277,8 @@ button:disabled {
   border: 1px solid var(--border);
   border-radius: 0.95rem;
   background: white;
+  color: var(--text);
+  font-size: 1rem;
   min-height: 3rem;
   padding: 0.8rem 0.9rem;
 }
@@ -540,6 +559,23 @@ button:disabled {
   gap: 0.65rem;
 }
 
+.toggle-row > button {
+  flex: 1 1 10rem;
+}
+
+.form-action-row,
+.planner-action-row,
+.grocery-action-row {
+  position: sticky;
+  bottom: 5.65rem;
+  z-index: 5;
+  margin: 0 -0.25rem;
+  padding: 0.55rem 0.25rem;
+  border-radius: 1rem;
+  background: rgba(255, 250, 243, 0.92);
+  backdrop-filter: blur(12px);
+}
+
 .unit-toggle {
   display: inline-flex;
   align-self: start;
@@ -567,6 +603,11 @@ button:disabled {
 .meal-card,
 .grocery-item {
   padding: 1rem;
+}
+
+.meal-card {
+  display: grid;
+  align-content: start;
 }
 
 .meal-card h3,
@@ -602,6 +643,10 @@ button:disabled {
   margin-top: 0.75rem;
 }
 
+.meal-card-actions button {
+  flex: 1 1 8rem;
+}
+
 .meal-card-ingredients span {
   padding: 0.35rem 0.55rem;
   border-radius: 999px;
@@ -631,6 +676,7 @@ button:disabled {
   background: white;
   padding: 0.8rem 0.9rem;
   color: var(--text);
+  font-size: 1rem;
   resize: vertical;
 }
 
@@ -670,13 +716,14 @@ button:disabled {
   min-height: 2.75rem;
   padding: 0.7rem 0.8rem;
   color: var(--text);
+  font-size: 1rem;
 }
 
 .grocery-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 1rem;
-  align-items: center;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
 }
 
 .grocery-item-copy {
@@ -684,9 +731,29 @@ button:disabled {
 }
 
 .grocery-store-tag {
-  justify-self: end;
-  color: var(--text);
-  text-align: right;
+  grid-column: 2;
+  justify-self: start;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(110, 141, 103, 0.1);
+  color: var(--accent-green);
+  text-align: left;
+}
+
+.grocery-progress-bar {
+  height: 0.7rem;
+  margin-bottom: 0.85rem;
+  overflow: hidden;
+  border: 1px solid rgba(110, 141, 103, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.grocery-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-green);
 }
 
 .grocery-diagnostics {
@@ -857,6 +924,16 @@ button:disabled {
     align-items: flex-start;
   }
 
+  .section-card-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .section-card-actions {
+    width: auto;
+  }
+
   .screen-layout {
     grid-template-columns: 1.25fr 0.95fr;
     align-items: start;
@@ -869,6 +946,27 @@ button:disabled {
 
   .meal-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-action-row,
+  .planner-action-row,
+  .grocery-action-row {
+    position: static;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .grocery-item {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .grocery-store-tag {
+    grid-column: auto;
+    justify-self: end;
+    text-align: right;
   }
 
   .ingredient-editor-row {

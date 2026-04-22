@@ -373,7 +373,7 @@ export function MealsScreen() {
             ))}
           </div>
 
-          <div className="toggle-row">
+          <div className="toggle-row form-action-row">
             <button type="submit" className="primary-button" disabled={isMealMutationPending}>
               {mealForm.id ? "Save meal" : "Add meal"}
             </button>

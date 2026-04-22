@@ -95,7 +95,7 @@ export function PlanScreen() {
         title="Weekly Plan"
         subtitle={`Build and save dinners for the week of ${weekStartDate}.`}
         actions={
-          <div className="toggle-row">
+          <div className="toggle-row planner-action-row">
             <button
               type="button"
               className="secondary-button"
@@ -159,6 +159,10 @@ export function PlanScreen() {
           />
         ) : null}
         {meals.length > 0 ? (
+          <div className="plan-summary-bar" aria-live="polite">
+            <strong>{weekdays.filter((day) => selections[day]).length}/7 dinners planned</strong>
+            <span className="muted-text">Preview before saving to catch repeat or premium limits.</span>
+          </div>
           <div className="day-stack">
             {weekdays.map((day) => {
               const selectedMeal = mealById.get(selections[day]);
@@ -196,6 +200,7 @@ export function PlanScreen() {
                     ))}
                   </div>
                   <select
+                    aria-label={`${day} dinner meal`}
                     value={selections[day]}
                     disabled={!categorySelections[day]}
                     onChange={(event) =>
