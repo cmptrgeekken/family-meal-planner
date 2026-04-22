@@ -5,8 +5,9 @@ import { EmptyState } from "../../components/EmptyState";
 import { SectionCard } from "../../components/SectionCard";
 import { StatusMessage } from "../../components/StatusMessage";
 import { getCategories, getMeals, getWeeklyPlan, previewWeeklyPlan, saveWeeklyPlan, type ApiMeal } from "../shared/api";
+import { getPlannerRuleHints, plannerWeekdays, type PlannerSelections } from "./planning-rule-hints";
 
-const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
+const weekdays = plannerWeekdays;
 
 export function PlanScreen() {
   const queryClient = useQueryClient();
@@ -306,7 +307,7 @@ export function PlanScreen() {
   );
 }
 
-function getEmptySelections() {
+function getEmptySelections(): PlannerSelections {
   return {
     Monday: "",
     Tuesday: "",
@@ -320,61 +321,6 @@ function getEmptySelections() {
 
 function getSelectedMeals(selections: Record<(typeof weekdays)[number], string>) {
   return weekdays.filter((day) => selections[day]).map((day) => ({ day, mealId: selections[day] as string }));
-}
-
-function getPlannerRuleHints(
-  selections: Record<(typeof weekdays)[number], string>,
-  mealById: Map<string, ApiMeal>,
-) {
-  const byDay = Object.fromEntries(weekdays.map((day) => [day, [] as string[]])) as Record<
-    (typeof weekdays)[number],
-    string[]
-  >;
-  const summary = new Set<string>();
-  const daysByMealId = new Map<string, Array<(typeof weekdays)[number]>>();
-  const premiumDays: Array<(typeof weekdays)[number]> = [];
-
-  for (const day of weekdays) {
-    const mealId = selections[day];
-
-    if (!mealId) {
-      continue;
-    }
-
-    daysByMealId.set(mealId, [...(daysByMealId.get(mealId) ?? []), day]);
-
-    if (mealById.get(mealId)?.costTier === "premium") {
-      premiumDays.push(day);
-    }
-  }
-
-  for (const [mealId, days] of daysByMealId) {
-    if (days.length <= 1) {
-      continue;
-    }
-
-    const mealName = mealById.get(mealId)?.name ?? "This meal";
-    const message = `${mealName} is planned ${days.length} times; the current limit is once per week.`;
-    summary.add(message);
-
-    for (const day of days) {
-      byDay[day].push(`Repeat limit: also planned on ${days.filter((otherDay) => otherDay !== day).join(", ")}.`);
-    }
-  }
-
-  if (premiumDays.length > 1) {
-    const message = `Premium limit: ${premiumDays.length} premium dinners selected; the current limit is one per week.`;
-    summary.add(message);
-
-    for (const day of premiumDays) {
-      byDay[day].push("Premium limit: choose only one premium dinner this week.");
-    }
-  }
-
-  return {
-    byDay,
-    summary: [...summary],
-  };
 }
 
 function MealSummaryChip({ meal }: { meal: ApiMeal }) {

@@ -175,7 +175,7 @@ Deferred export ideas:
 - [x] Backend tests cover health, categories, store tags, meals, planning, weekly plans, and grocery behavior.
 - [x] Frontend TypeScript build check runs through the frontend build script.
 - [x] Dev/test scripts generate Prisma client before using it.
-- [ ] Add focused frontend component or interaction tests.
+- [x] Add focused frontend component or interaction tests.
 - [ ] Add E2E coverage for the highest-value flows.
 - [ ] Add regression tests for magnet export layout and download behavior.
 - [ ] Add linting if the project standardizes on a linter.
