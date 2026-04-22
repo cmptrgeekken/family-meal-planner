@@ -38,15 +38,28 @@ The first export scope should be:
 - one label per category
 - one circular badge per exported category
 - one combined SVG output containing all requested magnets in a grid
+- self-contained downloaded SVGs with icon artwork embedded as data URIs, not linked to app-local `/icons/...` paths
+- PNG downloads rasterized from the same generated SVG for sharing, quick previews, and tools that do not handle SVG well
 
 The first layout model should expose:
 
-- circle diameter
+- inner diameter for visible icon and label content
+- outer diameter for the printable/cutout background circle and layout footprint
 - column count
 - horizontal gap
-- vertical gap
-- text font size
-- inner padding ratio for icon fit
+- a single fixed gutter used for sheet edges, vertical gaps, and minimum horizontal gaps
+- icon size derived from circle diameter
+- label size derived from circle diameter and constrained to 80% of the circle width
+- optional matched label sizing so every magnet uses the smallest computed label size
+- configurable background and foreground colors, with foreground applied to labels and embedded icon artwork
+- persisted local export settings for repeat use across browser refreshes
+
+The export screen should treat the generated sheet as the primary artifact:
+
+- Keep the SVG preview visible before the category selector on small screens.
+- On wider screens, use a two-column workspace with controls and category selection on the left and a sticky preview on the right.
+- Keep growing category lists scrollable or otherwise compact so additional categories do not push the preview below the fold.
+- Keep Download SVG available from the controls without requiring users to scroll through the category list.
 
 Recommended asset conventions:
 
@@ -62,16 +75,24 @@ Benefits:
 - Static public assets are easy to preview in the browser and easy to package into SVG exports.
 - Category/icon mapping can evolve without changing code every time a category is renamed.
 - The export feature can support both on-screen preview and downloadable SVG from the same rendering logic.
+- Embedded icon data lets downloaded SVGs render correctly when opened from `file://`, sent to another device, or printed outside the running app.
+- PNG export provides a broadly compatible fallback while preserving SVG as the editable source of truth.
+- Preview-first layout makes export adjustments easier to validate and keeps the generated artifact from being hidden behind a growing category list.
 - Database backups remain focused on user/application data instead of duplicating curated static artwork.
 
 Costs:
 
 - The frontend becomes responsible for some document-generation logic, not just screen rendering.
+- Export generation must fetch and parse selected icon SVGs before the preview/download can be considered ready.
+- PNG output is a raster snapshot, so it must pick a resolution; MVP uses 300 DPI based on the physical sheet dimensions.
 - Raw icon filenames like `10.svg`, `100.svg`, etc. are not very descriptive, so asset management will become awkward without metadata.
 - Category records will have references that must be validated against the current manifest.
 - If icons ever become user-uploaded rather than curated, the storage and validation model will need to change.
+- The export screen needs deliberate layout management as the category library grows; otherwise the selector becomes the dominant UI instead of the generated sheet.
 
 ## Follow-up
+
+Track implementation status in [../project-checklist.md](../project-checklist.md).
 
 Before implementation is complete, decide:
 
