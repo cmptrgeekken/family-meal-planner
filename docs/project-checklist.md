@@ -25,7 +25,7 @@ Priority order:
 - [x] Save weekly plans from the planning screen.
 - [ ] Add fast replace/remove meal actions on an existing weekly plan.
 - [x] Generate grocery output from the current or saved weekly plan instead of sample meal selections.
-- [ ] Add a phone-friendly shopping checklist experience.
+- [x] Add a phone-friendly shopping checklist experience.
 - [ ] Add child-friendly visual category/meal picking after custom categories are manageable.
 - [ ] Run a mobile/tablet usability pass across meal management, planning, and grocery flows.
 
@@ -113,8 +113,8 @@ Priority order:
 - [x] Grocery output includes quantity labels, store tags, and used-in meals.
 - [x] Grocery domain tests exist.
 - [x] Generate grocery output from the current or saved weekly plan instead of sample meal selections.
-- [ ] Add persistent shopping checklist state for real shopping use.
-- [ ] Add stronger UX for real store use on phones.
+- [x] Add persistent shopping checklist state for real shopping use.
+- [x] Add stronger UX for real store use on phones.
 - [ ] Add diagnostics for why an item appears on the grocery list.
 
 ## Settings And Icon Assignment

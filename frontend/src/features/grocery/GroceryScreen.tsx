@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { EmptyState } from "../../components/EmptyState";
@@ -8,26 +8,67 @@ import { getWeeklyPlan } from "../shared/api";
 
 export function GroceryScreen() {
   const weekStartDate = useMemo(getUpcomingMondayIso, []);
+  const storageKey = `family-meal-planner:grocery-checked:${weekStartDate}`;
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(window.localStorage.getItem(storageKey) ?? "[]") as string[]);
+    } catch {
+      return new Set();
+    }
+  });
   const weeklyPlanQuery = useQuery({
     queryKey: ["weekly-plan", weekStartDate, "grocery"],
     queryFn: () => getWeeklyPlan(weekStartDate),
   });
   const groceryList = weeklyPlanQuery.data?.groceryList ?? [];
+  const checkedCount = groceryList.filter((item) => checkedItems.has(getGroceryItemKey(item.group, item.name))).length;
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify([...checkedItems]));
+    } catch {
+      // Shopping progress is a convenience; the grocery list still works without local storage.
+    }
+  }, [checkedItems, storageKey]);
+
+  function toggleCheckedItem(itemKey: string) {
+    setCheckedItems((current) => {
+      const next = new Set(current);
+
+      if (next.has(itemKey)) {
+        next.delete(itemKey);
+      } else {
+        next.add(itemKey);
+      }
+
+      return next;
+    });
+  }
 
   return (
     <div className="screen-layout">
       <SectionCard
         title="Grocery List"
-        subtitle={`Generated from the saved dinner plan for the week of ${weekStartDate}.`}
+        subtitle={`Generated from the saved dinner plan for the week of ${weekStartDate}. ${checkedCount}/${groceryList.length} checked.`}
         actions={
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => void weeklyPlanQuery.refetch()}
-            disabled={weeklyPlanQuery.isFetching}
-          >
-            {weeklyPlanQuery.isFetching ? "Refreshing..." : "Refresh"}
-          </button>
+          <div className="toggle-row">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setCheckedItems(new Set())}
+              disabled={checkedItems.size === 0}
+            >
+              Clear checks
+            </button>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => void weeklyPlanQuery.refetch()}
+              disabled={weeklyPlanQuery.isFetching}
+            >
+              {weeklyPlanQuery.isFetching ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
         }
       >
         {weeklyPlanQuery.isError ? (
@@ -52,9 +93,17 @@ export function GroceryScreen() {
         ) : null}
         {groceryList.length > 0 ? (
           <div className="grocery-group-list">
-            {groceryList.map((item) => (
-              <article key={`${item.group}-${item.name}`} className="grocery-item">
-                <div>
+            {groceryList.map((item) => {
+              const itemKey = getGroceryItemKey(item.group, item.name);
+              const isChecked = checkedItems.has(itemKey);
+
+              return (
+                <article key={itemKey} className={isChecked ? "grocery-item grocery-item-checked" : "grocery-item"}>
+                  <label className="shopping-check">
+                    <input type="checkbox" checked={isChecked} onChange={() => toggleCheckedItem(itemKey)} />
+                    <span className="sr-only">Mark {item.name} as shopped</span>
+                  </label>
+                  <div>
                   <strong>{item.name}</strong>
                   <p>
                     {item.group}
@@ -64,12 +113,17 @@ export function GroceryScreen() {
                 </div>
                 <small>{item.storeTags.join(", ") || "Unassigned store"}</small>
               </article>
-            ))}
+              );
+            })}
           </div>
         ) : null}
       </SectionCard>
     </div>
   );
+}
+
+function getGroceryItemKey(group: string, name: string) {
+  return `${group}:${name}`;
 }
 
 function getUpcomingMondayIso() {
