@@ -26,7 +26,7 @@ Priority order:
 - [x] Add fast replace/remove meal actions on an existing weekly plan.
 - [x] Generate grocery output from the current or saved weekly plan instead of sample meal selections.
 - [x] Add a phone-friendly shopping checklist experience.
-- [ ] Add child-friendly visual category/meal picking after custom categories are manageable.
+- [x] Add child-friendly visual category/meal picking after custom categories are manageable.
 - [ ] Run a mobile/tablet usability pass across meal management, planning, and grocery flows.
 
 ## Infrastructure And Setup
@@ -101,8 +101,8 @@ Priority order:
 - [x] Add fast replace/remove meal actions for existing weekly plans.
 - [x] Add category-first meal narrowing for parent planning.
 - [ ] Add fast parent weekly planning workflow polish.
-- [ ] Add child-friendly visual meal picker/magnet board interactions.
-- [ ] Add non-drag accessible alternatives for assigning meals.
+- [ ] Add child-friendly visual meal picker/magnet board interactions. Category buttons exist; drag/drop magnet board remains deferred.
+- [x] Add non-drag accessible alternatives for assigning meals.
 - [ ] Add visible rule explanations when a planning choice is blocked.
 - [ ] Expand planning constraints such as repeat limits, premium limits, and balanced cost mix as product decisions settle.
 

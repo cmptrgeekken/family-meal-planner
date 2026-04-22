@@ -169,28 +169,32 @@ export function PlanScreen() {
                     <p className="day-label">{day}</p>
                     <span className="slot-pill">Dinner</span>
                   </div>
-                  <select
-                    value={categorySelections[day]}
-                    onChange={(event) => {
-                      const categorySlug = event.target.value;
-                      setCategorySelections((current) => ({
-                        ...current,
-                        [day]: categorySlug,
-                      }));
-                      setSelections((current) => ({
-                        ...current,
-                        [day]:
-                          categorySlug && mealById.get(current[day])?.categorySlug === categorySlug ? current[day] : "",
-                      }));
-                    }}
-                  >
-                    <option value="">Choose a category</option>
+                  <div className="planner-category-grid" aria-label={`${day} category`}>
                     {categories.map((category) => (
-                      <option key={category.id} value={category.slug}>
-                        {category.name}
-                      </option>
+                      <button
+                        key={category.id}
+                        type="button"
+                        className={
+                          categorySelections[day] === category.slug
+                            ? "planner-category-button planner-category-button-active"
+                            : "planner-category-button"
+                        }
+                        onClick={() => {
+                          setCategorySelections((current) => ({
+                            ...current,
+                            [day]: category.slug,
+                          }));
+                          setSelections((current) => ({
+                            ...current,
+                            [day]: mealById.get(current[day])?.categorySlug === category.slug ? current[day] : "",
+                          }));
+                        }}
+                      >
+                        {category.iconId ? <img src={`/icons/${category.iconId}.svg`} alt="" /> : null}
+                        <span>{category.name}</span>
+                      </button>
                     ))}
-                  </select>
+                  </div>
                   <select
                     value={selections[day]}
                     disabled={!categorySelections[day]}

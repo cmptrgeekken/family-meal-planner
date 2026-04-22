@@ -216,6 +216,41 @@ button:disabled {
   justify-self: start;
 }
 
+.planner-category-grid {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding: 0.1rem 0 0.35rem;
+  scroll-snap-type: x proximity;
+}
+
+.planner-category-button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--muted);
+  font-weight: 700;
+  scroll-snap-align: start;
+}
+
+.planner-category-button img {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
+.planner-category-button-active {
+  background: rgba(196, 95, 45, 0.14);
+  color: var(--accent);
+  border-color: rgba(196, 95, 45, 0.32);
+}
+
 .day-card select,
 .filter-stack select,
 .filter-stack input,
