@@ -27,7 +27,7 @@ Priority order:
 - [x] Generate grocery output from the current or saved weekly plan instead of sample meal selections.
 - [x] Add a phone-friendly shopping checklist experience.
 - [x] Add child-friendly visual category/meal picking after custom categories are manageable.
-- [ ] Run a mobile/tablet usability pass across meal management, planning, and grocery flows.
+- [x] Run a mobile/tablet usability pass across meal management, planning, and grocery flows.
 
 ## Infrastructure And Setup
 
@@ -76,7 +76,7 @@ Priority order:
 - [x] Screens exist for plan, meals, grocery, magnets, and settings.
 - [x] Shared section, empty-state, and status-message components exist.
 - [x] Frontend build uses `@vitejs/plugin-react`.
-- [ ] Review mobile/tablet ergonomics for meal management, weekly planning, and grocery flows.
+- [x] Review mobile/tablet ergonomics for meal management, weekly planning, and grocery flows.
 - [ ] Add richer loading, empty, and error states where screens are still thin.
 - [ ] Add accessible keyboard alternatives for any future drag/drop interactions.
 
@@ -103,7 +103,7 @@ Priority order:
 - [ ] Add fast parent weekly planning workflow polish.
 - [ ] Add child-friendly visual meal picker/magnet board interactions. Category buttons exist; drag/drop magnet board remains deferred.
 - [x] Add non-drag accessible alternatives for assigning meals.
-- [ ] Add visible rule explanations when a planning choice is blocked.
+- [x] Add visible rule explanations when a planning choice is blocked.
 - [ ] Expand planning constraints such as repeat limits, premium limits, and balanced cost mix as product decisions settle.
 
 ## Grocery
