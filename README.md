@@ -25,6 +25,7 @@ Important remaining work is tracked in [docs/project-checklist.md](docs/project-
 - Backend API contract: [docs/backend-api.md](docs/backend-api.md)
 - Environment variables: [docs/environment.md](docs/environment.md)
 - Backup and restore: [docs/backup-restore.md](docs/backup-restore.md)
+- Self-hosting guide: [docs/self-hosting.md](docs/self-hosting.md)
 - Decision records: [docs/decisions/](docs/decisions/)
 - Backend notes: [backend/README.md](backend/README.md)
 - Frontend notes: [frontend/README.md](frontend/README.md)
@@ -185,4 +186,4 @@ This repo uses [AGENTS.md](AGENTS.md) as the shared operating manual. The short 
 
 ## Self-Hosting Status
 
-Docker Compose exists for local app, API, and PostgreSQL services. A first-class production/self-hosting guide, backup/restore documentation, and complete environment variable reference are still pending and tracked in the project checklist.
+Docker Compose exists for local app, API, and PostgreSQL services. The current self-hosting path is documented in [docs/self-hosting.md](docs/self-hosting.md), with backup guidance in [docs/backup-restore.md](docs/backup-restore.md). Authentication, automated backups, HTTPS termination, and published container images are still future work.

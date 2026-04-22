@@ -40,7 +40,7 @@ Priority order:
 - [x] Dev tooling reports missing Docker Compose and Docker socket permission issues clearly.
 - [x] Backend test runner starts and stops an isolated test database.
 - [x] README documents local development prerequisites.
-- [ ] Add a first-class production/self-hosting guide.
+- [x] Add a first-class production/self-hosting guide.
 - [x] Document backup and restore expectations for local PostgreSQL data.
 - [x] Add environment variable reference documentation.
 
@@ -191,5 +191,5 @@ Deferred export ideas:
 - [x] Keep API docs in sync with route changes.
 - [x] Add environment variable reference documentation.
 - [x] Document backup and restore expectations for local PostgreSQL data.
-- [ ] Add setup, deployment, backup, and troubleshooting docs as the self-hosting story matures.
+- [x] Add setup, deployment, backup, and troubleshooting docs as the self-hosting story matures.
 - [ ] Add manual QA notes for complex visual/export workflows.
