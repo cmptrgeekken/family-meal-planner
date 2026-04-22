@@ -103,16 +103,16 @@ export function GroceryScreen() {
                     <input type="checkbox" checked={isChecked} onChange={() => toggleCheckedItem(itemKey)} />
                     <span className="sr-only">Mark {item.name} as shopped</span>
                   </label>
-                  <div>
-                  <strong>{item.name}</strong>
-                  <p>
-                    {item.group}
-                    {item.quantityLabels.length > 0 ? ` - ${item.quantityLabels.join(", ")}` : ""}
-                  </p>
-                  <p className="muted-text">Used in: {item.usedInMeals.join(", ")}</p>
-                </div>
-                <small>{item.storeTags.join(", ") || "Unassigned store"}</small>
-              </article>
+                  <div className="grocery-item-copy">
+                    <strong>{item.name}</strong>
+                    <p>
+                      {item.group}
+                      {item.quantityLabels.length > 0 ? ` - ${item.quantityLabels.join(", ")}` : ""}
+                    </p>
+                    <p className="muted-text">Used in: {item.usedInMeals.join(", ")}</p>
+                  </div>
+                  <small className="grocery-store-tag">{item.storeTags.join(", ") || "Unassigned store"}</small>
+                </article>
               );
             })}
           </div>

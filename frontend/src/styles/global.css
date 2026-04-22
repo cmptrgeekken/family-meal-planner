@@ -637,10 +637,20 @@ button:disabled {
 }
 
 .grocery-item {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 1rem;
   align-items: center;
+}
+
+.grocery-item-copy {
+  min-width: 0;
+}
+
+.grocery-store-tag {
+  justify-self: end;
+  color: var(--text);
+  text-align: right;
 }
 
 .grocery-item-checked {
