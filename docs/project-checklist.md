@@ -66,7 +66,7 @@ Priority order:
 - [x] Repository layer separates Prisma access from route handlers.
 - [x] Domain logic exists for planning and grocery generation.
 - [x] Server-side validation exists around API inputs.
-- [ ] Add explicit API documentation updates for all current route contracts.
+- [x] Add explicit API documentation updates for all current route contracts.
 - [ ] Add error response consistency review across all routes.
 - [ ] Add authentication/authorization only when multi-user household support becomes in scope.
 
@@ -188,6 +188,6 @@ Deferred export ideas:
 - [x] Backend API documentation exists.
 - [x] Decision records exist for dinner-first planning and category icon magnet exports.
 - [x] Project checklist exists.
-- [ ] Keep API docs in sync with route changes.
+- [x] Keep API docs in sync with route changes.
 - [ ] Add setup, deployment, backup, and troubleshooting docs as the self-hosting story matures.
 - [ ] Add manual QA notes for complex visual/export workflows.

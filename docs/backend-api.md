@@ -138,7 +138,8 @@ Response:
     {
       "id": "cat_123",
       "name": "Pasta",
-      "slug": "pasta"
+      "slug": "pasta",
+      "iconId": "168"
     }
   ]
 }
@@ -155,7 +156,8 @@ Response:
   "category": {
     "id": "cat_123",
     "name": "Pasta",
-    "slug": "pasta"
+    "slug": "pasta",
+    "iconId": "168"
   }
 }
 ```
@@ -169,9 +171,15 @@ Request:
 ```json
 {
   "name": "Rice/Bowls",
-  "slug": "rice-bowls"
+  "slug": "rice-bowls",
+  "iconId": "115"
 }
 ```
+
+Notes:
+
+- `iconId` is optional and may be `null`.
+- `iconId` references the frontend icon manifest, not a database-backed icon asset.
 
 Response: `201 Created`
 
@@ -261,6 +269,7 @@ Example meal:
   "name": "Spaghetti Night",
   "category": "Pasta",
   "categorySlug": "pasta",
+  "categoryIconId": "168",
   "costTier": "budget",
   "kidFavorite": true,
   "lowEffort": false,
@@ -549,6 +558,7 @@ Validation issue codes currently used:
 ## Notes for Frontend Work
 
 - Treat `categorySlug` and `storeTagSlug` as the preferred stable identifiers for filtering and selection.
+- Treat category `iconId` and meal `categoryIconId` as stable references into the frontend icon manifest.
 - Treat `slot` as part of the weekly-plan contract even though only `Dinner` is currently supported.
 - Prefer `preview` before `PUT` when you want rule feedback without saving changes.
 - Expect deletion operations to return `409` when a record is still in use by related data.
