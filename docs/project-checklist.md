@@ -88,7 +88,7 @@ Priority order:
 - [x] Add frontend category create/edit/delete UI so magnet and planning testing can use family-specific categories.
 - [x] Add frontend meal create/edit/delete UI.
 - [x] Add parent-friendly ingredient editing.
-- [ ] Add meal filtering/search beyond the current basic presentation.
+- [x] Add meal filtering/search beyond the current basic presentation.
 - [ ] Add regression coverage for frontend meal interactions once editing exists.
 
 ## Weekly Planning

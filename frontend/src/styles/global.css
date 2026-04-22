@@ -218,6 +218,7 @@ button:disabled {
 
 .day-card select,
 .filter-stack select,
+.filter-stack input,
 .field-grid input,
 .field-grid select {
   width: 100%;

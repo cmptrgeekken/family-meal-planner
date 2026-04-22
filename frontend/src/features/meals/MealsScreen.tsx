@@ -104,6 +104,7 @@ function formToPayload(form: MealFormState): ApiMealPayload {
 export function MealsScreen() {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
+    search: "",
     categorySlug: "",
     storeTagSlug: "",
     kidFavorite: false,
@@ -129,6 +130,20 @@ export function MealsScreen() {
         lowEffort: filters.lowEffort || undefined,
       }),
   });
+  const visibleMeals =
+    mealsQuery.data?.meals.filter((meal) => {
+      const search = filters.search.trim().toLowerCase();
+
+      if (!search) {
+        return true;
+      }
+
+      return (
+        meal.name.toLowerCase().includes(search) ||
+        meal.category.toLowerCase().includes(search) ||
+        meal.ingredients.some((ingredient) => ingredient.name.toLowerCase().includes(search))
+      );
+    }) ?? [];
   const createMealMutation = useMutation({
     mutationFn: createMeal,
     onSuccess: () => {
@@ -390,6 +405,12 @@ export function MealsScreen() {
 
       <SectionCard title="Meal Browser" subtitle="Use filter chips and quick toggles to narrow the list fast on a phone.">
         <div className="filter-stack">
+          <input
+            value={filters.search}
+            placeholder="Search meals or ingredients"
+            onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
+          />
+
           <select
             value={filters.categorySlug}
             onChange={(event) => setFilters((current) => ({ ...current, categorySlug: event.target.value }))}
@@ -435,11 +456,11 @@ export function MealsScreen() {
 
       <SectionCard title="Results" subtitle="Meal cards are intentionally compact and thumb-friendly for quick picking.">
         {mealsQuery.isLoading ? <p>Loading meals...</p> : null}
-        {!mealsQuery.isLoading && (mealsQuery.data?.meals.length ?? 0) === 0 ? (
+        {!mealsQuery.isLoading && visibleMeals.length === 0 ? (
           <EmptyState title="No matching meals" message="Try clearing one or more filters." />
         ) : null}
         <div className="meal-card-grid">
-          {mealsQuery.data?.meals.map((meal) => (
+          {visibleMeals.map((meal) => (
             <article key={meal.id} className="meal-card">
               <div className="meal-card-topline">
                 <span className="pill-muted category-pill">
