@@ -23,6 +23,7 @@ Important remaining work is tracked in [docs/project-checklist.md](docs/project-
 - Contributor guidance: [AGENTS.md](AGENTS.md)
 - Implementation checklist: [docs/project-checklist.md](docs/project-checklist.md)
 - Backend API contract: [docs/backend-api.md](docs/backend-api.md)
+- Environment variables: [docs/environment.md](docs/environment.md)
 - Decision records: [docs/decisions/](docs/decisions/)
 - Backend notes: [backend/README.md](backend/README.md)
 - Frontend notes: [frontend/README.md](frontend/README.md)
@@ -94,7 +95,7 @@ cp .env.example .env
 
 The defaults are suitable for local development. The main ports are:
 
-- Frontend: `http://localhost:5173` when using Vite through `npm run dev`
+- Frontend: `http://localhost:3000` when using Vite through `npm run dev`
 - Backend API: `http://localhost:3001`
 - App database: `localhost:5432`
 - Test database: `localhost:5433`

@@ -42,7 +42,7 @@ Priority order:
 - [x] README documents local development prerequisites.
 - [ ] Add a first-class production/self-hosting guide.
 - [ ] Document backup and restore expectations for local PostgreSQL data.
-- [ ] Add environment variable reference documentation.
+- [x] Add environment variable reference documentation.
 
 ## Data Model And Persistence
 
@@ -189,5 +189,6 @@ Deferred export ideas:
 - [x] Decision records exist for dinner-first planning and category icon magnet exports.
 - [x] Project checklist exists.
 - [x] Keep API docs in sync with route changes.
+- [x] Add environment variable reference documentation.
 - [ ] Add setup, deployment, backup, and troubleshooting docs as the self-hosting story matures.
 - [ ] Add manual QA notes for complex visual/export workflows.
