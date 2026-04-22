@@ -43,7 +43,9 @@ describe("category routes", () => {
   it("prevents deleting a category that is in use by meals", async () => {
     const app = createApp();
     const categoriesResponse = await request(app).get("/api/categories");
-    const chickenCategory = categoriesResponse.body.categories.find((category: { slug?: string }) => category.slug === "chicken");
+    const chickenCategory = categoriesResponse.body.categories.find(
+      (category: { slug?: string }) => category.slug === "chicken-night",
+    );
 
     const deleteResponse = await request(app).delete(`/api/categories/${chickenCategory.id}`);
 
@@ -55,7 +57,7 @@ describe("category routes", () => {
 
     const response = await request(app).post("/api/categories").send({
       name: "Chicken Clone",
-      slug: "chicken",
+      slug: "chicken-night",
     });
 
     expect(response.status).toBe(409);

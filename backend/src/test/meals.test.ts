@@ -16,24 +16,34 @@ describe("meal routes", () => {
 
   it("filters meals by category slug", async () => {
     const app = createApp();
-    const response = await request(app).get("/api/meals?categorySlug=pasta");
+    const response = await request(app).get("/api/meals?categorySlug=pasta-night");
 
     expect(response.status).toBe(200);
     expect(response.body.meals.length).toBeGreaterThan(0);
-    expect(response.body.meals.every((meal: { categorySlug?: string }) => meal.categorySlug === "pasta")).toBe(true);
+    expect(response.body.meals.every((meal: { categorySlug?: string }) => meal.categorySlug === "pasta-night")).toBe(true);
   });
 
   it("seeds at least one meal for every starter category", async () => {
     const app = createApp();
-    const categoriesResponse = await request(app).get("/api/categories");
     const mealsResponse = await request(app).get("/api/meals");
+    const starterCategorySlugs = [
+      "pasta-night",
+      "rice-bowls",
+      "grill-night",
+      "chicken-night",
+      "taco-night",
+      "sandwich-night",
+      "snack-plate",
+      "breakfast-dinner",
+      "pizza-night",
+      "easy-dinner",
+      "one-pot-meal",
+      "special-dinner",
+    ];
     const mealCategorySlugs = new Set(mealsResponse.body.meals.map((meal: { categorySlug: string }) => meal.categorySlug));
 
-    expect(categoriesResponse.status).toBe(200);
     expect(mealsResponse.status).toBe(200);
-    expect(
-      categoriesResponse.body.categories.every((category: { slug: string }) => mealCategorySlugs.has(category.slug)),
-    ).toBe(true);
+    expect(starterCategorySlugs.every((slug) => mealCategorySlugs.has(slug))).toBe(true);
   });
 
   it("filters meals by store tag slug and flags", async () => {
@@ -97,7 +107,7 @@ describe("meal routes", () => {
     const response = await request(app).post("/api/meals").send({
       name: "Spaghetti Clone",
       slug: "spaghetti-night",
-      categorySlug: "pasta",
+      categorySlug: "pasta-night",
       costTier: "budget",
       kidFavorite: true,
       lowEffort: true,

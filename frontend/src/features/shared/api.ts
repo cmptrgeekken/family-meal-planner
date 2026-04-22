@@ -5,6 +5,7 @@ export type IconManifestEntry = {
   name: string;
   slug: string;
   confidence: "high" | "medium" | "low";
+  aiGenerated?: boolean;
 };
 
 export type IconManifest = {

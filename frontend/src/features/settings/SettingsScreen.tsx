@@ -281,6 +281,7 @@ export function SettingsScreen() {
                   {iconManifest?.icons.map((icon) => (
                     <option key={icon.id} value={icon.id}>
                       #{icon.id} {icon.name}
+                      {icon.aiGenerated ? " (AI)" : ""}
                     </option>
                   ))}
                 </select>
@@ -334,6 +335,7 @@ export function SettingsScreen() {
                           {iconManifest?.icons.map((icon) => (
                             <option key={icon.id} value={icon.id}>
                               #{icon.id} {icon.name}
+                              {icon.aiGenerated ? " (AI)" : ""}
                             </option>
                           ))}
                         </select>
@@ -495,7 +497,7 @@ export function SettingsScreen() {
             <article key={icon.id} className={`icon-library-card icon-confidence-${icon.confidence}`}>
               <div className="icon-library-meta">
                 <strong>#{icon.id}</strong>
-                <span>{icon.confidence}</span>
+                <span>{icon.aiGenerated ? `AI ${icon.confidence}` : icon.confidence}</span>
               </div>
               <img src={`${iconManifestQuery.data.assetBasePath}/${icon.id}.svg`} alt="" />
               <p>{icon.name}</p>

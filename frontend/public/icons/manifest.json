@@ -776,6 +776,34 @@
       "name": "Potato",
       "slug": "potato",
       "confidence": "high"
+    },
+    {
+      "id": "ai-blt",
+      "name": "BLT Sandwich",
+      "slug": "blt-sandwich",
+      "confidence": "high",
+      "aiGenerated": true
+    },
+    {
+      "id": "ai-grill",
+      "name": "Grill Night",
+      "slug": "grill-night",
+      "confidence": "high",
+      "aiGenerated": true
+    },
+    {
+      "id": "ai-snackplate",
+      "name": "Snack Plate",
+      "slug": "snack-plate",
+      "confidence": "high",
+      "aiGenerated": true
+    },
+    {
+      "id": "ai-takeout",
+      "name": "Easy Takeout Bag",
+      "slug": "easy-takeout-bag",
+      "confidence": "high",
+      "aiGenerated": true
     }
   ]
 }

@@ -5,14 +5,18 @@ const { CostTier, IngredientType, PrismaClient } = prismaClient;
 const prisma = new PrismaClient();
 
 const categories = [
-  { name: "Pasta", slug: "pasta", iconId: "168" },
-  { name: "Rice/Bowls", slug: "rice-bowls", iconId: "115" },
-  { name: "Breakfast", slug: "breakfast", iconId: "71" },
-  { name: "Sandwich/Snack", slug: "sandwich-snack", iconId: "79" },
-  { name: "Chicken", slug: "chicken", iconId: "160" },
-  { name: "Ground Meat", slug: "ground-meat", iconId: "158" },
-  { name: "Premium", slug: "premium", iconId: "178" },
-  { name: "Fun/Zero-Cook", slug: "fun-zero-cook", iconId: "50" },
+  { name: "Pasta Night", slug: "pasta-night", legacySlug: "pasta", iconId: "168" },
+  { name: "Rice Bowls", slug: "rice-bowls", iconId: "115" },
+  { name: "Grill Night", slug: "grill-night", legacySlug: "ground-meat", iconId: "ai-grill" },
+  { name: "Chicken Night", slug: "chicken-night", legacySlug: "chicken", iconId: "160" },
+  { name: "Taco Night", slug: "taco-night", iconId: "77" },
+  { name: "Sandwich Night", slug: "sandwich-night", legacySlug: "sandwich-snack", iconId: "ai-blt" },
+  { name: "Snack Plate", slug: "snack-plate", iconId: "ai-snackplate" },
+  { name: "Breakfast Dinner", slug: "breakfast-dinner", legacySlug: "breakfast", iconId: "71" },
+  { name: "Pizza Night", slug: "pizza-night", iconId: "178" },
+  { name: "Easy Dinner", slug: "easy-dinner", legacySlug: "fun-zero-cook", iconId: "ai-takeout" },
+  { name: "One-Pot Meal", slug: "one-pot-meal", iconId: "117" },
+  { name: "Special Dinner", slug: "special-dinner", legacySlug: "premium", iconId: "429" },
 ];
 
 const storeTags = [
@@ -23,47 +27,18 @@ const storeTags = [
 
 const meals = [
   {
-    name: "Chicken Quesadillas",
-    slug: "chicken-quesadillas",
-    categorySlug: "chicken",
-    costTier: CostTier.STANDARD,
-    kidFavorite: true,
-    lowEffort: true,
-    notes: "Add peppers and black beans for a parent upgrade.",
-    ingredients: [
-      { name: "Chicken", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 pack" },
-      { name: "Tortillas", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 package" },
-      { name: "Shredded Cheese", type: IngredientType.EXTRA, storeTagSlug: "costco", quantityLabel: "1 bag" },
-      { name: "Bell Peppers", type: IngredientType.VEG, storeTagSlug: "cub", quantityLabel: "2 peppers" },
-    ],
-  },
-  {
     name: "Spaghetti Night",
     slug: "spaghetti-night",
-    categorySlug: "pasta",
+    categorySlug: "pasta-night",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: false,
-    notes: "Serve with a quick salad on the side.",
+    notes: "A reliable pasta-night default. Serve with salad or roasted vegetables for a parent upgrade.",
     ingredients: [
       { name: "Spaghetti", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 box" },
       { name: "Ground Beef", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 pound" },
       { name: "Marinara Sauce", type: IngredientType.EXTRA, storeTagSlug: "other", quantityLabel: "1 jar" },
       { name: "Romaine", type: IngredientType.VEG, storeTagSlug: "cub", quantityLabel: "1 head" },
-    ],
-  },
-  {
-    name: "Breakfast for Dinner",
-    slug: "breakfast-for-dinner",
-    categorySlug: "breakfast",
-    costTier: CostTier.BUDGET,
-    kidFavorite: true,
-    lowEffort: true,
-    notes: "Add berries or yogurt to round it out.",
-    ingredients: [
-      { name: "Eggs", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 dozen" },
-      { name: "Bread", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 loaf" },
-      { name: "Berries", type: IngredientType.FRUIT, storeTagSlug: "cub", quantityLabel: "1 clamshell" },
     ],
   },
   {
@@ -82,55 +57,69 @@ const meals = [
     ],
   },
   {
-    name: "Grilled Cheese and Tomato Soup",
-    slug: "grilled-cheese-and-tomato-soup",
-    categorySlug: "sandwich-snack",
-    costTier: CostTier.BUDGET,
+    name: "Burger Night",
+    slug: "burger-night",
+    categorySlug: "grill-night",
+    costTier: CostTier.STANDARD,
     kidFavorite: true,
-    lowEffort: true,
-    notes: "Add apple slices or carrots for a quick side.",
-    ingredients: [
-      { name: "Bread", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 loaf" },
-      { name: "Sliced Cheese", type: IngredientType.EXTRA, storeTagSlug: "costco", quantityLabel: "1 pack" },
-      { name: "Tomato Soup", type: IngredientType.EXTRA, storeTagSlug: "other", quantityLabel: "2 cans" },
-      { name: "Apples", type: IngredientType.FRUIT, storeTagSlug: "cub", quantityLabel: "4 apples" },
-    ],
-  },
-  {
-    name: "Burger Bowls",
-    slug: "burger-bowls",
-    categorySlug: "ground-meat",
-    costTier: CostTier.PREMIUM,
-    kidFavorite: false,
     lowEffort: false,
-    notes: "Use air fryer potatoes for an easier version.",
+    notes: "Hamburgers or hot dogs with simple fruit and chips keeps grill night easy.",
     ingredients: [
-      { name: "Ground Beef", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "2 pounds" },
-      { name: "Potatoes", type: IngredientType.CARB, storeTagSlug: "costco", quantityLabel: "1 bag" },
+      { name: "Burger Patties", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "6 patties" },
+      { name: "Hamburger Buns", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 pack" },
       { name: "Lettuce", type: IngredientType.VEG, storeTagSlug: "other", quantityLabel: "1 head" },
       { name: "Pickles", type: IngredientType.EXTRA, storeTagSlug: "other", quantityLabel: "1 jar" },
     ],
   },
   {
-    name: "Steak Taco Night",
-    slug: "steak-taco-night",
-    categorySlug: "premium",
-    costTier: CostTier.PREMIUM,
-    kidFavorite: false,
-    lowEffort: false,
-    notes: "Make it feel special with avocado, lime, and quick pickled onions.",
+    name: "Chicken Nugget Night",
+    slug: "chicken-nugget-night",
+    categorySlug: "chicken-night",
+    costTier: CostTier.STANDARD,
+    kidFavorite: true,
+    lowEffort: true,
+    notes: "Add carrot sticks, fruit, or a bag salad to make nuggets a full dinner.",
     ingredients: [
-      { name: "Steak", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1.5 pounds" },
-      { name: "Corn Tortillas", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 package" },
-      { name: "Avocados", type: IngredientType.FRUIT, storeTagSlug: "cub", quantityLabel: "2 avocados" },
-      { name: "Onions", type: IngredientType.VEG, storeTagSlug: "other", quantityLabel: "1 onion" },
-      { name: "Limes", type: IngredientType.FRUIT, storeTagSlug: "cub", quantityLabel: "2 limes" },
+      { name: "Chicken Nuggets", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 bag" },
+      { name: "Frozen Fries", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 bag" },
+      { name: "Baby Carrots", type: IngredientType.VEG, storeTagSlug: "costco", quantityLabel: "1 bag" },
+      { name: "Apples", type: IngredientType.FRUIT, storeTagSlug: "cub", quantityLabel: "4 apples" },
+    ],
+  },
+  {
+    name: "Chicken Quesadillas",
+    slug: "chicken-quesadillas",
+    categorySlug: "taco-night",
+    costTier: CostTier.STANDARD,
+    kidFavorite: true,
+    lowEffort: true,
+    notes: "A tortilla-meal fallback. Add peppers and black beans for a parent upgrade.",
+    ingredients: [
+      { name: "Chicken", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 pack" },
+      { name: "Tortillas", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 package" },
+      { name: "Shredded Cheese", type: IngredientType.EXTRA, storeTagSlug: "costco", quantityLabel: "1 bag" },
+      { name: "Bell Peppers", type: IngredientType.VEG, storeTagSlug: "cub", quantityLabel: "2 peppers" },
+    ],
+  },
+  {
+    name: "BLT Sandwiches",
+    slug: "blt-sandwiches",
+    categorySlug: "sandwich-night",
+    costTier: CostTier.BUDGET,
+    kidFavorite: true,
+    lowEffort: true,
+    notes: "Use deli meat instead of bacon when speed matters more than crispiness.",
+    ingredients: [
+      { name: "Bread", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 loaf" },
+      { name: "Bacon", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 pack" },
+      { name: "Tomatoes", type: IngredientType.VEG, storeTagSlug: "cub", quantityLabel: "2 tomatoes" },
+      { name: "Lettuce", type: IngredientType.VEG, storeTagSlug: "other", quantityLabel: "1 head" },
     ],
   },
   {
     name: "Snack Plate Dinner",
     slug: "snack-plate-dinner",
-    categorySlug: "fun-zero-cook",
+    categorySlug: "snack-plate",
     costTier: CostTier.STANDARD,
     kidFavorite: true,
     lowEffort: true,
@@ -138,20 +127,120 @@ const meals = [
     ingredients: [
       { name: "Deli Turkey", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 pack" },
       { name: "Crackers", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 box" },
-      { name: "Baby Carrots", type: IngredientType.VEG, storeTagSlug: "costco", quantityLabel: "1 bag" },
-      { name: "Hummus", type: IngredientType.EXTRA, storeTagSlug: "costco", quantityLabel: "1 tub" },
+      { name: "Cheddar Cheese", type: IngredientType.EXTRA, storeTagSlug: "costco", quantityLabel: "1 block" },
       { name: "Grapes", type: IngredientType.FRUIT, storeTagSlug: "cub", quantityLabel: "1 bag" },
+    ],
+  },
+  {
+    name: "Breakfast for Dinner",
+    slug: "breakfast-for-dinner",
+    categorySlug: "breakfast-dinner",
+    costTier: CostTier.BUDGET,
+    kidFavorite: true,
+    lowEffort: true,
+    notes: "Pancakes, eggs, waffles, or French toast. Add berries or yogurt to round it out.",
+    ingredients: [
+      { name: "Eggs", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 dozen" },
+      { name: "Pancake Mix", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 box" },
+      { name: "Berries", type: IngredientType.FRUIT, storeTagSlug: "cub", quantityLabel: "1 clamshell" },
+      { name: "Maple Syrup", type: IngredientType.EXTRA, storeTagSlug: "costco", quantityLabel: "1 bottle" },
+    ],
+  },
+  {
+    name: "Pizza Night",
+    slug: "pizza-night",
+    categorySlug: "pizza-night",
+    costTier: CostTier.STANDARD,
+    kidFavorite: true,
+    lowEffort: true,
+    notes: "Frozen pizza, delivery, or flatbreads all fit here. Add raw veggies or fruit on the side.",
+    ingredients: [
+      { name: "Pizza", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "2 pizzas" },
+      { name: "Mozzarella", type: IngredientType.EXTRA, storeTagSlug: "costco", quantityLabel: "1 bag" },
+      { name: "Pepperoni", type: IngredientType.PROTEIN, storeTagSlug: "other", quantityLabel: "1 pack" },
+      { name: "Cucumbers", type: IngredientType.VEG, storeTagSlug: "cub", quantityLabel: "2 cucumbers" },
+    ],
+  },
+  {
+    name: "Frozen Dumpling Dinner",
+    slug: "frozen-dumpling-dinner",
+    categorySlug: "easy-dinner",
+    costTier: CostTier.STANDARD,
+    kidFavorite: true,
+    lowEffort: true,
+    notes: "Quick heat-and-eat dinner. Add microwave rice or steamed edamame if needed.",
+    ingredients: [
+      { name: "Frozen Dumplings", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 bag" },
+      { name: "Microwave Rice", type: IngredientType.CARB, storeTagSlug: "costco", quantityLabel: "2 pouches" },
+      { name: "Edamame", type: IngredientType.VEG, storeTagSlug: "other", quantityLabel: "1 bag" },
+      { name: "Soy Sauce", type: IngredientType.EXTRA, storeTagSlug: "other", quantityLabel: "1 bottle" },
+    ],
+  },
+  {
+    name: "One-Pot Pasta",
+    slug: "one-pot-pasta",
+    categorySlug: "one-pot-meal",
+    costTier: CostTier.BUDGET,
+    kidFavorite: true,
+    lowEffort: false,
+    notes: "A single-pot pasta mix that can absorb vegetables, sausage, or leftover chicken.",
+    ingredients: [
+      { name: "Pasta", type: IngredientType.CARB, storeTagSlug: "other", quantityLabel: "1 box" },
+      { name: "Chicken Sausage", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1 pack" },
+      { name: "Spinach", type: IngredientType.VEG, storeTagSlug: "cub", quantityLabel: "1 bag" },
+      { name: "Chicken Broth", type: IngredientType.EXTRA, storeTagSlug: "other", quantityLabel: "1 carton" },
+    ],
+  },
+  {
+    name: "Steak Dinner",
+    slug: "steak-dinner",
+    categorySlug: "special-dinner",
+    costTier: CostTier.PREMIUM,
+    kidFavorite: false,
+    lowEffort: false,
+    notes: "A nicer dinner bucket for steak, salmon, or other premium mains.",
+    ingredients: [
+      { name: "Steak", type: IngredientType.PROTEIN, storeTagSlug: "costco", quantityLabel: "1.5 pounds" },
+      { name: "Potatoes", type: IngredientType.CARB, storeTagSlug: "costco", quantityLabel: "1 bag" },
+      { name: "Asparagus", type: IngredientType.VEG, storeTagSlug: "cub", quantityLabel: "1 bunch" },
+      { name: "Butter", type: IngredientType.EXTRA, storeTagSlug: "costco", quantityLabel: "1 pack" },
     ],
   },
 ];
 
+async function upsertCategory(category) {
+  const { legacySlug, ...categoryData } = category;
+
+  if (legacySlug && legacySlug !== category.slug) {
+    const [targetCategory, legacyCategory] = await Promise.all([
+      prisma.category.findUnique({ where: { slug: category.slug } }),
+      prisma.category.findUnique({ where: { slug: legacySlug } }),
+    ]);
+
+    if (legacyCategory && !targetCategory) {
+      await prisma.category.update({
+        where: { id: legacyCategory.id },
+        data: { slug: category.slug },
+      });
+    } else if (legacyCategory && targetCategory) {
+      await prisma.meal.updateMany({
+        where: { categoryId: legacyCategory.id },
+        data: { categoryId: targetCategory.id },
+      });
+      await prisma.category.delete({ where: { id: legacyCategory.id } });
+    }
+  }
+
+  await prisma.category.upsert({
+    where: { slug: category.slug },
+    update: { name: category.name, iconId: category.iconId },
+    create: categoryData,
+  });
+}
+
 async function seed() {
   for (const category of categories) {
-    await prisma.category.upsert({
-      where: { slug: category.slug },
-      update: { name: category.name, iconId: category.iconId },
-      create: category,
-    });
+    await upsertCategory(category);
   }
 
   for (const storeTag of storeTags) {
