@@ -64,6 +64,16 @@ This repository is currently in the initial project-setup stage. The goal of thi
 - Backend tests force Prisma onto `TEST_DATABASE_URL` so test artifacts cannot leak into the app database.
 - `db-test` is not part of the normal app startup path. Backend test commands start it on demand, prepare it, and stop it when the run finishes.
 
+## Local Development
+
+Run the full hot-reload stack from the repository root:
+
+```bash
+npm run dev
+```
+
+This starts the app database with Docker Compose, applies Prisma migrations, seeds development data, and then runs the backend API and Vite UI with hot reload.
+
 ## Next Likely Steps
 
 1. Scaffold the frontend app shell and design tokens.

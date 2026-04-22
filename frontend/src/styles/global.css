@@ -402,6 +402,16 @@ button:disabled {
   gap: 0.65rem;
 }
 
+.unit-toggle {
+  display: inline-flex;
+  align-self: start;
+  gap: 0.4rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
 .filter-chip {
   background: rgba(255, 255, 255, 0.85);
 }
