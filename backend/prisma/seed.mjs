@@ -16,7 +16,7 @@ const categories = [
   { name: "Pizza Night", slug: "pizza-night", iconId: "178" },
   { name: "Easy Dinner", slug: "easy-dinner", legacySlug: "fun-zero-cook", iconId: "ai-takeout" },
   { name: "One-Pot Meal", slug: "one-pot-meal", iconId: "117" },
-  { name: "Special Dinner", slug: "special-dinner", legacySlug: "premium", iconId: "429" },
+  { name: "Special Dinner", slug: "special-dinner", legacySlug: "premium", iconId: "ai-steak" },
 ];
 
 const storeTags = [

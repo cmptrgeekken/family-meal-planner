@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { SectionCard } from "../../components/SectionCard";
@@ -13,6 +13,8 @@ import {
   updateCategory,
   updateStoreTag,
   type ApiCategory,
+  type IconManifest,
+  type IconManifestEntry,
   type ApiStoreTag,
 } from "../shared/api";
 
@@ -62,6 +64,111 @@ function getStoreTagDraft(storeTag: ApiStoreTag, drafts: Record<string, StoreTag
       name: storeTag.name,
       slug: storeTag.slug,
     }
+  );
+}
+
+function getMutationErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function getIconSearchText(icon: IconManifestEntry) {
+  return `${icon.name} ${icon.slug} ${icon.aiGenerated ? "ai" : ""} ${icon.confidence}`.toLowerCase();
+}
+
+type IconPickerProps = {
+  value: string;
+  manifest?: IconManifest;
+  disabled?: boolean;
+  onChange: (iconId: string) => void;
+};
+
+function IconPicker({ value, manifest, disabled = false, onChange }: IconPickerProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const selectedIcon = manifest?.icons.find((icon) => icon.id === value);
+  const filteredIcons = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!manifest) {
+      return [];
+    }
+
+    if (!normalizedQuery) {
+      return manifest.icons;
+    }
+
+    return manifest.icons.filter((icon) => getIconSearchText(icon).includes(normalizedQuery));
+  }, [manifest, query]);
+
+  function selectIcon(iconId: string) {
+    onChange(iconId);
+    setQuery("");
+    setIsOpen(false);
+  }
+
+  return (
+    <div className="icon-combobox">
+      <button
+        type="button"
+        className="icon-combobox-trigger"
+        disabled={!manifest || disabled}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        <span className="icon-combobox-preview" aria-hidden="true">
+          {selectedIcon && manifest ? <img src={`${manifest.assetBasePath}/${selectedIcon.id}.svg`} alt="" /> : null}
+        </span>
+        <span>{selectedIcon?.name ?? "No icon"}</span>
+      </button>
+
+      {isOpen && manifest ? (
+        <div className="icon-combobox-popover">
+          <input
+            className="icon-combobox-search"
+            value={query}
+            placeholder="Search icons"
+            aria-label="Search icons"
+            autoFocus
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                setIsOpen(false);
+              }
+            }}
+          />
+          <div className="icon-combobox-list" role="listbox">
+            <button
+              type="button"
+              className={!value ? "icon-combobox-option icon-combobox-option-active" : "icon-combobox-option"}
+              role="option"
+              aria-selected={!value}
+              onClick={() => selectIcon("")}
+            >
+              <span className="icon-combobox-preview" aria-hidden="true" />
+              <span>No icon</span>
+            </button>
+            {filteredIcons.map((icon) => (
+              <button
+                key={icon.id}
+                type="button"
+                className={icon.id === value ? "icon-combobox-option icon-combobox-option-active" : "icon-combobox-option"}
+                role="option"
+                aria-selected={icon.id === value}
+                onClick={() => selectIcon(icon.id)}
+              >
+                <span className="icon-combobox-preview" aria-hidden="true">
+                  <img src={`${manifest.assetBasePath}/${icon.id}.svg`} alt="" />
+                </span>
+                <span>{icon.name}</span>
+                {icon.aiGenerated ? <span className="icon-combobox-badge">AI</span> : null}
+              </button>
+            ))}
+            {filteredIcons.length === 0 ? <p className="muted-text">No matching icons.</p> : null}
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -137,6 +244,13 @@ export function SettingsScreen() {
 
   const iconManifest = iconManifestQuery.data;
   const iconById = new Map(iconManifest?.icons.map((icon) => [icon.id, icon]) ?? []);
+  const categoryErrorMessage = deleteCategoryMutation.isError
+    ? getMutationErrorMessage(deleteCategoryMutation.error, "Category could not be deleted.")
+    : updateCategoryMutation.isError
+      ? "Category could not be saved. Please check for duplicate slugs."
+      : createCategoryMutation.isError
+        ? "Category could not be created. Please check for duplicate slugs."
+        : "";
   const isCategoryMutationPending =
     updateCategoryMutation.isPending || createCategoryMutation.isPending || deleteCategoryMutation.isPending;
   const isStoreTagMutationPending =
@@ -246,6 +360,11 @@ export function SettingsScreen() {
         <div className="reference-grid">
           <div className="mini-panel">
             <h3>Categories</h3>
+            {categoryErrorMessage ? (
+              <div className="status-message status-error" role="status">
+                <p>{categoryErrorMessage}</p>
+              </div>
+            ) : null}
             <form className="category-editor-form category-create-form" onSubmit={handleCreateCategory}>
               <label>
                 <span>Name</span>
@@ -272,19 +391,12 @@ export function SettingsScreen() {
               </label>
               <label>
                 <span>Icon</span>
-                <select
+                <IconPicker
                   value={newCategory.iconId}
+                  manifest={iconManifest}
                   disabled={!iconManifest}
-                  onChange={(event) => setNewCategory((current) => ({ ...current, iconId: event.target.value }))}
-                >
-                  <option value="">No icon</option>
-                  {iconManifest?.icons.map((icon) => (
-                    <option key={icon.id} value={icon.id}>
-                      #{icon.id} {icon.name}
-                      {icon.aiGenerated ? " (AI)" : ""}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(iconId) => setNewCategory((current) => ({ ...current, iconId }))}
+                />
               </label>
               <button type="submit" className="primary-button" disabled={isCategoryMutationPending}>
                 Add category
@@ -326,19 +438,12 @@ export function SettingsScreen() {
                       </label>
                       <label>
                         <span>Icon</span>
-                        <select
+                        <IconPicker
                           value={draft.iconId}
+                          manifest={iconManifest}
                           disabled={!iconManifest || isCategoryMutationPending}
-                          onChange={(event) => updateCategoryDraft(category, { iconId: event.target.value })}
-                        >
-                          <option value="">No icon</option>
-                          {iconManifest?.icons.map((icon) => (
-                            <option key={icon.id} value={icon.id}>
-                              #{icon.id} {icon.name}
-                              {icon.aiGenerated ? " (AI)" : ""}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(iconId) => updateCategoryDraft(category, { iconId })}
+                        />
                       </label>
                       <div className="category-editor-actions">
                         <button
@@ -370,19 +475,6 @@ export function SettingsScreen() {
                 );
               })}
             </ul>
-            {updateCategoryMutation.isError ? (
-              <p className="muted-text">Category could not be saved. Please check for duplicate slugs.</p>
-            ) : null}
-            {createCategoryMutation.isError ? (
-              <p className="muted-text">Category could not be created. Please check for duplicate slugs.</p>
-            ) : null}
-            {deleteCategoryMutation.isError ? (
-              <p className="muted-text">
-                {deleteCategoryMutation.error instanceof Error
-                  ? deleteCategoryMutation.error.message
-                  : "Category could not be deleted."}
-              </p>
-            ) : null}
           </div>
           <div className="mini-panel">
             <h3>Store Tags</h3>

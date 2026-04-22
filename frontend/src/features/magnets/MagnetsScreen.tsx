@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type KeyboardEvent, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { EmptyState } from "../../components/EmptyState";
@@ -10,10 +10,13 @@ import {
   getRowLayout,
   getSelectedCategories,
   getSheetSize,
+  getSvgBody,
+  getSvgViewBox,
   magnetGutterMm,
   mmPerInch,
   mmToDisplayUnit,
   pngDpi,
+  tintSvgText,
   type EmbeddedIconSvg,
   type LayoutUnit,
   type MagnetLayout,
@@ -26,6 +29,8 @@ type MagnetExportSettings = {
 };
 
 type NumericLayoutField = "innerDiameterMm" | "outerDiameterMm" | "pageWidthMm";
+type NumericLayoutDrafts = Record<NumericLayoutField, string>;
+type ColorDrafts = Pick<MagnetLayout, "backgroundColor" | "foregroundColor">;
 
 const localStorageKey = "family-meal-planner:magnet-export-settings";
 function isLayoutUnit(value: unknown): value is LayoutUnit {
@@ -38,6 +43,33 @@ function isHexColor(value: unknown): value is string {
 
 function toFiniteNumber(value: unknown, fallback: number) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function getNumericLayoutDrafts(layout: MagnetLayout, unit: LayoutUnit): NumericLayoutDrafts {
+  return {
+    innerDiameterMm: String(mmToDisplayUnit(layout.innerDiameterMm, unit)),
+    outerDiameterMm: String(mmToDisplayUnit(layout.outerDiameterMm, unit)),
+    pageWidthMm: String(mmToDisplayUnit(layout.pageWidthMm, unit)),
+  };
+}
+
+function getDisplayValueBounds(field: NumericLayoutField, layout: MagnetLayout, unit: LayoutUnit) {
+  if (field === "pageWidthMm") {
+    return unit === "in" ? { min: 2, max: 24 } : { min: 50, max: 610 };
+  }
+
+  if (field === "innerDiameterMm") {
+    return unit === "in" ? { min: 0.75, max: 5 } : { min: 20, max: 120 };
+  }
+
+  return {
+    min: mmToDisplayUnit(layout.innerDiameterMm, unit),
+    max: unit === "in" ? 6 : 150,
+  };
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function loadMagnetExportSettings(): MagnetExportSettings {
@@ -85,21 +117,6 @@ function loadMagnetExportSettings(): MagnetExportSettings {
   }
 }
 
-function svgTextToDataUri(svgText: string) {
-  const bytes = new TextEncoder().encode(svgText);
-  let binary = "";
-
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
-
-  return `data:image/svg+xml;base64,${window.btoa(binary)}`;
-}
-
-function tintSvgText(svgText: string, color: string) {
-  return svgText.replace(/<svg\b([^>]*)>/i, `<svg$1 fill="${color}" color="${color}">`);
-}
-
 async function getEmbeddedIconSvgs(manifest: IconManifest, iconIds: string[], foregroundColor: string) {
   const icons = await Promise.all(
     iconIds.map(async (iconId) => {
@@ -109,7 +126,9 @@ async function getEmbeddedIconSvgs(manifest: IconManifest, iconIds: string[], fo
         throw new Error(`Icon ${iconId} request failed: ${response.status}`);
       }
 
-      return [iconId, { dataUri: svgTextToDataUri(tintSvgText(await response.text(), foregroundColor)) }] as const;
+      const tintedSvgText = tintSvgText(await response.text(), foregroundColor);
+
+      return [iconId, { markup: getSvgBody(tintedSvgText), viewBox: getSvgViewBox(tintedSvgText) }] as const;
     }),
   );
 
@@ -148,9 +167,6 @@ async function downloadPng(svg: string, categories: ApiCategory[], layout: Magne
 
   canvas.width = Math.ceil((widthMm / mmPerInch) * pngDpi);
   canvas.height = Math.ceil((heightMm / mmPerInch) * pngDpi);
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
   const svgBlob = new Blob([svg], { type: "image/svg+xml" });
   const svgUrl = URL.createObjectURL(svgBlob);
 
@@ -188,6 +204,13 @@ export function MagnetsScreen() {
   const [hasInitializedSelection, setHasInitializedSelection] = useState(false);
   const [layoutUnit, setLayoutUnit] = useState<LayoutUnit>(savedSettings.layoutUnit);
   const [layout, setLayout] = useState<MagnetLayout>(savedSettings.layout);
+  const [numericLayoutDrafts, setNumericLayoutDrafts] = useState<NumericLayoutDrafts>(
+    getNumericLayoutDrafts(savedSettings.layout, savedSettings.layoutUnit),
+  );
+  const [colorDrafts, setColorDrafts] = useState<ColorDrafts>({
+    backgroundColor: savedSettings.layout.backgroundColor,
+    foregroundColor: savedSettings.layout.foregroundColor,
+  });
   const [pngExportError, setPngExportError] = useState("");
   const [isPngExporting, setIsPngExporting] = useState(false);
   const categoriesQuery = useQuery({
@@ -251,50 +274,67 @@ export function MagnetsScreen() {
     });
   }
 
-  function updateLayoutField(field: NumericLayoutField, value: number) {
-    setLayout((current) => ({
-      ...current,
-      [field]: Number.isFinite(value) ? value : current[field],
-    }));
+  function updateLayoutUnit(nextUnit: LayoutUnit) {
+    setLayoutUnit(nextUnit);
+    setNumericLayoutDrafts(getNumericLayoutDrafts(layout, nextUnit));
   }
 
-  function updateDiameterField(field: "innerDiameterMm" | "outerDiameterMm", value: number) {
-    setLayout((current) => {
-      if (!Number.isFinite(value)) {
-        return current;
-      }
-
-      if (field === "innerDiameterMm") {
-        return {
-          ...current,
-          innerDiameterMm: value,
-          outerDiameterMm: Math.max(current.outerDiameterMm, value),
-        };
-      }
-
-      return {
-        ...current,
-        outerDiameterMm: Math.max(value, current.innerDiameterMm),
-      };
-    });
-  }
-
-  function updateColorField(field: "backgroundColor" | "foregroundColor", value: string) {
-    setLayout((current) => ({
+  function updateNumericLayoutDraft(field: NumericLayoutField, value: string) {
+    setNumericLayoutDrafts((current) => ({
       ...current,
       [field]: value,
     }));
   }
 
-  function updateLinearLayoutField(field: NumericLayoutField, value: number) {
-    const valueMm = displayUnitToMm(value, layoutUnit);
+  function commitNumericLayoutDraft(field: NumericLayoutField) {
+    const rawValue = Number(numericLayoutDrafts[field]);
 
-    if (field === "innerDiameterMm" || field === "outerDiameterMm") {
-      updateDiameterField(field, valueMm);
-      return;
+    setLayout((current) => {
+      const bounds = getDisplayValueBounds(field, current, layoutUnit);
+
+      if (!Number.isFinite(rawValue)) {
+        setNumericLayoutDrafts(getNumericLayoutDrafts(current, layoutUnit));
+        return current;
+      }
+
+      const displayValue = clamp(rawValue, bounds.min, bounds.max);
+      const valueMm = displayUnitToMm(displayValue, layoutUnit);
+      let nextLayout: MagnetLayout;
+
+      if (field === "innerDiameterMm") {
+        nextLayout = {
+          ...current,
+          innerDiameterMm: valueMm,
+          outerDiameterMm: Math.max(current.outerDiameterMm, valueMm),
+        };
+      } else if (field === "outerDiameterMm") {
+        nextLayout = {
+          ...current,
+          outerDiameterMm: Math.max(valueMm, current.innerDiameterMm),
+        };
+      } else {
+        nextLayout = {
+          ...current,
+          pageWidthMm: valueMm,
+        };
+      }
+
+      setNumericLayoutDrafts(getNumericLayoutDrafts(nextLayout, layoutUnit));
+      return nextLayout;
+    });
+  }
+
+  function commitColorField(field: keyof ColorDrafts) {
+    setLayout((current) => ({
+      ...current,
+      [field]: colorDrafts[field],
+    }));
+  }
+
+  function handleNumericLayoutKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.currentTarget.blur();
     }
-
-    updateLayoutField(field, valueMm);
   }
 
   async function handleDownloadPng() {
@@ -326,14 +366,14 @@ export function MagnetsScreen() {
             <button
               type="button"
               className={layoutUnit === "in" ? "filter-chip filter-chip-active" : "filter-chip"}
-              onClick={() => setLayoutUnit("in")}
+              onClick={() => updateLayoutUnit("in")}
             >
               Inches
             </button>
             <button
               type="button"
               className={layoutUnit === "mm" ? "filter-chip filter-chip-active" : "filter-chip"}
-              onClick={() => setLayoutUnit("mm")}
+              onClick={() => updateLayoutUnit("mm")}
             >
               Millimeters
             </button>
@@ -347,8 +387,10 @@ export function MagnetsScreen() {
                 min={layoutUnit === "in" ? "2" : "50"}
                 max={layoutUnit === "in" ? "24" : "610"}
                 step={layoutUnit === "in" ? "0.05" : "1"}
-                value={mmToDisplayUnit(layout.pageWidthMm, layoutUnit)}
-                onChange={(event) => updateLinearLayoutField("pageWidthMm", event.target.valueAsNumber)}
+                value={numericLayoutDrafts.pageWidthMm}
+                onChange={(event) => updateNumericLayoutDraft("pageWidthMm", event.target.value)}
+                onBlur={() => commitNumericLayoutDraft("pageWidthMm")}
+                onKeyDown={handleNumericLayoutKeyDown}
               />
             </label>
             <label>
@@ -367,8 +409,10 @@ export function MagnetsScreen() {
                 min={layoutUnit === "in" ? "0.75" : "20"}
                 max={layoutUnit === "in" ? "5" : "120"}
                 step={layoutUnit === "in" ? "0.05" : "1"}
-                value={mmToDisplayUnit(layout.innerDiameterMm, layoutUnit)}
-                onChange={(event) => updateLinearLayoutField("innerDiameterMm", event.target.valueAsNumber)}
+                value={numericLayoutDrafts.innerDiameterMm}
+                onChange={(event) => updateNumericLayoutDraft("innerDiameterMm", event.target.value)}
+                onBlur={() => commitNumericLayoutDraft("innerDiameterMm")}
+                onKeyDown={handleNumericLayoutKeyDown}
               />
             </label>
             <label>
@@ -387,8 +431,10 @@ export function MagnetsScreen() {
                 min={mmToDisplayUnit(layout.innerDiameterMm, layoutUnit)}
                 max={layoutUnit === "in" ? "6" : "150"}
                 step={layoutUnit === "in" ? "0.05" : "1"}
-                value={mmToDisplayUnit(layout.outerDiameterMm, layoutUnit)}
-                onChange={(event) => updateLinearLayoutField("outerDiameterMm", event.target.valueAsNumber)}
+                value={numericLayoutDrafts.outerDiameterMm}
+                onChange={(event) => updateNumericLayoutDraft("outerDiameterMm", event.target.value)}
+                onBlur={() => commitNumericLayoutDraft("outerDiameterMm")}
+                onKeyDown={handleNumericLayoutKeyDown}
               />
             </label>
             <div className="color-field-row">
@@ -396,16 +442,22 @@ export function MagnetsScreen() {
                 <span>BG</span>
                 <input
                   type="color"
-                  value={layout.backgroundColor}
-                  onChange={(event) => updateColorField("backgroundColor", event.target.value)}
+                  value={colorDrafts.backgroundColor}
+                  onChange={(event) =>
+                    setColorDrafts((current) => ({ ...current, backgroundColor: event.target.value }))
+                  }
+                  onBlur={() => commitColorField("backgroundColor")}
                 />
               </label>
               <label>
                 <span>FG</span>
                 <input
                   type="color"
-                  value={layout.foregroundColor}
-                  onChange={(event) => updateColorField("foregroundColor", event.target.value)}
+                  value={colorDrafts.foregroundColor}
+                  onChange={(event) =>
+                    setColorDrafts((current) => ({ ...current, foregroundColor: event.target.value }))
+                  }
+                  onBlur={() => commitColorField("foregroundColor")}
                 />
               </label>
             </div>

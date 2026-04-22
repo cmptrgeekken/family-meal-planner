@@ -792,6 +792,13 @@
       "aiGenerated": true
     },
     {
+      "id": "ai-steak",
+      "name": "Steak",
+      "slug": "steak",
+      "confidence": "high",
+      "aiGenerated": true
+    },
+    {
       "id": "ai-snackplate",
       "name": "Snack Plate",
       "slug": "snack-plate",
