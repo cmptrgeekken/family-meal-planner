@@ -51,7 +51,7 @@ Priority order:
 - [x] Seed data creates starter categories, store tags, meals, and meal ingredients.
 - [x] Category records can store stable `iconId` values.
 - [x] Store tag options are modeled separately from ingredients.
-- [ ] Add create/update/delete flows for all core records that need parent editing. Category, meal, and meal-ingredient UI exists; store-tag editing remains.
+- [x] Add create/update/delete flows for all core records that need parent editing. Category, meal, meal-ingredient, and store-tag UI exists.
 - [ ] Add migration/backfill guidance once real user data exists.
 - [ ] Decide whether category display names and print labels should be separate fields.
 

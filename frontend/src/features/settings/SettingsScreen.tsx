@@ -4,12 +4,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SectionCard } from "../../components/SectionCard";
 import {
   createCategory,
+  createStoreTag,
   deleteCategory,
+  deleteStoreTag,
   getCategories,
   getIconManifest,
   getStoreTags,
   updateCategory,
+  updateStoreTag,
   type ApiCategory,
+  type ApiStoreTag,
 } from "../shared/api";
 
 type CategoryDraft = {
@@ -22,6 +26,16 @@ const emptyCategoryDraft: CategoryDraft = {
   name: "",
   slug: "",
   iconId: "",
+};
+
+type StoreTagDraft = {
+  name: string;
+  slug: string;
+};
+
+const emptyStoreTagDraft: StoreTagDraft = {
+  name: "",
+  slug: "",
 };
 
 function slugify(value: string) {
@@ -42,10 +56,21 @@ function getCategoryDraft(category: ApiCategory, drafts: Record<string, Category
   );
 }
 
+function getStoreTagDraft(storeTag: ApiStoreTag, drafts: Record<string, StoreTagDraft>) {
+  return (
+    drafts[storeTag.id] ?? {
+      name: storeTag.name,
+      slug: storeTag.slug,
+    }
+  );
+}
+
 export function SettingsScreen() {
   const queryClient = useQueryClient();
   const [newCategory, setNewCategory] = useState<CategoryDraft>(emptyCategoryDraft);
   const [categoryDrafts, setCategoryDrafts] = useState<Record<string, CategoryDraft>>({});
+  const [newStoreTag, setNewStoreTag] = useState<StoreTagDraft>(emptyStoreTagDraft);
+  const [storeTagDrafts, setStoreTagDrafts] = useState<Record<string, StoreTagDraft>>({});
   const categoriesQuery = useQuery({
     queryKey: ["categories", "settings"],
     queryFn: getCategories,
@@ -84,17 +109,54 @@ export function SettingsScreen() {
       void queryClient.invalidateQueries({ queryKey: ["meals"] });
     },
   });
+  const createStoreTagMutation = useMutation({
+    mutationFn: (payload: { name: string; slug: string }) => createStoreTag(payload),
+    onSuccess: () => {
+      setNewStoreTag(emptyStoreTagDraft);
+      void queryClient.invalidateQueries({ queryKey: ["store-tags"] });
+    },
+  });
+  const updateStoreTagMutation = useMutation({
+    mutationFn: (payload: { storeTagId: string; name: string; slug: string }) =>
+      updateStoreTag(payload.storeTagId, {
+        name: payload.name,
+        slug: payload.slug,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["store-tags"] });
+      void queryClient.invalidateQueries({ queryKey: ["meals"] });
+    },
+  });
+  const deleteStoreTagMutation = useMutation({
+    mutationFn: deleteStoreTag,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["store-tags"] });
+      void queryClient.invalidateQueries({ queryKey: ["meals"] });
+    },
+  });
 
   const iconManifest = iconManifestQuery.data;
   const iconById = new Map(iconManifest?.icons.map((icon) => [icon.id, icon]) ?? []);
   const isCategoryMutationPending =
     updateCategoryMutation.isPending || createCategoryMutation.isPending || deleteCategoryMutation.isPending;
+  const isStoreTagMutationPending =
+    createStoreTagMutation.isPending || updateStoreTagMutation.isPending || deleteStoreTagMutation.isPending;
 
   function updateCategoryDraft(category: ApiCategory, patch: Partial<CategoryDraft>) {
     setCategoryDrafts((current) => ({
       ...current,
       [category.id]: {
         ...getCategoryDraft(category, current),
+        ...patch,
+      },
+    }));
+  }
+
+  function updateStoreTagDraft(storeTag: ApiStoreTag, patch: Partial<StoreTagDraft>) {
+    setStoreTagDrafts((current) => ({
+      ...current,
+      [storeTag.id]: {
+        ...getStoreTagDraft(storeTag, current),
         ...patch,
       },
     }));
@@ -111,6 +173,19 @@ export function SettingsScreen() {
       name: newCategory.name.trim(),
       slug: newCategory.slug.trim(),
       iconId: newCategory.iconId || null,
+    });
+  }
+
+  function handleCreateStoreTag(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!newStoreTag.name.trim() || !newStoreTag.slug.trim()) {
+      return;
+    }
+
+    createStoreTagMutation.mutate({
+      name: newStoreTag.name.trim(),
+      slug: newStoreTag.slug.trim(),
     });
   }
 
@@ -133,6 +208,31 @@ export function SettingsScreen() {
           setCategoryDrafts((current) => {
             const next = { ...current };
             delete next[category.id];
+            return next;
+          });
+        },
+      },
+    );
+  }
+
+  function handleSaveStoreTag(storeTag: ApiStoreTag) {
+    const draft = getStoreTagDraft(storeTag, storeTagDrafts);
+
+    if (!draft.name.trim() || !draft.slug.trim()) {
+      return;
+    }
+
+    updateStoreTagMutation.mutate(
+      {
+        storeTagId: storeTag.id,
+        name: draft.name.trim(),
+        slug: draft.slug.trim(),
+      },
+      {
+        onSuccess: () => {
+          setStoreTagDrafts((current) => {
+            const next = { ...current };
+            delete next[storeTag.id];
             return next;
           });
         },
@@ -284,13 +384,102 @@ export function SettingsScreen() {
           </div>
           <div className="mini-panel">
             <h3>Store Tags</h3>
-            <ul className="plain-list">
+            <form className="category-editor-form category-create-form" onSubmit={handleCreateStoreTag}>
+              <label>
+                <span>Name</span>
+                <input
+                  value={newStoreTag.name}
+                  placeholder="Aldi"
+                  onChange={(event) => {
+                    const name = event.target.value;
+                    setNewStoreTag((current) => ({
+                      ...current,
+                      name,
+                      slug: slugify(name),
+                    }));
+                  }}
+                />
+              </label>
+              <label>
+                <span>Slug</span>
+                <input
+                  value={newStoreTag.slug}
+                  placeholder="aldi"
+                  onChange={(event) => setNewStoreTag((current) => ({ ...current, slug: slugify(event.target.value) }))}
+                />
+              </label>
+              <button type="submit" className="primary-button" disabled={isStoreTagMutationPending}>
+                Add store tag
+              </button>
+            </form>
+            <ul className="settings-record-list">
               {storeTagsQuery.data?.storeTags.map((storeTag) => (
-                <li key={storeTag.id}>
-                  <strong>{storeTag.name}</strong> <span className="muted-text">/{storeTag.slug}</span>
+                <li key={storeTag.id} className="settings-record-row">
+                  <div>
+                    <strong>{storeTag.name}</strong> <span className="muted-text">/{storeTag.slug}</span>
+                  </div>
+                  <div className="category-editor-form">
+                    <label>
+                      <span>Name</span>
+                      <input
+                        value={getStoreTagDraft(storeTag, storeTagDrafts).name}
+                        onChange={(event) => updateStoreTagDraft(storeTag, { name: event.target.value })}
+                      />
+                    </label>
+                    <label>
+                      <span>Slug</span>
+                      <input
+                        value={getStoreTagDraft(storeTag, storeTagDrafts).slug}
+                        onChange={(event) => updateStoreTagDraft(storeTag, { slug: slugify(event.target.value) })}
+                      />
+                    </label>
+                    <div className="category-editor-actions">
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        disabled={
+                          isStoreTagMutationPending ||
+                          (getStoreTagDraft(storeTag, storeTagDrafts).name === storeTag.name &&
+                            getStoreTagDraft(storeTag, storeTagDrafts).slug === storeTag.slug)
+                        }
+                        onClick={() => handleSaveStoreTag(storeTag)}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary-button danger-button"
+                        disabled={isStoreTagMutationPending}
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Delete "${storeTag.name}"? Store tags used by ingredients cannot be deleted.`,
+                            )
+                          ) {
+                            deleteStoreTagMutation.mutate(storeTag.id);
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>
+            {createStoreTagMutation.isError ? (
+              <p className="muted-text">Store tag could not be created. Please check for duplicate slugs.</p>
+            ) : null}
+            {updateStoreTagMutation.isError ? (
+              <p className="muted-text">Store tag could not be saved. Please check for duplicate slugs.</p>
+            ) : null}
+            {deleteStoreTagMutation.isError ? (
+              <p className="muted-text">
+                {deleteStoreTagMutation.error instanceof Error
+                  ? deleteStoreTagMutation.error.message
+                  : "Store tag could not be deleted."}
+              </p>
+            ) : null}
           </div>
         </div>
       </SectionCard>

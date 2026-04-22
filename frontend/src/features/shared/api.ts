@@ -167,6 +167,55 @@ export function getStoreTags() {
   return fetchJson<{ storeTags: ApiStoreTag[] }>("/store-tags");
 }
 
+export function createStoreTag(payload: { name: string; slug: string }) {
+  return fetch(apiUrl("/store-tags"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }).then(async (response) => {
+    const data = (await response.json()) as { storeTag: ApiStoreTag; message?: string };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Store tag create failed: ${response.status}`);
+    }
+
+    return data;
+  });
+}
+
+export function updateStoreTag(storeTagId: string, payload: { name: string; slug: string }) {
+  return fetch(apiUrl(`/store-tags/${storeTagId}`), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }).then(async (response) => {
+    const data = (await response.json()) as { storeTag: ApiStoreTag; message?: string };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Store tag update failed: ${response.status}`);
+    }
+
+    return data;
+  });
+}
+
+export function deleteStoreTag(storeTagId: string) {
+  return fetch(apiUrl(`/store-tags/${storeTagId}`), {
+    method: "DELETE",
+  }).then(async (response) => {
+    if (response.status === 204) {
+      return;
+    }
+
+    const data = (await response.json()) as { message?: string };
+    throw new Error(data.message ?? `Store tag delete failed: ${response.status}`);
+  });
+}
+
 export function getMeals(filters?: {
   categorySlug?: string;
   storeTagSlug?: string;
