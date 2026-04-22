@@ -49,6 +49,17 @@ export type ApiMeal = {
   ingredients: ApiMealIngredient[];
 };
 
+export type ApiMealPayload = {
+  name: string;
+  slug: string;
+  categorySlug: string;
+  costTier: ApiMeal["costTier"];
+  kidFavorite: boolean;
+  lowEffort: boolean;
+  notes?: string;
+  ingredients: ApiMealIngredient[];
+};
+
 export type ApiPlanSelection = {
   day: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
   slot: "Dinner";
@@ -166,6 +177,55 @@ export function getMeals(filters?: {
   const query = params.toString();
 
   return fetchJson<{ meals: ApiMeal[] }>(`/meals${query ? `?${query}` : ""}`);
+}
+
+export function createMeal(payload: ApiMealPayload) {
+  return fetch(apiUrl("/meals"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }).then(async (response) => {
+    const data = (await response.json()) as { meal: ApiMeal; message?: string };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Meal create failed: ${response.status}`);
+    }
+
+    return data;
+  });
+}
+
+export function updateMeal(mealId: string, payload: ApiMealPayload) {
+  return fetch(apiUrl(`/meals/${mealId}`), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }).then(async (response) => {
+    const data = (await response.json()) as { meal: ApiMeal; message?: string };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Meal update failed: ${response.status}`);
+    }
+
+    return data;
+  });
+}
+
+export function deleteMeal(mealId: string) {
+  return fetch(apiUrl(`/meals/${mealId}`), {
+    method: "DELETE",
+  }).then(async (response) => {
+    if (response.status === 204) {
+      return;
+    }
+
+    const data = (await response.json()) as { message?: string };
+    throw new Error(data.message ?? `Meal delete failed: ${response.status}`);
+  });
 }
 
 export function previewWeeklyPlan(payload: { weekStartDate: string; selections: Array<{ day: string; mealId: string }> }) {

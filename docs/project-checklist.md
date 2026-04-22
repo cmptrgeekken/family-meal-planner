@@ -20,8 +20,8 @@ Priority order:
 ## MVP Critical Path
 
 - [x] Add frontend category create/edit/delete UI so families can create their own planning categories.
-- [ ] Add frontend meal create/edit/delete UI.
-- [ ] Add parent-friendly ingredient editing inside meal management.
+- [x] Add frontend meal create/edit/delete UI.
+- [x] Add parent-friendly ingredient editing inside meal management.
 - [ ] Save weekly plans from the planning screen.
 - [ ] Add fast replace/remove meal actions on an existing weekly plan.
 - [ ] Generate grocery output from the current or saved weekly plan instead of sample meal selections.
@@ -51,7 +51,7 @@ Priority order:
 - [x] Seed data creates starter categories, store tags, meals, and meal ingredients.
 - [x] Category records can store stable `iconId` values.
 - [x] Store tag options are modeled separately from ingredients.
-- [ ] Add create/update/delete flows for all core records that need parent editing. Category UI exists; meal and ingredient editing remain.
+- [ ] Add create/update/delete flows for all core records that need parent editing. Category, meal, and meal-ingredient UI exists; store-tag editing remains.
 - [ ] Add migration/backfill guidance once real user data exists.
 - [ ] Decide whether category display names and print labels should be separate fields.
 
@@ -86,8 +86,8 @@ Priority order:
 - [x] Meal data includes category, category icon, cost tier, kid favorite, low effort, notes, ingredients, quantity labels, and store tags.
 - [x] Backend meal tests exist.
 - [x] Add frontend category create/edit/delete UI so magnet and planning testing can use family-specific categories.
-- [ ] Add frontend meal create/edit/delete UI.
-- [ ] Add parent-friendly ingredient editing.
+- [x] Add frontend meal create/edit/delete UI.
+- [x] Add parent-friendly ingredient editing.
 - [ ] Add meal filtering/search beyond the current basic presentation.
 - [ ] Add regression coverage for frontend meal interactions once editing exists.
 

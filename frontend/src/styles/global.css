@@ -214,7 +214,8 @@ button:disabled {
 
 .day-card select,
 .filter-stack select,
-.field-grid input {
+.field-grid input,
+.field-grid select {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 0.95rem;
@@ -553,6 +554,84 @@ button:disabled {
   color: var(--muted);
 }
 
+.meal-card-ingredients,
+.meal-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.meal-card-ingredients span {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(85, 124, 153, 0.1);
+  color: var(--accent-blue);
+  font-size: 0.78rem;
+}
+
+.meal-editor-form,
+.ingredient-editor-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.notes-field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.notes-field textarea {
+  width: 100%;
+  min-height: 6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.95rem;
+  background: white;
+  padding: 0.8rem 0.9rem;
+  color: var(--text);
+  resize: vertical;
+}
+
+.meal-form-section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.meal-form-section-heading h3 {
+  margin: 0;
+}
+
+.ingredient-editor-row {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface-strong);
+}
+
+.ingredient-editor-row label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.ingredient-editor-row input,
+.ingredient-editor-row select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: white;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.8rem;
+  color: var(--text);
+}
+
 .grocery-item {
   display: flex;
   justify-content: space-between;
@@ -693,6 +772,11 @@ button:disabled {
 
   .meal-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ingredient-editor-row {
+    grid-template-columns: 1.2fr 0.8fr 0.85fr 0.9fr auto;
+    align-items: end;
   }
 
   .magnet-screen {
