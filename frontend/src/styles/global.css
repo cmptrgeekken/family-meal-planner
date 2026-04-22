@@ -412,6 +412,23 @@ button:disabled {
   font-size: 0.9rem;
 }
 
+.rule-hint-text {
+  color: #a33d33;
+  font-weight: 700;
+}
+
+.rule-hint-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.75rem 0.85rem 0.75rem 1.7rem;
+  border: 1px solid rgba(163, 61, 51, 0.22);
+  border-radius: 0.95rem;
+  background: rgba(209, 77, 77, 0.08);
+  color: #803029;
+  font-size: 0.9rem;
+}
+
 .preview-grid,
 .reference-grid {
   display: grid;

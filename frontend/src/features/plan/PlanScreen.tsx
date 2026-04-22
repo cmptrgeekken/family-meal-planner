@@ -60,6 +60,8 @@ export function PlanScreen() {
   }, [meals]);
   const hasSelections = weekdays.some((day) => selections[day]);
   const feedbackData = preview.data ?? savePlan.data;
+  const plannerRuleHints = useMemo(() => getPlannerRuleHints(selections, mealById), [mealById, selections]);
+  const hasPlannerRuleHints = Object.values(plannerRuleHints.byDay).some((messages) => messages.length > 0);
 
   useEffect(() => {
     if (!savedPlanQuery.data?.weeklyPlan) {
@@ -159,80 +161,93 @@ export function PlanScreen() {
           />
         ) : null}
         {meals.length > 0 ? (
-          <div className="plan-summary-bar" aria-live="polite">
-            <strong>{weekdays.filter((day) => selections[day]).length}/7 dinners planned</strong>
-            <span className="muted-text">Preview before saving to catch repeat or premium limits.</span>
-          </div>
-          <div className="day-stack">
-            {weekdays.map((day) => {
-              const selectedMeal = mealById.get(selections[day]);
+          <>
+            <div className="plan-summary-bar" aria-live="polite">
+              <strong>{weekdays.filter((day) => selections[day]).length}/7 dinners planned</strong>
+              <span className={hasPlannerRuleHints ? "rule-hint-text" : "muted-text"}>
+                {hasPlannerRuleHints
+                  ? "Some choices need attention before saving."
+                  : "Preview before saving to catch repeat or premium limits."}
+              </span>
+            </div>
+            <div className="day-stack">
+              {weekdays.map((day) => {
+                const selectedMeal = mealById.get(selections[day]);
 
-              return (
-                <label key={day} className="day-card">
-                  <div className="day-card-copy">
-                    <p className="day-label">{day}</p>
-                    <span className="slot-pill">Dinner</span>
-                  </div>
-                  <div className="planner-category-grid" aria-label={`${day} category`}>
-                    {categories.map((category) => (
-                      <button
-                        key={category.id}
-                        type="button"
-                        className={
-                          categorySelections[day] === category.slug
-                            ? "planner-category-button planner-category-button-active"
-                            : "planner-category-button"
-                        }
-                        onClick={() => {
-                          setCategorySelections((current) => ({
-                            ...current,
-                            [day]: category.slug,
-                          }));
-                          setSelections((current) => ({
-                            ...current,
-                            [day]: mealById.get(current[day])?.categorySlug === category.slug ? current[day] : "",
-                          }));
-                        }}
-                      >
-                        {category.iconId ? <img src={`/icons/${category.iconId}.svg`} alt="" /> : null}
-                        <span>{category.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <select
-                    aria-label={`${day} dinner meal`}
-                    value={selections[day]}
-                    disabled={!categorySelections[day]}
-                    onChange={(event) =>
-                      setSelections((current) => ({
-                        ...current,
-                        [day]: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="">
-                      {categorySelections[day] ? "Choose a meal" : "Choose a category first"}
-                    </option>
-                    {(mealsByCategorySlug.get(categorySelections[day]) ?? []).map((meal) => (
-                      <option key={meal.id} value={meal.id}>
-                        {meal.name}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedMeal ? <MealSummaryChip meal={selectedMeal} /> : null}
-                  {selectedMeal ? (
-                    <button
-                      type="button"
-                      className="secondary-button day-remove-button"
-                      onClick={() => clearDay(day)}
+                return (
+                  <label key={day} className="day-card">
+                    <div className="day-card-copy">
+                      <p className="day-label">{day}</p>
+                      <span className="slot-pill">Dinner</span>
+                    </div>
+                    <div className="planner-category-grid" aria-label={`${day} category`}>
+                      {categories.map((category) => (
+                        <button
+                          key={category.id}
+                          type="button"
+                          className={
+                            categorySelections[day] === category.slug
+                              ? "planner-category-button planner-category-button-active"
+                              : "planner-category-button"
+                          }
+                          onClick={() => {
+                            setCategorySelections((current) => ({
+                              ...current,
+                              [day]: category.slug,
+                            }));
+                            setSelections((current) => ({
+                              ...current,
+                              [day]: mealById.get(current[day])?.categorySlug === category.slug ? current[day] : "",
+                            }));
+                          }}
+                        >
+                          {category.iconId ? <img src={`/icons/${category.iconId}.svg`} alt="" /> : null}
+                          <span>{category.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <select
+                      aria-label={`${day} dinner meal`}
+                      value={selections[day]}
+                      disabled={!categorySelections[day]}
+                      onChange={(event) =>
+                        setSelections((current) => ({
+                          ...current,
+                          [day]: event.target.value,
+                        }))
+                      }
                     >
-                      Remove {day}
-                    </button>
-                  ) : null}
-                </label>
-              );
-            })}
-          </div>
+                      <option value="">
+                        {categorySelections[day] ? "Choose a meal" : "Choose a category first"}
+                      </option>
+                      {(mealsByCategorySlug.get(categorySelections[day]) ?? []).map((meal) => (
+                        <option key={meal.id} value={meal.id}>
+                          {meal.name}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedMeal ? <MealSummaryChip meal={selectedMeal} /> : null}
+                    {plannerRuleHints.byDay[day].length > 0 ? (
+                      <ul className="rule-hint-list" aria-label={`${day} planning rule hints`}>
+                        {plannerRuleHints.byDay[day].map((message) => (
+                          <li key={message}>{message}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {selectedMeal ? (
+                      <button
+                        type="button"
+                        className="secondary-button day-remove-button"
+                        onClick={() => clearDay(day)}
+                      >
+                        Remove {day}
+                      </button>
+                    ) : null}
+                  </label>
+                );
+              })}
+            </div>
+          </>
         ) : null}
       </SectionCard>
 
@@ -257,10 +272,13 @@ export function PlanScreen() {
           <div className="preview-grid">
             <div className="mini-panel">
               <h3>Validation</h3>
-              {feedbackData.validationIssues.length === 0 ? (
+              {feedbackData.validationIssues.length === 0 && plannerRuleHints.summary.length === 0 ? (
                 <p>No rule violations in this preview.</p>
               ) : (
                 <ul className="plain-list">
+                  {plannerRuleHints.summary.map((message) => (
+                    <li key={message}>{message}</li>
+                  ))}
                   {feedbackData.validationIssues.map((issue) => (
                     <li key={`${issue.code}-${issue.mealId ?? issue.message}`}>{issue.message}</li>
                   ))}
@@ -302,6 +320,61 @@ function getEmptySelections() {
 
 function getSelectedMeals(selections: Record<(typeof weekdays)[number], string>) {
   return weekdays.filter((day) => selections[day]).map((day) => ({ day, mealId: selections[day] as string }));
+}
+
+function getPlannerRuleHints(
+  selections: Record<(typeof weekdays)[number], string>,
+  mealById: Map<string, ApiMeal>,
+) {
+  const byDay = Object.fromEntries(weekdays.map((day) => [day, [] as string[]])) as Record<
+    (typeof weekdays)[number],
+    string[]
+  >;
+  const summary = new Set<string>();
+  const daysByMealId = new Map<string, Array<(typeof weekdays)[number]>>();
+  const premiumDays: Array<(typeof weekdays)[number]> = [];
+
+  for (const day of weekdays) {
+    const mealId = selections[day];
+
+    if (!mealId) {
+      continue;
+    }
+
+    daysByMealId.set(mealId, [...(daysByMealId.get(mealId) ?? []), day]);
+
+    if (mealById.get(mealId)?.costTier === "premium") {
+      premiumDays.push(day);
+    }
+  }
+
+  for (const [mealId, days] of daysByMealId) {
+    if (days.length <= 1) {
+      continue;
+    }
+
+    const mealName = mealById.get(mealId)?.name ?? "This meal";
+    const message = `${mealName} is planned ${days.length} times; the current limit is once per week.`;
+    summary.add(message);
+
+    for (const day of days) {
+      byDay[day].push(`Repeat limit: also planned on ${days.filter((otherDay) => otherDay !== day).join(", ")}.`);
+    }
+  }
+
+  if (premiumDays.length > 1) {
+    const message = `Premium limit: ${premiumDays.length} premium dinners selected; the current limit is one per week.`;
+    summary.add(message);
+
+    for (const day of premiumDays) {
+      byDay[day].push("Premium limit: choose only one premium dinner this week.");
+    }
+  }
+
+  return {
+    byDay,
+    summary: [...summary],
+  };
 }
 
 function MealSummaryChip({ meal }: { meal: ApiMeal }) {
