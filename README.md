@@ -1,16 +1,44 @@
 # Family Meal Planner
 
-Family Meal Planner is a self-hosted application for planning meals with kids, building weekly meal schedules, and generating useful grocery lists with low friction.
+Family Meal Planner is a self-hosted app for answering "what's for dinner?" with less friction. It helps families maintain a meal catalog, build weekly dinner plans, involve kids through visual category choices, and generate grocery lists that are useful in a real shopping trip.
 
-This repository is currently in the initial project-setup stage. The goal of this first pass is to establish a clean structure for product, frontend, backend, and infrastructure work before deeper implementation begins.
+The project is past initial scaffolding. The current app includes a React frontend, an Express/Prisma backend, PostgreSQL persistence, seeded starter data, backend test coverage, and Docker-oriented local development.
 
-## Current Focus
+## Current Product Shape
 
-- Align implementation with [docs/prd-v1.md](/d:/Projects/family-meal-planner/docs/prd-v1.md)
-- Use [AGENTS.md](/d:/Projects/family-meal-planner/AGENTS.md) as the shared contributor guide
-- Build toward a self-hosted stack with React, Node, and PostgreSQL
+Implemented core flows:
 
-## Initial Repository Structure
+- Parent-managed meal categories, including icon assignment.
+- Meal create/edit/delete with category, cost tier, kid favorite, low effort, notes, ingredients, quantities, and store tags.
+- Dinner-first weekly planning with save, replace, and remove actions.
+- Grocery generation from current or saved weekly plans, including deduplication, grouping, store tags, quantities, used-in diagnostics, and a persistent shopping checklist.
+- Child-friendly category/meal selection views.
+- Category magnet/button SVG and PNG export using curated frontend icon assets.
+
+Important remaining work is tracked in [docs/project-checklist.md](docs/project-checklist.md). Near-term themes include mobile/tablet usability polish, frontend interaction/E2E tests, production self-hosting docs, API error consistency, and magnet export refactoring/tests.
+
+## Developer Starting Points
+
+- Product requirements: [docs/prd-v1.md](docs/prd-v1.md)
+- Contributor guidance: [AGENTS.md](AGENTS.md)
+- Implementation checklist: [docs/project-checklist.md](docs/project-checklist.md)
+- Backend API contract: [docs/backend-api.md](docs/backend-api.md)
+- Decision records: [docs/decisions/](docs/decisions/)
+- Backend notes: [backend/README.md](backend/README.md)
+- Frontend notes: [frontend/README.md](frontend/README.md)
+
+For substantial work, read the PRD, the relevant decision record, and the affected code before changing behavior.
+
+## Stack
+
+- Frontend: React, Vite, TypeScript, TanStack Query
+- Backend: Node.js, Express, TypeScript, Zod
+- Database: PostgreSQL
+- ORM: Prisma
+- Tests: Vitest, Supertest, isolated PostgreSQL test database
+- Local infrastructure: Docker Compose
+
+## Repository Map
 
 ```text
 .
@@ -19,71 +47,140 @@ This repository is currently in the initial project-setup stage. The goal of thi
 |-- docker-compose.yml
 |-- .env.example
 |-- docs/
+|   |-- backend-api.md
 |   |-- prd-v1.md
+|   |-- project-checklist.md
 |   `-- decisions/
-|-- frontend/
-|   |-- README.md
-|   |-- index.html
-|   |-- public/
+|-- backend/
+|   |-- prisma/
+|   |   |-- schema.prisma
+|   |   |-- migrations/
+|   |   `-- seed.mjs
 |   `-- src/
-|       |-- app/
-|       |-- components/
-|       |-- features/
-|       |-- styles/
+|       |-- config/
+|       |-- domain/
+|       |-- repositories/
+|       |-- routes/
 |       `-- test/
-`-- backend/
-    |-- README.md
-    |-- Dockerfile
-    |-- prisma/
+`-- frontend/
+    |-- public/
+    |   `-- icons/
     `-- src/
-        |-- config/
-        |-- domain/
-        |-- routes/
-        |-- services/
-        `-- test/
+        |-- app/
+        |-- components/
+        |-- features/
+        |   |-- grocery/
+        |   |-- magnets/
+        |   |-- meals/
+        |   |-- plan/
+        |   |-- settings/
+        |   `-- shared/
+        `-- styles/
 ```
-
-## Architecture Direction
-
-- `frontend/`: React-based SPA for parent and child workflows
-- `backend/`: Node API for meal, planner, and grocery-list logic
-- `backend/prisma/`: future database schema and migrations
-- `docs/decisions/`: lightweight architecture and product decisions
-
-## Working Agreements
-
-- Keep the MVP centered on meal management, weekly planning, and grocery generation.
-- Prefer clear boundaries between UI, domain logic, and persistence.
-- Add tests alongside behavior as implementation begins.
-- Use Docker-oriented local development from the start, even if the first version is simple.
-
-## Local Databases
-
-- The app database runs at `localhost:5432` by default and uses `POSTGRES_DB`.
-- The test database runs at `localhost:5433` by default and uses `POSTGRES_TEST_DB`.
-- Backend tests force Prisma onto `TEST_DATABASE_URL` so test artifacts cannot leak into the app database.
-- `db-test` is not part of the normal app startup path. Backend test commands start it on demand, prepare it, and stop it when the run finishes.
 
 ## Local Development
 
 Prerequisites:
 
+- Node.js and npm.
 - Docker with Docker Compose available as either `docker compose` or `docker-compose`.
-- On Fedora, the Compose plugin is usually installed with `sudo dnf install docker-compose-plugin`.
-- Your user needs Docker daemon access. If `sudo docker run hello-world` works but `npm run dev` fails with a Docker socket permission error, run `sudo usermod -aG docker $USER`, then log out and back in or run `newgrp docker`.
+- Docker daemon access for your user.
 
-Run the full hot-reload stack from the repository root:
+Optional environment setup:
+
+```bash
+cp .env.example .env
+```
+
+The defaults are suitable for local development. The main ports are:
+
+- Frontend: `http://localhost:5173` when using Vite through `npm run dev`
+- Backend API: `http://localhost:3001`
+- App database: `localhost:5432`
+- Test database: `localhost:5433`
+
+Install dependencies from the repository root:
+
+```bash
+npm install
+```
+
+Run the full hot-reload stack:
 
 ```bash
 npm run dev
 ```
 
-This starts the app database with Docker Compose, applies Prisma migrations, seeds development data, and then runs the backend API and Vite UI with hot reload.
+This starts the development PostgreSQL container, generates the Prisma client, applies migrations, seeds development data, and starts the backend API plus Vite UI.
 
-## Next Likely Steps
+To start only the development database:
 
-1. Scaffold the frontend app shell and design tokens.
-2. Scaffold the backend API and health endpoint.
-3. Add package manifests and shared scripts.
-4. Define the first Prisma schema for meals, ingredients, and weekly plans.
-5. Add linting, type checking, unit tests, and an initial E2E harness.
+```bash
+npm run dev:db
+```
+
+## Useful Commands
+
+From the repository root:
+
+```bash
+npm run dev
+npm run dev:db
+```
+
+Backend:
+
+```bash
+cd backend
+npm test
+npm run test:unit
+npm run typecheck
+npm run build
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:seed
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm run dev
+npm run typecheck
+npm run build
+```
+
+## Testing
+
+Backend tests are the strongest automated coverage today. `npm test` from `backend/` starts the dedicated `db-test` container, generates Prisma client code, applies migrations, seeds test data, runs Vitest, and stops the test database afterward.
+
+Frontend TypeScript validation currently runs through the frontend build/typecheck scripts. Focused component tests and E2E coverage are still open checklist items.
+
+Before considering meaningful code done, run the checks relevant to the changed area and note anything that could not be verified.
+
+## API And Data Notes
+
+The backend contract is documented in [docs/backend-api.md](docs/backend-api.md).
+
+Current model highlights:
+
+- Categories are data-driven and can reference a stable frontend `iconId`.
+- Store tags are first-class records used by ingredients.
+- Meals own meal-specific ingredient quantities through the join table.
+- Weekly planning is dinner-first, but API/domain shapes include `slot` so future meal occasions can be added deliberately.
+- Grocery generation deduplicates ingredients from selected meals and keeps enough context to explain why each item appears.
+
+## Working Agreements
+
+This repo uses [AGENTS.md](AGENTS.md) as the shared operating manual. The short version:
+
+- Keep the MVP centered on meal management, weekly planning, useful grocery output, and child-friendly participation.
+- Prefer small, reviewable changes grounded in the PRD and current code.
+- Keep business rules centralized and testable.
+- Add or update tests when behavior changes.
+- Preserve existing user work and avoid unrelated refactors.
+- Update docs when behavior, setup, API contracts, data models, or architecture change.
+
+## Self-Hosting Status
+
+Docker Compose exists for local app, API, and PostgreSQL services. A first-class production/self-hosting guide, backup/restore documentation, and complete environment variable reference are still pending and tracked in the project checklist.
