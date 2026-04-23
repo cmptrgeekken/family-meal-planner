@@ -11,15 +11,39 @@ const planSlots = [
 ];
 
 const categories = [
-  { name: "Pasta Night", slug: "pasta-night", legacySlug: "pasta", iconId: "168", slotSlugs: ["dinner"] },
-  { name: "Rice Bowls", slug: "rice-bowls", iconId: "115", slotSlugs: ["dinner"] },
-  { name: "Grill Night", slug: "grill-night", legacySlug: "ground-meat", iconId: "ai-grill", slotSlugs: ["dinner"] },
-  { name: "Chicken Night", slug: "chicken-night", legacySlug: "chicken", iconId: "160", slotSlugs: ["dinner"] },
-  { name: "Taco Night", slug: "taco-night", iconId: "77", slotSlugs: ["dinner"] },
-  { name: "Sandwich Night", slug: "sandwich-night", legacySlug: "sandwich-snack", iconId: "ai-blt", slotSlugs: ["dinner"] },
-  { name: "Snack Plate", slug: "snack-plate", iconId: "ai-snackplate", slotSlugs: ["dinner"] },
-  { name: "Breakfast Dinner", slug: "breakfast-dinner", legacySlug: "breakfast", iconId: "71", slotSlugs: ["dinner"] },
-  { name: "Pizza Night", slug: "pizza-night", iconId: "178", slotSlugs: ["dinner"] },
+  { name: "Pasta", slug: "pasta-night", legacySlug: "pasta", iconId: "168", slotSlugs: ["lunch", "dinner"] },
+  { name: "Rice Bowls", slug: "rice-bowls", iconId: "115", slotSlugs: ["lunch", "dinner"] },
+  {
+    name: "Grill & Hot Dogs",
+    slug: "grill-night",
+    legacySlug: "ground-meat",
+    iconId: "ai-grill",
+    slotSlugs: ["lunch", "dinner"],
+  },
+  {
+    name: "Chicken",
+    slug: "chicken-night",
+    legacySlug: "chicken",
+    iconId: "160",
+    slotSlugs: ["lunch", "dinner"],
+  },
+  { name: "Wraps & Tortillas", slug: "taco-night", iconId: "77", slotSlugs: ["breakfast", "lunch", "dinner"] },
+  {
+    name: "Sandwiches",
+    slug: "sandwich-night",
+    legacySlug: "sandwich-snack",
+    iconId: "ai-blt",
+    slotSlugs: ["breakfast", "lunch", "dinner"],
+  },
+  { name: "Snack Plates", slug: "snack-plate", iconId: "ai-snackplate", slotSlugs: ["breakfast", "lunch", "dinner"] },
+  {
+    name: "Pancakes & Waffles",
+    slug: "breakfast-dinner",
+    legacySlug: "breakfast",
+    iconId: "71",
+    slotSlugs: ["breakfast", "lunch", "dinner"],
+  },
+  { name: "Pizza", slug: "pizza-night", iconId: "178", slotSlugs: ["lunch", "dinner"] },
   { name: "Easy Dinner", slug: "easy-dinner", legacySlug: "fun-zero-cook", iconId: "ai-takeout", slotSlugs: ["dinner"] },
   { name: "One-Pot Meal", slug: "one-pot-meal", iconId: "117", slotSlugs: ["dinner"] },
   {
@@ -30,30 +54,33 @@ const categories = [
     slotSlugs: ["dinner"],
     weeklyMaxCount: 1,
   },
-  { name: "Classic Sandwich", slug: "classic-sandwich", iconId: "ai-blt", slotSlugs: ["lunch"] },
-  { name: "Bagel Lunch", slug: "bagel-lunch", iconId: "73", slotSlugs: ["lunch"] },
-  { name: "Cheese & Crackers Box", slug: "cheese-crackers-box", iconId: "152", slotSlugs: ["lunch"] },
-  { name: "Chicken Bites", slug: "chicken-bites", iconId: "160", slotSlugs: ["lunch"] },
-  { name: "Hot Dog Lunch", slug: "hot-dog-lunch", iconId: "162", slotSlugs: ["lunch"] },
-  { name: "Pasta Lunch", slug: "pasta-lunch", iconId: "168", slotSlugs: ["lunch"] },
-  { name: "Lunch Rice Bowl", slug: "lunch-rice-bowl", iconId: "115", slotSlugs: ["lunch"] },
-  { name: "Wrap Lunch", slug: "wrap-lunch", iconId: "581", slotSlugs: ["lunch"] },
-  { name: "Pizza Lunch", slug: "pizza-lunch", iconId: "178", slotSlugs: ["lunch"] },
-  { name: "Egg-Free Protein Box", slug: "egg-free-protein-box", iconId: "522", slotSlugs: ["lunch"] },
-  { name: "Breakfast Lunch", slug: "breakfast-lunch", iconId: "44", slotSlugs: ["lunch"] },
-  { name: "Snack Box", slug: "snack-box", iconId: "547", slotSlugs: ["lunch"] },
-  { name: "Pancake Stack", slug: "pancake-stack", iconId: "71", slotSlugs: ["breakfast"] },
-  { name: "Bagel Bar", slug: "bagel-bar", iconId: "73", slotSlugs: ["breakfast"] },
+  { name: "Bagel Bar", slug: "bagel-bar", iconId: "73", slotSlugs: ["breakfast", "lunch"] },
   { name: "Cereal Bowl", slug: "cereal-bowl", iconId: "256", slotSlugs: ["breakfast"] },
   { name: "Fruit & Yogurt", slug: "fruit-yogurt", iconId: "369", slotSlugs: ["breakfast"] },
-  { name: "Breakfast Sandwich", slug: "breakfast-sandwich", iconId: "79", slotSlugs: ["breakfast"] },
-  { name: "Breakfast Wrap", slug: "breakfast-wrap", iconId: "188", slotSlugs: ["breakfast"] },
   { name: "Breakfast Plate", slug: "breakfast-plate", iconId: "150", slotSlugs: ["breakfast"] },
   { name: "Toast & Toppings", slug: "toast-toppings", iconId: "79", slotSlugs: ["breakfast"] },
-  { name: "Freezer Breakfast", slug: "freezer-breakfast", iconId: "44", slotSlugs: ["breakfast"] },
-  { name: "Smoothie & Fruit", slug: "smoothie-fruit", iconId: "224", slotSlugs: ["breakfast"] },
-  { name: "Snack Breakfast", slug: "snack-breakfast", iconId: "170", slotSlugs: ["breakfast"] },
   { name: "Treat Breakfast", slug: "treat-breakfast", iconId: "36", slotSlugs: ["breakfast"] },
+];
+
+const categoryConsolidations = [
+  { fromSlug: "classic-sandwich", toSlug: "sandwich-night" },
+  { fromSlug: "breakfast-sandwich", toSlug: "sandwich-night" },
+  { fromSlug: "cheese-crackers-box", toSlug: "snack-plate" },
+  { fromSlug: "egg-free-protein-box", toSlug: "snack-plate" },
+  { fromSlug: "snack-box", toSlug: "snack-plate" },
+  { fromSlug: "snack-breakfast", toSlug: "snack-plate" },
+  { fromSlug: "chicken-bites", toSlug: "chicken-night" },
+  { fromSlug: "hot-dog-lunch", toSlug: "grill-night" },
+  { fromSlug: "pasta-lunch", toSlug: "pasta-night" },
+  { fromSlug: "lunch-rice-bowl", toSlug: "rice-bowls" },
+  { fromSlug: "wrap-lunch", toSlug: "taco-night" },
+  { fromSlug: "breakfast-wrap", toSlug: "taco-night" },
+  { fromSlug: "pizza-lunch", toSlug: "pizza-night" },
+  { fromSlug: "breakfast-lunch", toSlug: "breakfast-dinner" },
+  { fromSlug: "pancake-stack", toSlug: "breakfast-dinner" },
+  { fromSlug: "freezer-breakfast", toSlug: "breakfast-dinner" },
+  { fromSlug: "bagel-lunch", toSlug: "bagel-bar" },
+  { fromSlug: "smoothie-fruit", toSlug: "fruit-yogurt" },
 ];
 
 const storeTags = [
@@ -246,7 +273,7 @@ const meals = [
   {
     name: "Turkey & Cheese Sandwich",
     slug: "turkey-cheese-sandwich",
-    categorySlug: "classic-sandwich",
+    categorySlug: "sandwich-night",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -261,7 +288,7 @@ const meals = [
   {
     name: "Bagel Turkey Lunch",
     slug: "bagel-turkey-lunch",
-    categorySlug: "bagel-lunch",
+    categorySlug: "bagel-bar",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -276,7 +303,7 @@ const meals = [
   {
     name: "DIY Lunchable Box",
     slug: "diy-lunchable-box",
-    categorySlug: "cheese-crackers-box",
+    categorySlug: "snack-plate",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -291,7 +318,7 @@ const meals = [
   {
     name: "Chicken Bite Lunch",
     slug: "chicken-bite-lunch",
-    categorySlug: "chicken-bites",
+    categorySlug: "chicken-night",
     costTier: CostTier.STANDARD,
     kidFavorite: true,
     lowEffort: true,
@@ -306,7 +333,7 @@ const meals = [
   {
     name: "Sliced Hot Dog Lunch",
     slug: "sliced-hot-dog-lunch",
-    categorySlug: "hot-dog-lunch",
+    categorySlug: "grill-night",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -321,7 +348,7 @@ const meals = [
   {
     name: "Buttered Noodles Lunch",
     slug: "buttered-noodles-lunch",
-    categorySlug: "pasta-lunch",
+    categorySlug: "pasta-night",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -336,7 +363,7 @@ const meals = [
   {
     name: "Soy Chicken Rice Bowl",
     slug: "soy-chicken-rice-bowl",
-    categorySlug: "lunch-rice-bowl",
+    categorySlug: "rice-bowls",
     costTier: CostTier.STANDARD,
     kidFavorite: true,
     lowEffort: true,
@@ -351,7 +378,7 @@ const meals = [
   {
     name: "Turkey Cheese Wrap",
     slug: "turkey-cheese-wrap",
-    categorySlug: "wrap-lunch",
+    categorySlug: "taco-night",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -366,7 +393,7 @@ const meals = [
   {
     name: "Mini Pizza Lunch",
     slug: "mini-pizza-lunch",
-    categorySlug: "pizza-lunch",
+    categorySlug: "pizza-night",
     costTier: CostTier.STANDARD,
     kidFavorite: true,
     lowEffort: true,
@@ -381,7 +408,7 @@ const meals = [
   {
     name: "No-Sandwich Protein Box",
     slug: "no-sandwich-protein-box",
-    categorySlug: "egg-free-protein-box",
+    categorySlug: "snack-plate",
     costTier: CostTier.STANDARD,
     kidFavorite: true,
     lowEffort: true,
@@ -396,7 +423,7 @@ const meals = [
   {
     name: "Waffle Sausage Lunch",
     slug: "waffle-sausage-lunch",
-    categorySlug: "breakfast-lunch",
+    categorySlug: "breakfast-dinner",
     costTier: CostTier.STANDARD,
     kidFavorite: true,
     lowEffort: true,
@@ -411,7 +438,7 @@ const meals = [
   {
     name: "Flexible Snack Box",
     slug: "flexible-snack-box",
-    categorySlug: "snack-box",
+    categorySlug: "snack-plate",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -426,7 +453,7 @@ const meals = [
   {
     name: "Pancakes and Berries",
     slug: "pancakes-and-berries",
-    categorySlug: "pancake-stack",
+    categorySlug: "breakfast-dinner",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -486,7 +513,7 @@ const meals = [
   {
     name: "Toast Breakfast Sandwich",
     slug: "toast-breakfast-sandwich",
-    categorySlug: "breakfast-sandwich",
+    categorySlug: "sandwich-night",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -501,7 +528,7 @@ const meals = [
   {
     name: "Cheese Sausage Breakfast Wrap",
     slug: "cheese-sausage-breakfast-wrap",
-    categorySlug: "breakfast-wrap",
+    categorySlug: "taco-night",
     costTier: CostTier.STANDARD,
     kidFavorite: true,
     lowEffort: true,
@@ -546,7 +573,7 @@ const meals = [
   {
     name: "Toaster Waffles",
     slug: "toaster-waffles",
-    categorySlug: "freezer-breakfast",
+    categorySlug: "breakfast-dinner",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -561,7 +588,7 @@ const meals = [
   {
     name: "Berry Banana Smoothie",
     slug: "berry-banana-smoothie",
-    categorySlug: "smoothie-fruit",
+    categorySlug: "fruit-yogurt",
     costTier: CostTier.STANDARD,
     kidFavorite: true,
     lowEffort: true,
@@ -576,7 +603,7 @@ const meals = [
   {
     name: "Grab-and-Go Breakfast Box",
     slug: "grab-and-go-breakfast-box",
-    categorySlug: "snack-breakfast",
+    categorySlug: "snack-plate",
     costTier: CostTier.BUDGET,
     kidFavorite: true,
     lowEffort: true,
@@ -662,6 +689,28 @@ async function upsertCategory(category) {
   }
 }
 
+async function consolidateCategories() {
+  for (const consolidation of categoryConsolidations) {
+    const [sourceCategory, targetCategory] = await Promise.all([
+      prisma.category.findUnique({ where: { slug: consolidation.fromSlug } }),
+      prisma.category.findUnique({ where: { slug: consolidation.toSlug } }),
+    ]);
+
+    if (!sourceCategory || !targetCategory) {
+      continue;
+    }
+
+    await prisma.meal.updateMany({
+      where: { categoryId: sourceCategory.id },
+      data: { categoryId: targetCategory.id },
+    });
+
+    await prisma.category.delete({
+      where: { id: sourceCategory.id },
+    });
+  }
+}
+
 async function seed() {
   for (const planSlot of planSlots) {
     await prisma.planSlot.upsert({
@@ -678,6 +727,8 @@ async function seed() {
   for (const category of categories) {
     await upsertCategory(category);
   }
+
+  await consolidateCategories();
 
   for (const storeTag of storeTags) {
     await prisma.storeTagOption.upsert({
