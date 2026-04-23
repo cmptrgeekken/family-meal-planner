@@ -17,6 +17,10 @@ Priority order:
 5. Add child-friendly category/meal selection once parent-managed data exists.
 6. Keep setup, backups, and self-hosting docs reliable enough for a home deployment.
 
+Next major planning expansion:
+
+- [ ] Implement configurable Breakfast/Lunch/Dinner-style meal slots for planning, category eligibility, and grocery filtering. See [decisions/003-configurable-meal-slots.md](decisions/003-configurable-meal-slots.md) and [plans/meal-slots-implementation-plan.md](plans/meal-slots-implementation-plan.md).
+
 ## MVP Critical Path
 
 - [x] Add frontend category create/edit/delete UI so families can create their own planning categories.
@@ -100,6 +104,11 @@ Priority order:
 - [x] Save weekly plans from the planning screen.
 - [x] Add fast replace/remove meal actions for existing weekly plans.
 - [x] Add category-first meal narrowing for parent planning.
+- [ ] Add configurable meal slots so families can plan Breakfast, Lunch, Dinner, or household-specific occasions.
+- [ ] Persist weekly plan meals by `(day, slot)` instead of dinner-only `(day)`.
+- [ ] Filter planner category choices by slot eligibility.
+- [ ] Add configurable category weekly minimum/maximum counts.
+- [ ] Disable or visually cross out category choices that have reached their weekly maximum.
 - [ ] Add fast parent weekly planning workflow polish.
 - [ ] Add child-friendly visual meal picker/magnet board interactions. Category buttons exist; drag/drop magnet board remains deferred.
 - [x] Add non-drag accessible alternatives for assigning meals.
@@ -117,6 +126,7 @@ Priority order:
 - [x] Add persistent shopping checklist state for real shopping use.
 - [x] Add stronger UX for real store use on phones.
 - [x] Add diagnostics for why an item appears on the grocery list.
+- [ ] Add grocery slot filters so shopping trips can include only selected planned meal slots.
 
 ## Settings And Icon Assignment
 
@@ -124,6 +134,8 @@ Priority order:
 - [x] Icon manifest is loaded from `frontend/public/icons/manifest.json`.
 - [x] Icon library browsing exists.
 - [x] Category icon assignments persist through the API.
+- [ ] Add meal slot management.
+- [ ] Add category-to-slot assignment.
 - [ ] Improve icon search/filtering if the icon library remains large.
 - [ ] Add validation/reporting for categories referencing missing icon IDs.
 - [ ] Decide whether user-uploaded icons are out of scope permanently or deferred.
@@ -188,6 +200,7 @@ Deferred export ideas:
 - [x] Contributor guidance exists in `AGENTS.md`.
 - [x] Backend API documentation exists.
 - [x] Decision records exist for dinner-first planning and category icon magnet exports.
+- [x] ADR and development plan exist for configurable meal slots.
 - [x] Project checklist exists.
 - [x] Keep API docs in sync with route changes.
 - [x] Add environment variable reference documentation.
