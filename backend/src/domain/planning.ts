@@ -1,4 +1,5 @@
 import type { Meal, PlanValidationIssue, WeeklyPlanPreview } from "./models.js";
+import { getDaySlotKey, validateCategoryWeeklyCounts } from "./plan-slots.js";
 
 export type WeeklyPlanRules = {
   maxRepeatsPerMealPerWeek: number;
@@ -22,12 +23,13 @@ export function validateWeeklyPlan(
   let premiumSelections = 0;
 
   for (const selection of preview.selections) {
-    const daySlotKey = `${selection.day}:${selection.slot}`;
+    const daySlotKey = getDaySlotKey(selection);
 
     if (occupiedDaySlots.has(daySlotKey)) {
       issues.push({
         code: "duplicate_day_slot",
         mealId: selection.mealId,
+        planSlotSlug: selection.slotSlug,
         message: `The ${selection.slot} slot on ${selection.day} already has a planned meal.`,
       });
       continue;
@@ -69,5 +71,5 @@ export function validateWeeklyPlan(
     });
   }
 
-  return issues;
+  return [...issues, ...validateCategoryWeeklyCounts(preview.selections, meals)];
 }

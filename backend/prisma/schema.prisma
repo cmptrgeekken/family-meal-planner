@@ -22,13 +22,37 @@ enum CostTier {
 }
 
 model Category {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  iconId    String?
-  meals     Meal[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String             @id @default(cuid())
+  name            String
+  slug            String             @unique
+  iconId          String?
+  weeklyMinCount  Int?
+  weeklyMaxCount  Int?
+  meals           Meal[]
+  slotAssignments CategoryPlanSlot[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+}
+
+model PlanSlot {
+  id                  String             @id @default(cuid())
+  name                String
+  slug                String             @unique
+  sortOrder           Int
+  isEnabled           Boolean            @default(true)
+  categoryAssignments CategoryPlanSlot[]
+  planMeals           WeeklyPlanMeal[]
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+}
+
+model CategoryPlanSlot {
+  categoryId String
+  planSlotId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  planSlot   PlanSlot @relation(fields: [planSlotId], references: [id], onDelete: Restrict)
+
+  @@id([categoryId, planSlotId])
 }
 
 model StoreTagOption {
@@ -90,8 +114,10 @@ model WeeklyPlanMeal {
   weeklyPlanId String
   mealId       String
   dayOfWeek    Int
+  planSlotId   String
   weeklyPlan   WeeklyPlan @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
   meal         Meal       @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  planSlot     PlanSlot   @relation(fields: [planSlotId], references: [id], onDelete: Restrict)
 
-  @@unique([weeklyPlanId, dayOfWeek])
+  @@unique([weeklyPlanId, dayOfWeek, planSlotId])
 }

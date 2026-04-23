@@ -2,10 +2,11 @@ import { Router } from "express";
 import { z } from "zod";
 
 import { buildGroceryList } from "../domain/grocery.js";
-import { defaultPlanSlotName, planSlotNames, weekdayNames } from "../domain/models.js";
+import { weekdayNames } from "../domain/models.js";
 import { normalizeWeeklyPlanSelections } from "../domain/plan-slots.js";
 import { validateWeeklyPlan } from "../domain/planning.js";
 import { listMeals } from "../repositories/meal-repository.js";
+import { listPlanSlots } from "../repositories/plan-slot-repository.js";
 import {
   getWeeklyPlanByWeekStartDate,
   listRecentWeeklyPlans,
@@ -20,7 +21,8 @@ const previewSchema = z.object({
   selections: z.array(
     z.object({
       day: z.enum(weekdayNames),
-      slot: z.enum(planSlotNames).optional().default(defaultPlanSlotName),
+      slot: z.string().min(1).optional(),
+      slotSlug: z.string().min(1).optional(),
       mealId: z.string().min(1),
     }),
   ),
@@ -33,6 +35,20 @@ const weekParamSchema = z.object({
 const recentPlansQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(20).optional(),
 });
+
+function hasBlockingValidationIssues(validationIssues: Array<{ code: string }>) {
+  return validationIssues.some((issue) => issue.code !== "category_minimum_unmet");
+}
+
+async function assertKnownSlotSlugs(slotSlugs: string[]) {
+  const planSlots = await listPlanSlots();
+  const knownSlotSlugs = new Set(planSlots.map((planSlot) => planSlot.slug));
+  const unknownSlotSlug = slotSlugs.find((slotSlug) => !knownSlotSlugs.has(slotSlug));
+
+  if (unknownSlotSlug) {
+    throw new HttpError(400, `Meal slot "${unknownSlotSlug}" does not exist.`);
+  }
+}
 
 export const weeklyPlansRouter = Router();
 
@@ -89,6 +105,7 @@ weeklyPlansRouter.post(
       ...preview,
       selections: normalizeWeeklyPlanSelections(preview.selections),
     };
+    await assertKnownSlotSlugs(normalizedPreview.selections.map((selection) => selection.slotSlug));
     const meals = await listMeals();
     const validationIssues = validateWeeklyPlan(normalizedPreview, meals);
     const groceryList = buildGroceryList(normalizedPreview, meals);
@@ -124,10 +141,11 @@ weeklyPlansRouter.put(
       ...parsed.data,
       selections: normalizeWeeklyPlanSelections(parsed.data.selections),
     };
+    await assertKnownSlotSlugs(weeklyPlan.selections.map((selection) => selection.slotSlug));
     const meals = await listMeals();
     const validationIssues = validateWeeklyPlan(weeklyPlan, meals);
 
-    if (validationIssues.length > 0) {
+    if (hasBlockingValidationIssues(validationIssues)) {
       response.status(400).json({
         error: "invalid_weekly_plan",
         message: "Weekly plan violates one or more planning rules.",
@@ -141,6 +159,7 @@ weeklyPlansRouter.put(
       weeklyPlan.selections.map((selection) => ({
         mealId: selection.mealId,
         dayOfWeek: weekdayToIndex(selection.day),
+        slotSlug: selection.slotSlug,
       })),
     );
 

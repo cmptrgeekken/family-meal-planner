@@ -36,8 +36,8 @@ describe("buildGroceryList", () => {
       {
         weekStartDate: "2026-04-20",
         selections: [
-          { day: "Monday", slot: "Dinner", mealId: "spaghetti-night" },
-          { day: "Tuesday", slot: "Dinner", mealId: "burger-bowls" },
+          { day: "Monday", slot: "Dinner", slotSlug: "dinner", mealId: "spaghetti-night" },
+          { day: "Tuesday", slot: "Dinner", slotSlug: "dinner", mealId: "burger-bowls" },
         ],
       },
       meals,
@@ -47,5 +47,25 @@ describe("buildGroceryList", () => {
 
     expect(groundBeef).toBeDefined();
     expect(groundBeef?.usedInMeals).toEqual(["Spaghetti Night", "Burger Bowls"]);
+    expect(groundBeef?.usedIn).toEqual([
+      { day: "Monday", slotName: "Dinner", slotSlug: "dinner", mealName: "Spaghetti Night", mealId: "spaghetti-night" },
+      { day: "Tuesday", slotName: "Dinner", slotSlug: "dinner", mealName: "Burger Bowls", mealId: "burger-bowls" },
+    ]);
+  });
+
+  it("filters grocery output by selected slot slugs", () => {
+    const groceryList = buildGroceryList(
+      {
+        weekStartDate: "2026-04-20",
+        selections: [
+          { day: "Monday", slot: "Dinner", slotSlug: "dinner", mealId: "spaghetti-night" },
+          { day: "Tuesday", slot: "Lunch", slotSlug: "lunch", mealId: "burger-bowls" },
+        ],
+      },
+      meals,
+      ["dinner"],
+    );
+
+    expect(groceryList.map((item) => item.name)).toEqual(["Spaghetti", "Ground Beef"]);
   });
 });

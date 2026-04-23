@@ -30,8 +30,8 @@ describe("validateWeeklyPlan", () => {
       {
         weekStartDate: "2026-04-20",
         selections: [
-          { day: "Monday", slot: "Dinner", mealId: "spaghetti-night" },
-          { day: "Thursday", slot: "Dinner", mealId: "spaghetti-night" },
+          { day: "Monday", slot: "Dinner", slotSlug: "dinner", mealId: "spaghetti-night" },
+          { day: "Thursday", slot: "Dinner", slotSlug: "dinner", mealId: "spaghetti-night" },
         ],
       },
       meals,
@@ -45,8 +45,8 @@ describe("validateWeeklyPlan", () => {
       {
         weekStartDate: "2026-04-20",
         selections: [
-          { day: "Monday", slot: "Dinner", mealId: "burger-bowls" },
-          { day: "Friday", slot: "Dinner", mealId: "burger-bowls" },
+          { day: "Monday", slot: "Dinner", slotSlug: "dinner", mealId: "burger-bowls" },
+          { day: "Friday", slot: "Dinner", slotSlug: "dinner", mealId: "burger-bowls" },
         ],
       },
       meals,
@@ -60,13 +60,33 @@ describe("validateWeeklyPlan", () => {
       {
         weekStartDate: "2026-04-20",
         selections: [
-          { day: "Monday", slot: "Dinner", mealId: "spaghetti-night" },
-          { day: "Monday", slot: "Dinner", mealId: "burger-bowls" },
+          { day: "Monday", slot: "Dinner", slotSlug: "dinner", mealId: "spaghetti-night" },
+          { day: "Monday", slot: "Dinner", slotSlug: "dinner", mealId: "burger-bowls" },
         ],
       },
       meals,
     );
 
     expect(issues.some((issue) => issue.code === "duplicate_day_slot")).toBe(true);
+  });
+
+  it("reports category weekly maximum and minimum feedback", () => {
+    const issues = validateWeeklyPlan(
+      {
+        weekStartDate: "2026-04-20",
+        selections: [
+          { day: "Monday", slot: "Dinner", slotSlug: "dinner", mealId: "spaghetti-night" },
+          { day: "Tuesday", slot: "Lunch", slotSlug: "lunch", mealId: "burger-bowls" },
+        ],
+      },
+      [
+        { ...meals[0]!, categorySlug: "pasta", categoryWeeklyMinCount: 2 },
+        { ...meals[1]!, categorySlug: "premium", categoryWeeklyMaxCount: 0 },
+      ],
+      { maxRepeatsPerMealPerWeek: 7, maxPremiumMealsPerWeek: 7 },
+    );
+
+    expect(issues.some((issue) => issue.code === "category_minimum_unmet" && issue.categorySlug === "pasta")).toBe(true);
+    expect(issues.some((issue) => issue.code === "category_maximum_exceeded" && issue.categorySlug === "premium")).toBe(true);
   });
 });

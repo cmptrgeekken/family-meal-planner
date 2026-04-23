@@ -18,6 +18,7 @@ describe("weekly plan routes", () => {
     expect(previewResponse.status).toBe(200);
     expect(previewResponse.body.persisted).toBe(false);
     expect(previewResponse.body.preview.selections[0].slot).toBe("Dinner");
+    expect(previewResponse.body.preview.selections[0].slotSlug).toBe("dinner");
 
     const fetchResponse = await request(app).get(`/api/weekly-plans/${weekStartDate}`);
 
@@ -48,8 +49,31 @@ describe("weekly plan routes", () => {
     expect(fetchResponse.status).toBe(200);
     expect(fetchResponse.body.weeklyPlan.weekStartDate).toContain("2099-04-27");
     expect(fetchResponse.body.weeklyPlan.selections).toEqual([
-      { day: "Monday", slot: "Dinner", mealId: spaghettiNight.id },
-      { day: "Tuesday", slot: "Dinner", mealId: breakfastForDinner.id },
+      { day: "Monday", slot: "Dinner", slotSlug: "dinner", mealId: spaghettiNight.id },
+      { day: "Tuesday", slot: "Dinner", slotSlug: "dinner", mealId: breakfastForDinner.id },
+    ]);
+  });
+
+  it("allows multiple slots on the same day", async () => {
+    const app = createApp();
+    const weekStartDate = "2099-07-06";
+    const mealsResponse = await request(app).get("/api/meals");
+    const spaghettiNight = mealsResponse.body.meals.find((meal: { slug?: string }) => meal.slug === "spaghetti-night");
+    const breakfastForDinner = mealsResponse.body.meals.find(
+      (meal: { slug?: string }) => meal.slug === "breakfast-for-dinner",
+    );
+
+    const response = await request(app).put(`/api/weekly-plans/${weekStartDate}`).send({
+      selections: [
+        { day: "Monday", slotSlug: "breakfast", mealId: breakfastForDinner.id },
+        { day: "Monday", slotSlug: "dinner", mealId: spaghettiNight.id },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.weeklyPlan.selections).toEqual([
+      { day: "Monday", slot: "Breakfast", slotSlug: "breakfast", mealId: breakfastForDinner.id },
+      { day: "Monday", slot: "Dinner", slotSlug: "dinner", mealId: spaghettiNight.id },
     ]);
   });
 

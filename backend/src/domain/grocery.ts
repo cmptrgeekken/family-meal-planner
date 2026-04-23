@@ -1,16 +1,35 @@
 import type { GroceryListItem, Meal, WeeklyPlanPreview } from "./models.js";
+import { selectionMatchesSlotFilter } from "./plan-slots.js";
 
-export function buildGroceryList(preview: WeeklyPlanPreview, meals: Meal[]): GroceryListItem[] {
+export function buildGroceryList(preview: WeeklyPlanPreview, meals: Meal[], slotSlugs?: string[]): GroceryListItem[] {
+  const mealMap = new Map(meals.map((meal) => [meal.id, meal]));
   const selectedMeals = preview.selections
-    .map((selection) => meals.find((meal) => meal.id === selection.mealId))
-    .filter((meal): meal is Meal => Boolean(meal));
+    .filter((selection) => selectionMatchesSlotFilter(selection, slotSlugs))
+    .map((selection) => {
+      const meal = mealMap.get(selection.mealId);
+
+      return meal
+        ? {
+            meal,
+            selection,
+          }
+        : null;
+    })
+    .filter((selection): selection is NonNullable<typeof selection> => Boolean(selection));
 
   const items = new Map<string, GroceryListItem>();
 
-  for (const meal of selectedMeals) {
+  for (const { meal, selection } of selectedMeals) {
     for (const ingredient of meal.ingredients) {
       const key = `${ingredient.group}:${ingredient.name.toLowerCase()}`;
       const current = items.get(key);
+      const usageContext = {
+        day: selection.day,
+        slotName: selection.slot,
+        slotSlug: selection.slotSlug,
+        mealName: meal.name,
+        mealId: meal.id,
+      };
 
       if (!current) {
         items.set(key, {
@@ -19,6 +38,7 @@ export function buildGroceryList(preview: WeeklyPlanPreview, meals: Meal[]): Gro
           quantityLabels: ingredient.quantityLabel ? [ingredient.quantityLabel] : [],
           storeTags: ingredient.storeTag ? [ingredient.storeTag] : [],
           usedInMeals: [meal.name],
+          usedIn: [usageContext],
         });
         continue;
       }
@@ -33,6 +53,10 @@ export function buildGroceryList(preview: WeeklyPlanPreview, meals: Meal[]): Gro
 
       if (!current.usedInMeals.includes(meal.name)) {
         current.usedInMeals.push(meal.name);
+      }
+
+      if (!current.usedIn.some((usage) => usage.day === selection.day && usage.slotSlug === selection.slotSlug && usage.mealId === meal.id)) {
+        current.usedIn.push(usageContext);
       }
     }
   }

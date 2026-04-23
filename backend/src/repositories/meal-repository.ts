@@ -10,7 +10,15 @@ import { prisma } from "../config/prisma.js";
 import { throwIfUniqueConstraintError } from "./prisma-error-utils.js";
 
 const mealWithStoreInclude = {
-  category: true,
+  category: {
+    include: {
+      slotAssignments: {
+        include: {
+          planSlot: true,
+        },
+      },
+    },
+  },
   ingredients: {
     include: {
       ingredient: {
@@ -67,6 +75,9 @@ function mapMeal(record: MealRecord): Meal {
     category: record.category.name,
     categorySlug: record.category.slug,
     categoryIconId: record.category.iconId ?? undefined,
+    categoryWeeklyMinCount: record.category.weeklyMinCount ?? undefined,
+    categoryWeeklyMaxCount: record.category.weeklyMaxCount ?? undefined,
+    categorySlotSlugs: record.category.slotAssignments.map((assignment) => assignment.planSlot.slug),
     costTier: mapCostTier(record.costTier),
     kidFavorite: record.kidFavorite,
     lowEffort: record.lowEffort,

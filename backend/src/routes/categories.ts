@@ -17,7 +17,19 @@ const categorySchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1),
   iconId: z.string().min(1).nullable().optional(),
-});
+  slotSlugs: z.array(z.string().min(1)).optional(),
+  weeklyMinCount: z.number().int().nonnegative().nullable().optional(),
+  weeklyMaxCount: z.number().int().nonnegative().nullable().optional(),
+}).refine(
+  (category) =>
+    category.weeklyMinCount == null ||
+    category.weeklyMaxCount == null ||
+    category.weeklyMinCount <= category.weeklyMaxCount,
+  {
+    message: "Weekly minimum cannot be greater than weekly maximum.",
+    path: ["weeklyMinCount"],
+  },
+);
 
 const categoryParamsSchema = z.object({
   categoryId: z.string().min(1),
@@ -61,6 +73,11 @@ categoriesRouter.post(
     }
 
     const category = await createCategory(parsed.data);
+
+    if (!category) {
+      throw new HttpError(400, "Category references an unknown meal slot.");
+    }
+
     response.status(201).json({ category });
   }),
 );
@@ -83,7 +100,7 @@ categoriesRouter.put(
     const category = await updateCategory(params.categoryId, parsed.data);
 
     if (!category) {
-      throw new HttpError(404, "Category not found.");
+      throw new HttpError(404, "Category not found or references an unknown meal slot.");
     }
 
     response.json({ category });

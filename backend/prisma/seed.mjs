@@ -4,19 +4,32 @@ const { CostTier, IngredientType, PrismaClient } = prismaClient;
 
 const prisma = new PrismaClient();
 
+const planSlots = [
+  { name: "Breakfast", slug: "breakfast", sortOrder: 0, isEnabled: true },
+  { name: "Lunch", slug: "lunch", sortOrder: 1, isEnabled: true },
+  { name: "Dinner", slug: "dinner", sortOrder: 2, isEnabled: true },
+];
+
 const categories = [
-  { name: "Pasta Night", slug: "pasta-night", legacySlug: "pasta", iconId: "168" },
-  { name: "Rice Bowls", slug: "rice-bowls", iconId: "115" },
-  { name: "Grill Night", slug: "grill-night", legacySlug: "ground-meat", iconId: "ai-grill" },
-  { name: "Chicken Night", slug: "chicken-night", legacySlug: "chicken", iconId: "160" },
-  { name: "Taco Night", slug: "taco-night", iconId: "77" },
-  { name: "Sandwich Night", slug: "sandwich-night", legacySlug: "sandwich-snack", iconId: "ai-blt" },
-  { name: "Snack Plate", slug: "snack-plate", iconId: "ai-snackplate" },
-  { name: "Breakfast Dinner", slug: "breakfast-dinner", legacySlug: "breakfast", iconId: "71" },
-  { name: "Pizza Night", slug: "pizza-night", iconId: "178" },
-  { name: "Easy Dinner", slug: "easy-dinner", legacySlug: "fun-zero-cook", iconId: "ai-takeout" },
-  { name: "One-Pot Meal", slug: "one-pot-meal", iconId: "117" },
-  { name: "Special Dinner", slug: "special-dinner", legacySlug: "premium", iconId: "ai-steak" },
+  { name: "Pasta Night", slug: "pasta-night", legacySlug: "pasta", iconId: "168", slotSlugs: ["dinner"] },
+  { name: "Rice Bowls", slug: "rice-bowls", iconId: "115", slotSlugs: ["dinner"] },
+  { name: "Grill Night", slug: "grill-night", legacySlug: "ground-meat", iconId: "ai-grill", slotSlugs: ["dinner"] },
+  { name: "Chicken Night", slug: "chicken-night", legacySlug: "chicken", iconId: "160", slotSlugs: ["dinner"] },
+  { name: "Taco Night", slug: "taco-night", iconId: "77", slotSlugs: ["dinner"] },
+  { name: "Sandwich Night", slug: "sandwich-night", legacySlug: "sandwich-snack", iconId: "ai-blt", slotSlugs: ["dinner"] },
+  { name: "Snack Plate", slug: "snack-plate", iconId: "ai-snackplate", slotSlugs: ["dinner"] },
+  { name: "Breakfast Dinner", slug: "breakfast-dinner", legacySlug: "breakfast", iconId: "71", slotSlugs: ["dinner"] },
+  { name: "Pizza Night", slug: "pizza-night", iconId: "178", slotSlugs: ["dinner"] },
+  { name: "Easy Dinner", slug: "easy-dinner", legacySlug: "fun-zero-cook", iconId: "ai-takeout", slotSlugs: ["dinner"] },
+  { name: "One-Pot Meal", slug: "one-pot-meal", iconId: "117", slotSlugs: ["dinner"] },
+  {
+    name: "Special Dinner",
+    slug: "special-dinner",
+    legacySlug: "premium",
+    iconId: "ai-steak",
+    slotSlugs: ["dinner"],
+    weeklyMaxCount: 1,
+  },
 ];
 
 const storeTags = [
@@ -209,7 +222,7 @@ const meals = [
 ];
 
 async function upsertCategory(category) {
-  const { legacySlug, ...categoryData } = category;
+  const { legacySlug, slotSlugs = ["dinner"], ...categoryData } = category;
 
   if (legacySlug && legacySlug !== category.slug) {
     const [targetCategory, legacyCategory] = await Promise.all([
@@ -231,14 +244,53 @@ async function upsertCategory(category) {
     }
   }
 
-  await prisma.category.upsert({
+  const createdCategory = await prisma.category.upsert({
     where: { slug: category.slug },
-    update: { name: category.name, iconId: category.iconId },
+    update: {
+      name: category.name,
+      iconId: category.iconId,
+      weeklyMinCount: category.weeklyMinCount ?? null,
+      weeklyMaxCount: category.weeklyMaxCount ?? null,
+    },
     create: categoryData,
   });
+
+  const planSlots = await prisma.planSlot.findMany({
+    where: {
+      slug: {
+        in: slotSlugs,
+      },
+    },
+  });
+
+  await prisma.categoryPlanSlot.deleteMany({
+    where: { categoryId: createdCategory.id },
+  });
+
+  if (planSlots.length > 0) {
+    await prisma.categoryPlanSlot.createMany({
+      data: planSlots.map((planSlot) => ({
+        categoryId: createdCategory.id,
+        planSlotId: planSlot.id,
+      })),
+      skipDuplicates: true,
+    });
+  }
 }
 
 async function seed() {
+  for (const planSlot of planSlots) {
+    await prisma.planSlot.upsert({
+      where: { slug: planSlot.slug },
+      update: {
+        name: planSlot.name,
+        sortOrder: planSlot.sortOrder,
+        isEnabled: planSlot.isEnabled,
+      },
+      create: planSlot,
+    });
+  }
+
   for (const category of categories) {
     await upsertCategory(category);
   }
