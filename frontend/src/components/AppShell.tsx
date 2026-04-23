@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import type { AppTab } from "../app/App";
 
@@ -17,9 +17,21 @@ const tabs: Array<{ id: AppTab; label: string; description: string; href: string
 ];
 
 export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
+  const [isDesktopNavCompact, setIsDesktopNavCompact] = useState(false);
+
+  useEffect(() => {
+    function handleScroll() {
+      setIsDesktopNavCompact(window.scrollY > 24);
+    }
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <div className="app-shell">
-      <header className="app-header">
+      <header className={isDesktopNavCompact ? "app-header app-header-compact" : "app-header"}>
         <div className="app-brand">
           <div>
             <p className="eyebrow">Family Meal Planner</p>
@@ -28,7 +40,10 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
           </div>
           <div className="header-badge">Local-first and family-friendly</div>
         </div>
-        <nav className="desktop-nav" aria-label="Primary">
+      </header>
+
+      <div className={isDesktopNavCompact ? "desktop-nav-shell desktop-nav-shell-compact" : "desktop-nav-shell"}>
+        <nav className={isDesktopNavCompact ? "desktop-nav desktop-nav-compact" : "desktop-nav"} aria-label="Primary">
           {tabs.map((tab) => (
             <a
               key={tab.id}
@@ -45,7 +60,7 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
             </a>
           ))}
         </nav>
-      </header>
+      </div>
 
       <main className="app-main">{children}</main>
 

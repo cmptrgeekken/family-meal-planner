@@ -771,8 +771,8 @@ export function SettingsScreen() {
                           </span>
                         );
                       })}
-                      {category.weeklyMinCount !== null ? <span className="pill-muted">Min {category.weeklyMinCount}</span> : null}
-                      {category.weeklyMaxCount !== null ? <span className="pill-muted">Max {category.weeklyMaxCount}</span> : null}
+                      {category.weeklyMinCount != null ? <span className="pill-muted">Min {category.weeklyMinCount}</span> : null}
+                      {category.weeklyMaxCount != null ? <span className="pill-muted">Max {category.weeklyMaxCount}</span> : null}
                     </div>
                     <div className="category-editor-actions">
                       <button type="button" className="secondary-button" onClick={() => setCategoryEditorId(category.id)}>
