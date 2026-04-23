@@ -75,7 +75,7 @@ test.beforeEach(async ({ page }) => {
 test("captures desktop UI review screenshots for core screens", async ({ page }) => {
   const screens = [
     { path: "/plan", title: "Weekly Plan" },
-    { path: "/meals", title: "Add Meal" },
+    { path: "/meals", title: "Meal Library" },
     { path: "/grocery", title: "Grocery List" },
     { path: "/settings", title: "Reference Data" },
     { path: "/magnets", title: "Magnet Export" },

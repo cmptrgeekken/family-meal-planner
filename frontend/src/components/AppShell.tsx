@@ -20,11 +20,31 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div>
-          <p className="eyebrow">Family Meal Planner</p>
-          <h1>Plan faster. Shop smarter. Keep dinner calm.</h1>
+        <div className="app-brand">
+          <div>
+            <p className="eyebrow">Family Meal Planner</p>
+            <h1>Plan meals without the weekly scramble.</h1>
+            <p className="app-header-copy">Self-hosted weekly planning, grocery output, and practical meal maintenance.</p>
+          </div>
+          <div className="header-badge">Local-first and family-friendly</div>
         </div>
-        <div className="header-badge">Dinner-first, mobile-first</div>
+        <nav className="desktop-nav" aria-label="Primary">
+          {tabs.map((tab) => (
+            <a
+              key={tab.id}
+              href={tab.href}
+              className={tab.id === activeTab ? "nav-pill nav-pill-active" : "nav-pill"}
+              onClick={(event) => {
+                event.preventDefault();
+                onTabChange(tab.id);
+              }}
+              aria-current={tab.id === activeTab ? "page" : undefined}
+            >
+              <span>{tab.label}</span>
+              <small>{tab.description}</small>
+            </a>
+          ))}
+        </nav>
       </header>
 
       <main className="app-main">{children}</main>

@@ -1,7 +1,8 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { EmptyState } from "../../components/EmptyState";
+import { Modal } from "../../components/Modal";
 import { SectionCard } from "../../components/SectionCard";
 import {
   createMeal,
@@ -53,6 +54,14 @@ const emptyMealForm: MealFormState = {
 };
 
 const groceryGroups: ApiMealIngredient["group"][] = ["protein", "carb", "veg", "fruit", "extras"];
+
+function buildEmptyMealForm(defaultCategorySlug: string): MealFormState {
+  return {
+    ...emptyMealForm,
+    categorySlug: defaultCategorySlug,
+    ingredients: [{ ...emptyIngredient }],
+  };
+}
 
 function slugify(value: string) {
   return value
@@ -111,6 +120,7 @@ export function MealsScreen() {
     lowEffort: false,
   });
   const [mealForm, setMealForm] = useState<MealFormState>(emptyMealForm);
+  const [isMealEditorOpen, setIsMealEditorOpen] = useState(false);
 
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
@@ -147,20 +157,14 @@ export function MealsScreen() {
   const createMealMutation = useMutation({
     mutationFn: createMeal,
     onSuccess: () => {
-      setMealForm({
-        ...emptyMealForm,
-        categorySlug: categoriesQuery.data?.categories[0]?.slug ?? "",
-      });
+      closeMealEditor();
       void queryClient.invalidateQueries({ queryKey: ["meals"] });
     },
   });
   const updateMealMutation = useMutation({
     mutationFn: (payload: { mealId: string; meal: ApiMealPayload }) => updateMeal(payload.mealId, payload.meal),
     onSuccess: () => {
-      setMealForm({
-        ...emptyMealForm,
-        categorySlug: categoriesQuery.data?.categories[0]?.slug ?? "",
-      });
+      closeMealEditor();
       void queryClient.invalidateQueries({ queryKey: ["meals"] });
       void queryClient.invalidateQueries({ queryKey: ["weekly-plan-preview"] });
     },
@@ -177,6 +181,39 @@ export function MealsScreen() {
   const categories = categoriesQuery.data?.categories ?? [];
   const storeTags = storeTagsQuery.data?.storeTags ?? [];
   const activeCategorySlug = mealForm.categorySlug || categories[0]?.slug || "";
+  const activeFilterCount = [filters.categorySlug, filters.storeTagSlug, filters.search.trim()]
+    .filter(Boolean)
+    .concat(filters.kidFavorite ? ["kidFavorite"] : [])
+    .concat(filters.lowEffort ? ["lowEffort"] : []).length;
+  const visibleMealCountLabel = useMemo(() => {
+    const count = visibleMeals.length;
+    return `${count} meal${count === 1 ? "" : "s"}`;
+  }, [visibleMeals.length]);
+
+  function resetMealForm() {
+    setMealForm(buildEmptyMealForm(categories[0]?.slug ?? ""));
+  }
+
+  function openCreateMealModal() {
+    createMealMutation.reset();
+    updateMealMutation.reset();
+    resetMealForm();
+    setIsMealEditorOpen(true);
+  }
+
+  function openEditMealModal(meal: ApiMeal) {
+    createMealMutation.reset();
+    updateMealMutation.reset();
+    setMealForm(mealToForm(meal));
+    setIsMealEditorOpen(true);
+  }
+
+  function closeMealEditor() {
+    createMealMutation.reset();
+    updateMealMutation.reset();
+    setIsMealEditorOpen(false);
+    resetMealForm();
+  }
 
   function updateIngredient(index: number, patch: Partial<MealFormIngredient>) {
     setMealForm((current) => ({
@@ -218,10 +255,147 @@ export function MealsScreen() {
   }
 
   return (
-    <div className="screen-layout">
+    <div className="screen-layout meals-screen-layout">
       <SectionCard
+        title="Meal Library"
+        subtitle="Browse the catalog, filter quickly, and open add or edit in a focused modal instead of chasing a form up the page."
+        className="meals-library-card"
+        actions={
+          <div className="section-toolbar">
+            <span className="pill-muted">{visibleMealCountLabel}</span>
+            <button type="button" className="primary-button" onClick={openCreateMealModal}>
+              Add meal
+            </button>
+          </div>
+        }
+      >
+        <div className="meals-library-stack">
+          <div className="filter-stack meals-filter-grid">
+            <input
+              value={filters.search}
+              placeholder="Search meals or ingredients"
+              onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
+            />
+
+            <select
+              value={filters.categorySlug}
+              onChange={(event) => setFilters((current) => ({ ...current, categorySlug: event.target.value }))}
+            >
+              <option value="">All categories</option>
+              {categoriesQuery.data?.categories.map((category) => (
+                <option key={category.id} value={category.slug}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filters.storeTagSlug}
+              onChange={(event) => setFilters((current) => ({ ...current, storeTagSlug: event.target.value }))}
+            >
+              <option value="">All stores</option>
+              {storeTagsQuery.data?.storeTags.map((storeTag) => (
+                <option key={storeTag.id} value={storeTag.slug}>
+                  {storeTag.name}
+                </option>
+              ))}
+            </select>
+
+            <div className="toggle-row meals-filter-toggles">
+              <button
+                type="button"
+                className={filters.kidFavorite ? "filter-chip filter-chip-active" : "filter-chip"}
+                onClick={() => setFilters((current) => ({ ...current, kidFavorite: !current.kidFavorite }))}
+              >
+                Kid favorite
+              </button>
+              <button
+                type="button"
+                className={filters.lowEffort ? "filter-chip filter-chip-active" : "filter-chip"}
+                onClick={() => setFilters((current) => ({ ...current, lowEffort: !current.lowEffort }))}
+              >
+                Low effort
+              </button>
+              {activeFilterCount > 0 ? (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() =>
+                    setFilters({
+                      search: "",
+                      categorySlug: "",
+                      storeTagSlug: "",
+                      kidFavorite: false,
+                      lowEffort: false,
+                    })
+                  }
+                >
+                  Clear filters
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          {deleteMealMutation.isError ? (
+            <p className="muted-text">
+              {deleteMealMutation.error instanceof Error ? deleteMealMutation.error.message : "Meal could not be deleted."}
+            </p>
+          ) : null}
+
+          {mealsQuery.isLoading ? <p>Loading meals...</p> : null}
+          {!mealsQuery.isLoading && visibleMeals.length === 0 ? (
+            <EmptyState title="No matching meals" message="Try clearing one or more filters." />
+          ) : null}
+          <div className="meal-card-grid">
+            {visibleMeals.map((meal) => (
+              <article key={meal.id} className="meal-card">
+                <div className="meal-card-topline">
+                  <span className="pill-muted category-pill">
+                    {meal.categoryIconId ? <img src={`/icons/${meal.categoryIconId}.svg`} alt="" /> : null}
+                    {meal.category}
+                  </span>
+                  <span className={`pill-cost pill-cost-${meal.costTier}`}>{meal.costTier}</span>
+                </div>
+                <h3>{meal.name}</h3>
+                <p>{meal.notes ?? "No notes yet."}</p>
+                <div className="meal-card-flags">
+                  {meal.kidFavorite ? <span>Kid favorite</span> : null}
+                  {meal.lowEffort ? <span>Low effort</span> : null}
+                </div>
+                <div className="meal-card-ingredients">
+                  {meal.ingredients.slice(0, 4).map((ingredient) => (
+                    <span key={`${meal.id}-${ingredient.name}`}>{ingredient.name}</span>
+                  ))}
+                  {meal.ingredients.length > 4 ? <span>+{meal.ingredients.length - 4} more</span> : null}
+                </div>
+                <div className="meal-card-actions">
+                  <button type="button" className="secondary-button" onClick={() => openEditMealModal(meal)}>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button danger-button"
+                    disabled={isMealMutationPending}
+                    onClick={() => {
+                      if (window.confirm(`Delete "${meal.name}"? Meals used in saved plans cannot be deleted.`)) {
+                        deleteMealMutation.mutate(meal.id);
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </SectionCard>
+
+      <Modal
+        isOpen={isMealEditorOpen}
         title={mealForm.id ? "Edit Meal" : "Add Meal"}
-        subtitle="Parent-friendly meal maintenance with practical ingredient details for grocery generation."
+        description="Update the meal details and ingredients without losing your place in the library."
+        onClose={closeMealEditor}
       >
         <form className="meal-editor-form" onSubmit={handleSubmitMeal}>
           <div className="field-grid">
@@ -373,135 +547,19 @@ export function MealsScreen() {
             ))}
           </div>
 
-          <div className="toggle-row form-action-row">
+          <div className="toggle-row modal-action-row">
             <button type="submit" className="primary-button" disabled={isMealMutationPending}>
               {mealForm.id ? "Save meal" : "Add meal"}
             </button>
-            {mealForm.id ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() =>
-                  setMealForm({
-                    ...emptyMealForm,
-                    categorySlug: categories[0]?.slug ?? "",
-                  })
-                }
-              >
-                Cancel edit
-              </button>
-            ) : null}
+            <button type="button" className="secondary-button" onClick={closeMealEditor}>
+              Cancel
+            </button>
           </div>
           {createMealMutation.isError || updateMealMutation.isError ? (
             <p className="muted-text">Meal could not be saved. Check required fields and duplicate slugs.</p>
           ) : null}
-          {deleteMealMutation.isError ? (
-            <p className="muted-text">
-              {deleteMealMutation.error instanceof Error ? deleteMealMutation.error.message : "Meal could not be deleted."}
-            </p>
-          ) : null}
         </form>
-      </SectionCard>
-
-      <SectionCard title="Meal Browser" subtitle="Use filter chips and quick toggles to narrow the list fast on a phone.">
-        <div className="filter-stack">
-          <input
-            value={filters.search}
-            placeholder="Search meals or ingredients"
-            onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
-          />
-
-          <select
-            value={filters.categorySlug}
-            onChange={(event) => setFilters((current) => ({ ...current, categorySlug: event.target.value }))}
-          >
-            <option value="">All categories</option>
-            {categoriesQuery.data?.categories.map((category) => (
-              <option key={category.id} value={category.slug}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={filters.storeTagSlug}
-            onChange={(event) => setFilters((current) => ({ ...current, storeTagSlug: event.target.value }))}
-          >
-            <option value="">All stores</option>
-            {storeTagsQuery.data?.storeTags.map((storeTag) => (
-              <option key={storeTag.id} value={storeTag.slug}>
-                {storeTag.name}
-              </option>
-            ))}
-          </select>
-
-          <div className="toggle-row">
-            <button
-              type="button"
-              className={filters.kidFavorite ? "filter-chip filter-chip-active" : "filter-chip"}
-              onClick={() => setFilters((current) => ({ ...current, kidFavorite: !current.kidFavorite }))}
-            >
-              Kid favorite
-            </button>
-            <button
-              type="button"
-              className={filters.lowEffort ? "filter-chip filter-chip-active" : "filter-chip"}
-              onClick={() => setFilters((current) => ({ ...current, lowEffort: !current.lowEffort }))}
-            >
-              Low effort
-            </button>
-          </div>
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Results" subtitle="Meal cards are intentionally compact and thumb-friendly for quick picking.">
-        {mealsQuery.isLoading ? <p>Loading meals...</p> : null}
-        {!mealsQuery.isLoading && visibleMeals.length === 0 ? (
-          <EmptyState title="No matching meals" message="Try clearing one or more filters." />
-        ) : null}
-        <div className="meal-card-grid">
-          {visibleMeals.map((meal) => (
-            <article key={meal.id} className="meal-card">
-              <div className="meal-card-topline">
-                <span className="pill-muted category-pill">
-                  {meal.categoryIconId ? <img src={`/icons/${meal.categoryIconId}.svg`} alt="" /> : null}
-                  {meal.category}
-                </span>
-                <span className={`pill-cost pill-cost-${meal.costTier}`}>{meal.costTier}</span>
-              </div>
-              <h3>{meal.name}</h3>
-              <p>{meal.notes ?? "No notes yet."}</p>
-              <div className="meal-card-flags">
-                {meal.kidFavorite ? <span>Kid favorite</span> : null}
-                {meal.lowEffort ? <span>Low effort</span> : null}
-              </div>
-              <div className="meal-card-ingredients">
-                {meal.ingredients.slice(0, 4).map((ingredient) => (
-                  <span key={`${meal.id}-${ingredient.name}`}>{ingredient.name}</span>
-                ))}
-                {meal.ingredients.length > 4 ? <span>+{meal.ingredients.length - 4} more</span> : null}
-              </div>
-              <div className="meal-card-actions">
-                <button type="button" className="secondary-button" onClick={() => setMealForm(mealToForm(meal))}>
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="secondary-button danger-button"
-                  disabled={isMealMutationPending}
-                  onClick={() => {
-                    if (window.confirm(`Delete "${meal.name}"? Meals used in saved plans cannot be deleted.`)) {
-                      deleteMealMutation.mutate(meal.id);
-                    }
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </SectionCard>
+      </Modal>
     </div>
   );
 }
