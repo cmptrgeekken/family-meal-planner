@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "dev:db": "node scripts/dev-db.mjs"
+    "dev:db": "node scripts/dev-db.mjs",
+    "test:e2e": "npm run test:e2e -w frontend"
   }
 }
