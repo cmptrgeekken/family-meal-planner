@@ -534,6 +534,22 @@ button:disabled {
   list-style: none;
 }
 
+.settings-screen-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.settings-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.settings-section-stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
 .settings-record-list {
   display: grid;
   gap: 0.75rem;
@@ -556,6 +572,17 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
+}
+
+.settings-record-copy {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.settings-record-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
 }
 
 .category-icon-row {

@@ -77,7 +77,7 @@ test("captures desktop UI review screenshots for core screens", async ({ page })
     { path: "/plan", title: "Weekly Plan" },
     { path: "/meals", title: "Meal Library" },
     { path: "/grocery", title: "Grocery List" },
-    { path: "/settings", title: "Reference Data" },
+    { path: "/settings", title: "Settings" },
     { path: "/magnets", title: "Magnet Export" },
   ];
 
