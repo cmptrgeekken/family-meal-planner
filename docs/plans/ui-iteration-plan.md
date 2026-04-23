@@ -1,152 +1,179 @@
 # UI Iteration Plan
 
-## Context
+## Purpose
 
-Playwright desktop screenshots exposed a clear mismatch between the app's current layout and the amount of data now available after meal slots, categories, and seeded meals expanded.
+This document defines the next UI cleanup pass for the Family Meal Planner app.
+It is intentionally prescriptive. The goal is to remove ambiguity before implementation starts.
 
-The product is still intended to feel fast, practical, and low-stress for family meal planning. The current UI is functional, but several screens now feel busy because mobile-first stacked cards are being used unchanged on desktop.
+## Problem Statement
 
-Primary observed issues:
+Playwright desktop screenshots showed that the app is now carrying significantly more content than its original mobile-first stacked layouts can comfortably support.
 
-- Desktop screens leave large unused areas while dense workflows stack vertically in narrow columns.
-- Meal editing is unintuitive: clicking `Edit` changes the form at the top of the page, requiring the user to scroll away from the meal they were viewing.
-- Settings has become one long maintenance page containing meal slots, categories, store tags, and the full icon library.
-- The icon library consumes too much visual space for something that is reference/browsing support.
-- Planning shows every day and slot as tall repeated cards, creating heavy scrolling.
+The main issues are now established:
 
-## Design Direction
+- Desktop screens waste large areas of width while primary workflows remain trapped in narrow stacked columns.
+- Meal editing is disorienting because `Edit` changes a form elsewhere on the page instead of opening an editor at the point of intent.
+- Settings has become a long mixed-maintenance surface containing too many unrelated tasks.
+- The icon library is useful, but it overwhelms Settings and should not sit inline with routine category and slot editing.
+- The planner is too tall on desktop because every day and every slot repeats the same control structure in stacked cards.
 
-Use desktop width for the primary browsing/listing surface, and move creation/editing into focused modal dialogs.
+## Firm Decisions
 
-This is preferable to a persistent left-list/right-editor layout because the app already has several dense records with rich forms. Keeping a permanent editor panel visible would preserve the "busy admin screen" feeling. Modal editors let the user focus on one edit task, then return to the list exactly where they started.
+### 1. Editing Pattern
 
-Guiding principles:
+The application will use **full-width browse/list surfaces plus modal add/edit flows**.
 
-- Full-width list or table surfaces for browsing, scanning, and filtering.
-- Modal dialogs for add/edit flows on both desktop and mobile.
-- Inline destructive or high-impact actions should be explicit and confirmed.
-- Keep dense reference management behind tabs or separate screens.
-- Reduce nested cards and repeated controls.
-- Keep the main app header compact on internal tool screens.
-- Preserve mobile touch ergonomics while giving desktop its own layout.
+This applies to:
 
-## Proposed Work Batches
+- meals
+- meal slots
+- categories
+- store tags
 
-### 1. App Shell And Desktop Layout
+We are **not** using a persistent list-on-one-side and editor-on-the-other layout.
 
-Goals:
+Reason:
 
-- Reduce the oversized internal header on desktop.
-- Use more viewport width for work surfaces.
-- Keep bottom navigation for mobile, but switch to a compact desktop navigation treatment.
+- persistent editors keep too much UI on screen at once
+- the app already has dense forms
+- modal focus better matches the parent workflow of scanning a list, then editing one thing
+- the same interaction model works on desktop and mobile
 
-Candidate changes:
+### 2. Desktop Shell
 
-- Add responsive shell styles for desktop.
-- Replace the large hero-like title with a compact app bar on desktop.
-- Move primary navigation to a top or side desktop nav.
-- Keep current bottom nav under tablet/mobile breakpoints.
+Internal app screens will use a **compact desktop app shell**, not a hero-style header.
 
-Success criteria:
+Decisions:
 
-- Desktop screenshots show the primary workflow near the top of the page.
-- The app no longer feels like a landing page wrapped around admin tools.
+- the large landing-style headline remains inappropriate for internal tool screens and will be removed from desktop layouts
+- desktop navigation will move out of the bottom mobile bar treatment
+- the mobile bottom navigation remains for smaller breakpoints
+- the main content area will expand to use desktop width efficiently
 
-### 2. Meal Management Modal Editing
+### 3. Meals Screen
 
-Goals:
+The Meals screen will become a **full-width browsing surface with modal editing**.
 
-- Make editing meals obvious and local to the selected record.
-- Let the meal list use the full width.
-- Remove the need to scroll to the top after clicking `Edit`.
+Decisions:
 
-Candidate changes:
+- the always-visible add/edit form will be removed from the page body
+- the page will show:
+  - a compact action bar
+  - filter/search controls
+  - a full-width meal list/grid
+- `Add meal` opens a modal
+- `Edit` opens the same modal prefilled for the selected meal
+- closing the modal returns the user to the same browse position
+- delete remains a separate explicit action with confirmation
 
-- Replace always-visible add/edit form with an `Add meal` button.
-- Open add/edit in a modal dialog.
-- Keep filters above the meal list as a compact toolbar.
-- Use a wider responsive meal grid/list for desktop.
-- Return focus to the originating button when the modal closes.
+### 4. Settings Information Architecture
 
-Success criteria:
+Settings will be split into **focused sections**, not one long maintenance page.
 
-- Clicking `Edit` opens an editor immediately.
-- Closing the modal returns the user to the same place in the list.
-- Meal browsing and filtering use the full desktop width.
+Decisions:
 
-### 3. Settings Information Architecture
-
-Goals:
-
-- Turn Settings from a long mixed maintenance page into focused sections.
-- Remove the icon library from the default settings maintenance flow.
-
-Candidate changes:
-
-- Add Settings tabs or segmented navigation:
-  - Meal slots
+- Settings will be divided into separate sections for:
+  - Meal Slots
   - Categories
-  - Store tags
-- Move add/edit for slots, categories, and store tags into modal dialogs.
-- Show categories and slots as compact full-width lists/tables.
-- Move Icon Library to its own screen or its own Settings subtab.
+  - Store Tags
+- each section will present a compact list/table-like browsing surface
+- add/edit flows for these records will use modals
+- only the currently active section is shown at a time
 
-Success criteria:
+### 5. Icon Library Placement
 
-- Managing meal slots does not require scrolling past categories or icons.
-- Category assignment is still easy, but each edit is focused.
-- Icon browsing no longer dominates Settings.
+The Icon Library will **not** remain inline on the main Settings page.
 
-### 4. Icon Library Separation
+Decisions:
 
-Goals:
+- the icon library moves to its own dedicated screen or dedicated Settings subsection
+- the default Settings experience will focus on routine maintenance tasks, not icon browsing
+- icon browsing will still support category assignment work, but it will no longer dominate the default page layout
 
-- Preserve icon browsing while making it feel optional and searchable.
+Implementation choice:
 
-Candidate changes:
+- use a dedicated Settings subsection first, rather than a top-level app tab
+- this keeps icon management adjacent to category management without making Settings unusable
 
-- Add a dedicated `/icons` route or Settings subtab.
-- Add icon search/filter controls.
-- Show icon name, ID, AI-generated flag, and confidence.
-- Later: show whether an icon is currently assigned to any category.
+### 6. Planner Desktop Layout
 
-Success criteria:
+The planner will adopt a **desktop week grid**.
 
-- Settings is usable without scrolling through the full icon grid.
-- Icon Library remains available when assigning or auditing icons.
+Decisions:
 
-### 5. Planner Desktop Grid
+- desktop layout uses:
+  - rows for days
+  - columns for enabled meal slots
+- mobile keeps the current stacked card model
+- each desktop planner cell will become more compact than the current repeated card stack
+- detailed category/meal picking will move into a focused interaction surface per cell rather than always rendering the full control stack inline
 
-Goals:
+### 7. Density Rules
 
-- Reduce vertical scrolling in the weekly planner.
-- Make Breakfast/Lunch/Dinner planning scannable as a week.
+The following rules apply across the redesign:
 
-Candidate changes:
+- do not keep unrelated maintenance tools visible at the same time on desktop
+- do not render giant top-of-page marketing-style copy on internal tool screens
+- do not require users to scroll away from the selected record just to edit it
+- do not use long stacks of repeated cards when a grid, table-like list, or sectioned layout will scan faster
+- do keep mobile touch targets generous
+- do keep add/edit/delete workflows obvious and recoverable
 
-- Use a desktop grid with days as rows and enabled meal slots as columns.
-- Keep mobile as stacked day/slot cards.
-- Compact each cell to show selected category and meal.
-- Open detailed category/meal picking in a modal or popover from the cell.
-- Keep preview/rule feedback in a collapsible panel or sidebar.
+## Implementation Order
 
-Success criteria:
+This order is now fixed for the next iteration cycle:
 
-- A full week is much more visible at desktop size.
-- Parents can scan gaps quickly.
-- Editing a cell is focused and does not require scrolling through repeated controls.
+1. Refactor the desktop app shell.
+2. Refactor Meals to modal add/edit.
+3. Refactor Settings into sectioned navigation and modal maintenance flows.
+4. Move Icon Library into its own Settings subsection.
+5. Refactor the planner into a desktop week grid.
 
-## Suggested First Implementation Slice
+## Scope For The First Build Slice
 
-1. Refactor `AppShell` desktop layout.
-2. Convert Meal add/edit to modal dialogs.
-3. Use Playwright screenshots to compare before/after.
+The first implementation slice will include:
 
-This slice directly addresses the most painful interaction issue while creating responsive layout patterns that Settings and Planner can reuse.
+1. compact desktop app shell
+2. Meals screen modal editing
+3. Playwright before/after screenshot comparison
+
+This is the first slice because it addresses the clearest workflow failure:
+
+- users browse meals in one place
+- they click `Edit`
+- they should edit immediately
+- they should not have to relocate themselves on the page
+
+## Acceptance Criteria
+
+### App Shell
+
+- desktop screenshots no longer show a landing-page-style hero above the main tool
+- desktop navigation is not presented as the primary bottom navigation bar
+- the primary work surface uses materially more horizontal space than today
+
+### Meals
+
+- there is no always-visible add/edit meal form in the page body
+- `Add meal` opens a modal
+- `Edit` opens a modal for that specific meal
+- closing the modal returns the user to the same list position
+- filtering and browsing remain visible and usable without page repositioning
+
+### Settings
+
+- meal slots, categories, and store tags are not all visible in one long scroll by default
+- icon browsing is not inline with the default maintenance flow
+- add/edit flows use modals rather than embedded page-length forms
+
+### Planner
+
+- desktop week planning becomes more scannable than the current stacked-card layout
+- a user can visually compare multiple days without scrolling through repeated tall sections
 
 ## Validation
 
-Use:
+Required checks:
 
 ```bash
 npm run build -w frontend
@@ -154,9 +181,15 @@ npm test -w frontend
 npm run test:e2e -w frontend
 ```
 
-Manual review targets:
+Required screenshot review after each major UI slice:
 
-- Desktop `Meals` screenshot after modal refactor.
-- Desktop `Settings` screenshot after sectioning.
-- Desktop `Plan` screenshot after grid exploration.
-- Mobile spot checks for modal usability and bottom navigation.
+- `Meals` desktop
+- `Settings` desktop
+- `Plan` desktop
+
+Required manual review:
+
+- modal open/close behavior
+- focus return after closing modals
+- desktop width usage
+- mobile usability for any modal introduced
