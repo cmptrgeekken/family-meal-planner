@@ -88,6 +88,7 @@ Next UI focus:
 - [x] Review mobile/tablet ergonomics for meal management, weekly planning, and grocery flows.
 - [ ] Add desktop-specific app shell layout so internal screens use width efficiently.
 - [ ] Reduce the oversized internal header treatment on desktop.
+- [ ] Revisit active-page highlighting in the desktop primary navigation after the planner density pass.
 - [ ] Add richer loading, empty, and error states where screens are still thin.
 - [ ] Add accessible keyboard alternatives for any future drag/drop interactions.
 

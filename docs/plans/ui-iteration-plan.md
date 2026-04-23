@@ -193,3 +193,7 @@ Required manual review:
 - focus return after closing modals
 - desktop width usage
 - mobile usability for any modal introduced
+
+## Follow-Up Notes
+
+- Revisit desktop active-page highlighting in the primary navigation after the planner density pass. The active state is improved, but it still needs a final polish review so the current page remains unmistakable in both expanded and compact sticky-nav states.
