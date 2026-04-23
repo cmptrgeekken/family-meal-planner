@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildMagnetSvg,
-  buildVectorLabelPath,
-  buildVectorLabelSvg,
   defaultLayout,
   getFittedSvgTransform,
   getLabelFontSizes,
@@ -87,29 +85,10 @@ describe("buildMagnetSvg", () => {
     expect(svg).toContain('role="img"');
     expect(svg).toContain('transform="translate(');
     expect(svg).toContain('<path d="M0 0h10v10z" />');
-    expect(svg).toContain('aria-label="Pasta &amp; Sauce"');
     expect(svg).not.toContain("<svg x=");
     expect(svg).not.toContain("<image");
-    expect(svg).not.toContain("<text");
     expect(svg).not.toContain("/icons/");
-  });
-});
-
-describe("vector labels", () => {
-  it("renders label text as Cricut-friendly path geometry", () => {
-    const label = buildVectorLabelSvg("BLTs", 10, 12, 2.4, 18, "#111111");
-
-    expect(label).toContain("<path");
-    expect(label).toContain('fill="#111111"');
-    expect(label).toContain('aria-label="BLTs"');
-    expect(label).not.toContain("<text");
-  });
-
-  it("compresses long vector labels to the requested maximum width", () => {
-    const wideLabel = buildVectorLabelPath("BREAKFAST DINNER", 0, 0, 2.4, 12);
-    const xValues = [...wideLabel.matchAll(/M(-?\d+\.\d+)/g)].map((match) => Number(match[1]));
-
-    expect(Math.max(...xValues) - Math.min(...xValues)).toBeLessThanOrEqual(12);
+    expect(svg).toContain("Pasta &amp; Sauce");
   });
 });
 

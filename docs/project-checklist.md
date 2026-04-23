@@ -148,7 +148,7 @@ Priority order:
 - [x] Background color is configurable.
 - [x] Foreground color is configurable for labels and embedded icon artwork.
 - [x] Export settings persist in local storage across browser refreshes.
-- [x] SVG downloads are self-contained by embedding icon artwork as data URIs.
+- [x] SVG downloads are self-contained by inlining icon artwork as SVG vectors.
 - [x] PNG downloads are rasterized from the generated SVG at 300 DPI.
 - [x] Download controls are available without scrolling through the category list.
 - [x] Basic loading and error states exist for category, manifest, icon artwork, and PNG export failures.
@@ -157,6 +157,7 @@ Priority order:
 - [x] Add snapshot-style tests for generated SVG structure.
 - [ ] Add a browser-level test that verifies downloaded SVGs contain embedded icon data instead of `/icons/...` paths.
 - [ ] Add a browser-level test for PNG export success.
+- [ ] Investigate Cricut Design Space SVG text import behavior. PNG export works for the current physical workflow, and SVG text renders in other tools, but Cricut may drop or substitute labels unless labels are converted to acceptable paths or supported font handling.
 - [ ] Decide whether labels should support wrapping, truncation, or dedicated short print labels.
 - [ ] Add icon normalization metadata if some icons have inconsistent visual weight, padding, or viewBox behavior.
 
