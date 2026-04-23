@@ -4,11 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { EmptyState } from "../../components/EmptyState";
 import { SectionCard } from "../../components/SectionCard";
 import { StatusMessage } from "../../components/StatusMessage";
-import { getWeeklyPlan } from "../shared/api";
+import { getPlanSlots, getWeeklyPlan, type ApiPlanSlot, type ApiWeeklyPlan } from "../shared/api";
 
 export function GroceryScreen() {
   const weekStartDate = useMemo(getUpcomingMondayIso, []);
-  const storageKey = `family-meal-planner:grocery-checked:${weekStartDate}`;
+  const [selectedSlotSlugs, setSelectedSlotSlugs] = useState<Set<string>>(new Set());
+  const slotFilterKey = [...selectedSlotSlugs].sort().join(",");
+  const storageKey = `family-meal-planner:grocery-checked:${weekStartDate}:${slotFilterKey || "all"}`;
   const [checkedItems, setCheckedItems] = useState<Set<string>>(() => {
     try {
       return new Set(JSON.parse(window.localStorage.getItem(storageKey) ?? "[]") as string[]);
@@ -16,12 +18,41 @@ export function GroceryScreen() {
       return new Set();
     }
   });
+  const planSlotsQuery = useQuery({
+    queryKey: ["plan-slots"],
+    queryFn: getPlanSlots,
+  });
   const weeklyPlanQuery = useQuery({
-    queryKey: ["weekly-plan", weekStartDate, "grocery"],
+    queryKey: ["weekly-plan", weekStartDate],
     queryFn: () => getWeeklyPlan(weekStartDate),
   });
-  const groceryList = weeklyPlanQuery.data?.groceryList ?? [];
+  const slotOptions = useMemo(
+    () => getGrocerySlotOptions(planSlotsQuery.data?.planSlots ?? [], weeklyPlanQuery.data?.weeklyPlan),
+    [planSlotsQuery.data?.planSlots, weeklyPlanQuery.data?.weeklyPlan],
+  );
+  const groceryQuery = useQuery({
+    queryKey: ["weekly-plan", weekStartDate, "grocery", slotFilterKey],
+    queryFn: () => getWeeklyPlan(weekStartDate, { slotSlugs: [...selectedSlotSlugs] }),
+    enabled: selectedSlotSlugs.size > 0,
+  });
+  const groceryList = groceryQuery.data?.groceryList ?? [];
   const checkedCount = groceryList.filter((item) => checkedItems.has(getGroceryItemKey(item.group, item.name))).length;
+
+  useEffect(() => {
+    if (selectedSlotSlugs.size > 0 || slotOptions.length === 0) {
+      return;
+    }
+
+    setSelectedSlotSlugs(new Set(slotOptions.map((slot) => slot.slug)));
+  }, [selectedSlotSlugs.size, slotOptions]);
+
+  useEffect(() => {
+    try {
+      setCheckedItems(new Set(JSON.parse(window.localStorage.getItem(storageKey) ?? "[]") as string[]));
+    } catch {
+      setCheckedItems(new Set());
+    }
+  }, [storageKey]);
 
   useEffect(() => {
     try {
@@ -45,11 +76,29 @@ export function GroceryScreen() {
     });
   }
 
+  function toggleSlot(slotSlug: string) {
+    setSelectedSlotSlugs((current) => {
+      if (current.size === 1 && current.has(slotSlug)) {
+        return current;
+      }
+
+      const next = new Set(current);
+
+      if (next.has(slotSlug)) {
+        next.delete(slotSlug);
+      } else {
+        next.add(slotSlug);
+      }
+
+      return next;
+    });
+  }
+
   return (
     <div className="screen-layout">
       <SectionCard
         title="Grocery List"
-        subtitle={`Generated from the saved dinner plan for the week of ${weekStartDate}. ${checkedCount}/${groceryList.length} checked.`}
+        subtitle={`Generated from the saved plan for the week of ${weekStartDate}. ${checkedCount}/${groceryList.length} checked.`}
         actions={
           <div className="toggle-row grocery-action-row">
             <button
@@ -63,32 +112,49 @@ export function GroceryScreen() {
             <button
               type="button"
               className="primary-button"
-              onClick={() => void weeklyPlanQuery.refetch()}
-              disabled={weeklyPlanQuery.isFetching}
+              onClick={() => void groceryQuery.refetch()}
+              disabled={groceryQuery.isFetching || selectedSlotSlugs.size === 0}
             >
-              {weeklyPlanQuery.isFetching ? "Refreshing..." : "Refresh"}
+              {groceryQuery.isFetching ? "Refreshing..." : "Refresh"}
             </button>
           </div>
         }
       >
-        {weeklyPlanQuery.isError ? (
+        {weeklyPlanQuery.isError || groceryQuery.isError ? (
           <StatusMessage
             tone="error"
             title="Grocery list unavailable"
             message="The saved weekly plan could not be loaded."
           />
         ) : null}
-        {weeklyPlanQuery.isLoading ? <p>Loading saved grocery list...</p> : null}
+        {weeklyPlanQuery.isLoading || planSlotsQuery.isLoading || groceryQuery.isLoading ? (
+          <p>Loading saved grocery list...</p>
+        ) : null}
         {!weeklyPlanQuery.isLoading && !weeklyPlanQuery.data ? (
           <EmptyState
             title="No saved week yet"
             message="Save a weekly plan from the Plan screen, then come back here for the grocery list."
           />
         ) : null}
-        {weeklyPlanQuery.data && groceryList.length === 0 ? (
+        {slotOptions.length > 0 ? (
+          <div className="slot-filter-row" aria-label="Grocery meal slot filters">
+            {slotOptions.map((slot) => (
+              <label key={slot.slug} className="filter-chip slot-filter-chip">
+                <input
+                  type="checkbox"
+                  checked={selectedSlotSlugs.has(slot.slug)}
+                  disabled={selectedSlotSlugs.size === 1 && selectedSlotSlugs.has(slot.slug)}
+                  onChange={() => toggleSlot(slot.slug)}
+                />
+                <span>{slot.name}</span>
+              </label>
+            ))}
+          </div>
+        ) : null}
+        {weeklyPlanQuery.data && !groceryQuery.isLoading && groceryList.length === 0 ? (
           <EmptyState
             title="No grocery items"
-            message="The saved week exists, but its selected meals do not have ingredients yet."
+            message="The saved week exists, but the selected meal slots do not have grocery ingredients yet."
           />
         ) : null}
         {groceryList.length > 0 ? (
@@ -113,11 +179,11 @@ export function GroceryScreen() {
                         {item.group}
                         {item.quantityLabels.length > 0 ? ` - ${item.quantityLabels.join(", ")}` : ""}
                       </p>
-                      <p className="muted-text">Used in: {item.usedInMeals.join(", ")}</p>
+                      <p className="muted-text">{getUsageSummary(item.usedIn)}</p>
                       <details className="grocery-diagnostics">
                         <summary>Why is this here?</summary>
                         <p>
-                          Included because {item.usedInMeals.join(", ")} use {item.name}
+                          Included because {formatUsageList(item.usedIn)} use {item.name}
                           {item.quantityLabels.length > 0 ? ` (${item.quantityLabels.join(", ")})` : ""}.
                         </p>
                       </details>
@@ -136,6 +202,41 @@ export function GroceryScreen() {
 
 function getGroceryItemKey(group: string, name: string) {
   return `${group}:${name}`;
+}
+
+function getGrocerySlotOptions(planSlots: ApiPlanSlot[], weeklyPlan?: ApiWeeklyPlan) {
+  if (!weeklyPlan) {
+    return [];
+  }
+
+  const slotBySlug = new Map(planSlots.map((slot) => [slot.slug, slot]));
+  const slotOptions = new Map<string, { slug: string; name: string; sortOrder: number }>();
+
+  for (const selection of weeklyPlan.selections) {
+    const slot = slotBySlug.get(selection.slotSlug);
+    slotOptions.set(selection.slotSlug, {
+      slug: selection.slotSlug,
+      name: slot?.name ?? selection.slot,
+      sortOrder: slot?.sortOrder ?? Number.MAX_SAFE_INTEGER,
+    });
+  }
+
+  return [...slotOptions.values()].sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
+}
+
+function getUsageSummary(usedIn: Array<{ day: string; slotName: string; mealName: string }>) {
+  const slotNames = [...new Set(usedIn.map((usage) => usage.slotName))];
+  const mealText = usedIn.length === 1 ? "1 meal" : `${usedIn.length} meals`;
+
+  return `Used in ${mealText}${slotNames.length > 0 ? ` across ${slotNames.join(", ")}` : ""}.`;
+}
+
+function formatUsageList(usedIn: Array<{ day: string; slotName: string; mealName: string }>) {
+  if (usedIn.length === 0) {
+    return "saved meals";
+  }
+
+  return usedIn.map((usage) => `${usage.day} ${usage.slotName} (${usage.mealName})`).join(", ");
 }
 
 function getUpcomingMondayIso() {

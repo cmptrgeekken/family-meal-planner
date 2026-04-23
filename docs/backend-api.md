@@ -6,7 +6,7 @@ Base assumptions:
 
 - Local API base URL: `http://localhost:3001`
 - JSON request and response bodies
-- Current planner behavior is dinner-first, with `slot: "Dinner"` as the default and only supported planning slot for now
+- Planning is slot-aware. Breakfast, Lunch, and Dinner are seeded by default, and dinner remains the legacy default for older payloads.
 
 ## General Behavior
 
@@ -139,7 +139,10 @@ Response:
       "id": "cat_123",
       "name": "Pasta",
       "slug": "pasta",
-      "iconId": "168"
+      "iconId": "168",
+      "slotSlugs": ["dinner"],
+      "weeklyMinCount": null,
+      "weeklyMaxCount": 2
     }
   ]
 }
@@ -157,7 +160,10 @@ Response:
     "id": "cat_123",
     "name": "Pasta",
     "slug": "pasta",
-    "iconId": "168"
+    "iconId": "168",
+    "slotSlugs": ["dinner"],
+    "weeklyMinCount": null,
+    "weeklyMaxCount": 2
   }
 }
 ```
@@ -172,7 +178,10 @@ Request:
 {
   "name": "Rice/Bowls",
   "slug": "rice-bowls",
-  "iconId": "115"
+  "iconId": "115",
+  "slotSlugs": ["lunch", "dinner"],
+  "weeklyMinCount": null,
+  "weeklyMaxCount": 2
 }
 ```
 
@@ -180,6 +189,11 @@ Notes:
 
 - `iconId` is optional and may be `null`.
 - `iconId` references the frontend icon manifest, not a database-backed icon asset.
+- `slotSlugs` is optional. If omitted, the backend defaults the category to Dinner for backwards compatibility.
+- Explicitly passing an empty `slotSlugs` array leaves the category unavailable in planner slot cells.
+- `weeklyMinCount` and `weeklyMaxCount` are optional nullable non-negative integers.
+- `weeklyMinCount` cannot be greater than `weeklyMaxCount`.
+- Nullable category count fields may be omitted from responses when unset.
 
 Response: `201 Created`
 
@@ -198,6 +212,78 @@ Response: `204 No Content`
 Deletion rule:
 
 - returns `409` if the category is still used by one or more meals
+
+## Plan Slots
+
+Plan slots are configurable planning occasions such as Breakfast, Lunch, and Dinner.
+
+### List plan slots
+
+`GET /api/plan-slots`
+
+Response:
+
+```json
+{
+  "planSlots": [
+    {
+      "id": "plan_slot_dinner",
+      "name": "Dinner",
+      "slug": "dinner",
+      "sortOrder": 30,
+      "isEnabled": true
+    }
+  ]
+}
+```
+
+### Create plan slot
+
+`POST /api/plan-slots`
+
+Request:
+
+```json
+{
+  "name": "Snack",
+  "slug": "snack",
+  "sortOrder": 40,
+  "isEnabled": true
+}
+```
+
+Notes:
+
+- `sortOrder` and `isEnabled` are optional.
+- Disabled slots are hidden from new planning defaults but historical saved selections can still be displayed by clients.
+
+### Update plan slot
+
+`PUT /api/plan-slots/:planSlotId`
+
+Request body matches create.
+
+### Reorder plan slots
+
+`PUT /api/plan-slots/reorder`
+
+Request:
+
+```json
+{
+  "planSlotIds": ["plan_slot_breakfast", "plan_slot_lunch", "plan_slot_dinner"]
+}
+```
+
+### Delete plan slot
+
+`DELETE /api/plan-slots/:planSlotId`
+
+Response: `204 No Content`
+
+Deletion rule:
+
+- returns `409` if the slot is used by saved weekly plan meals or category assignments
 
 ## Store Tags
 
@@ -270,6 +356,9 @@ Example meal:
   "category": "Pasta",
   "categorySlug": "pasta",
   "categoryIconId": "168",
+  "categorySlotSlugs": ["dinner"],
+  "categoryWeeklyMinCount": null,
+  "categoryWeeklyMaxCount": 2,
   "costTier": "budget",
   "kidFavorite": true,
   "lowEffort": false,
@@ -376,12 +465,8 @@ Conflict rule:
 
 ## Weekly Plans
 
-Weekly plans are currently dinner-first.
-The API already includes `slot` in the contract so future multi-occasion planning can grow without a full redesign.
-
-Current supported slot:
-
-- `Dinner`
+Weekly plans store one meal per `(day, slot)` cell.
+Legacy payloads without `slotSlug` still normalize to Dinner.
 
 ### Weekly plan selection shape
 
@@ -389,6 +474,7 @@ Current supported slot:
 {
   "day": "Monday",
   "slot": "Dinner",
+  "slotSlug": "dinner",
   "mealId": "meal_123"
 }
 ```
@@ -427,6 +513,10 @@ Route param format:
 
 - ISO date string, for example `2026-04-27`
 
+Optional query params:
+
+- `slotSlugs`, as a comma-separated list such as `dinner,lunch`, filters the generated `groceryList` while returning the full saved plan.
+
 Response:
 
 ```json
@@ -438,6 +528,7 @@ Response:
       {
         "day": "Monday",
         "slot": "Dinner",
+        "slotSlug": "dinner",
         "mealId": "meal_123"
       }
     ]
@@ -461,6 +552,7 @@ Request:
   "selections": [
     {
       "day": "Monday",
+      "slotSlug": "dinner",
       "mealId": "meal_123"
     }
   ]
@@ -469,8 +561,9 @@ Request:
 
 Notes:
 
-- `slot` is optional and currently defaults to `Dinner`
-- preview response normalizes selections to include `slot`
+- `slotSlug` is preferred and identifies the configured plan slot.
+- Omitted slot information defaults to Dinner for backwards compatibility.
+- preview response normalizes selections to include both `slot` and `slotSlug`.
 
 Response:
 
@@ -482,6 +575,7 @@ Response:
       {
         "day": "Monday",
         "slot": "Dinner",
+        "slotSlug": "dinner",
         "mealId": "meal_123"
       }
     ]
@@ -507,6 +601,7 @@ Request:
   "selections": [
     {
       "day": "Monday",
+      "slotSlug": "dinner",
       "mealId": "meal_123"
     }
   ]
@@ -516,8 +611,10 @@ Request:
 Notes:
 
 - the route param becomes the canonical `weekStartDate`
-- `slot` is optional and defaults to `Dinner`
-- validation must pass before the plan is persisted
+- `slotSlug` is preferred.
+- omitted slot information defaults to Dinner for backwards compatibility.
+- blocking validation must pass before the plan is persisted.
+- unmet category minimums are returned as feedback but do not block saving.
 
 Response:
 
@@ -530,6 +627,7 @@ Response:
       {
         "day": "Monday",
         "slot": "Dinner",
+        "slotSlug": "dinner",
         "mealId": "meal_123"
       }
     ]
@@ -547,10 +645,16 @@ Current rules:
 - the same meal may appear at most once per week
 - premium meals may appear at most once per week
 - the same `(day, slot)` may appear at most once in the same weekly plan
+- category weekly maximums block additional selections after the maximum is reached
+- category weekly minimums are reported as feedback
 
 Validation issue codes currently used:
 
 - `unknown_meal`
+- `unknown_plan_slot`
+- `category_not_allowed_in_slot`
+- `category_maximum_exceeded`
+- `category_minimum_unmet`
 - `duplicate_meal`
 - `premium_limit_exceeded`
 - `duplicate_day_slot`
@@ -559,6 +663,6 @@ Validation issue codes currently used:
 
 - Treat `categorySlug` and `storeTagSlug` as the preferred stable identifiers for filtering and selection.
 - Treat category `iconId` and meal `categoryIconId` as stable references into the frontend icon manifest.
-- Treat `slot` as part of the weekly-plan contract even though only `Dinner` is currently supported.
+- Use `slotSlug` for weekly-plan mutations; treat `slot` as a display label in responses.
 - Prefer `preview` before `PUT` when you want rule feedback without saving changes.
 - Expect deletion operations to return `409` when a record is still in use by related data.

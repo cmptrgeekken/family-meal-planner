@@ -2,6 +2,8 @@
 
 ## Current Project Status
 
+Implementation status: the first end-to-end meal-slot pass has landed across schema, backend API, planner UI, grocery filtering, settings management, and API/checklist documentation. Remaining work should focus on manual UX QA, richer E2E coverage, and any follow-up polish found while using multi-slot plans with real household data.
+
 The project checklist shows the dinner-first MVP loop is largely implemented:
 
 - category, meal, store-tag, weekly-plan, and grocery APIs exist

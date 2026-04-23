@@ -19,7 +19,7 @@ Priority order:
 
 Next major planning expansion:
 
-- [ ] Implement configurable Breakfast/Lunch/Dinner-style meal slots for planning, category eligibility, and grocery filtering. See [decisions/003-configurable-meal-slots.md](decisions/003-configurable-meal-slots.md) and [plans/meal-slots-implementation-plan.md](plans/meal-slots-implementation-plan.md).
+- [x] Implement configurable Breakfast/Lunch/Dinner-style meal slots for planning, category eligibility, and grocery filtering. See [decisions/003-configurable-meal-slots.md](decisions/003-configurable-meal-slots.md) and [plans/meal-slots-implementation-plan.md](plans/meal-slots-implementation-plan.md).
 
 ## MVP Critical Path
 
@@ -50,8 +50,8 @@ Next major planning expansion:
 
 ## Data Model And Persistence
 
-- [x] Prisma schema exists for categories, meals, ingredients, store tags, meal ingredients, weekly plans, and weekly plan meals.
-- [x] Migrations exist for the initial schema, first-class store tags, and category icon IDs.
+- [x] Prisma schema exists for categories, meals, ingredients, store tags, meal ingredients, plan slots, weekly plans, and weekly plan meals.
+- [x] Migrations exist for the initial schema, first-class store tags, category icon IDs, and configurable meal slots.
 - [x] Seed data creates starter categories, store tags, meals, and meal ingredients.
 - [x] Category records can store stable `iconId` values.
 - [x] Store tag options are modeled separately from ingredients.
@@ -66,6 +66,7 @@ Next major planning expansion:
 - [x] Category API exists.
 - [x] Store tag API exists.
 - [x] Weekly plan API exists.
+- [x] Plan slot API exists.
 - [x] Grocery preview/generation logic exists.
 - [x] Repository layer separates Prisma access from route handlers.
 - [x] Domain logic exists for planning and grocery generation.
@@ -104,11 +105,11 @@ Next major planning expansion:
 - [x] Save weekly plans from the planning screen.
 - [x] Add fast replace/remove meal actions for existing weekly plans.
 - [x] Add category-first meal narrowing for parent planning.
-- [ ] Add configurable meal slots so families can plan Breakfast, Lunch, Dinner, or household-specific occasions.
-- [ ] Persist weekly plan meals by `(day, slot)` instead of dinner-only `(day)`.
-- [ ] Filter planner category choices by slot eligibility.
-- [ ] Add configurable category weekly minimum/maximum counts.
-- [ ] Disable or visually cross out category choices that have reached their weekly maximum.
+- [x] Add configurable meal slots so families can plan Breakfast, Lunch, Dinner, or household-specific occasions.
+- [x] Persist weekly plan meals by `(day, slot)` instead of dinner-only `(day)`.
+- [x] Filter planner category choices by slot eligibility.
+- [x] Add configurable category weekly minimum/maximum counts.
+- [x] Disable or visually cross out category choices that have reached their weekly maximum.
 - [ ] Add fast parent weekly planning workflow polish.
 - [ ] Add child-friendly visual meal picker/magnet board interactions. Category buttons exist; drag/drop magnet board remains deferred.
 - [x] Add non-drag accessible alternatives for assigning meals.
@@ -126,7 +127,7 @@ Next major planning expansion:
 - [x] Add persistent shopping checklist state for real shopping use.
 - [x] Add stronger UX for real store use on phones.
 - [x] Add diagnostics for why an item appears on the grocery list.
-- [ ] Add grocery slot filters so shopping trips can include only selected planned meal slots.
+- [x] Add grocery slot filters so shopping trips can include only selected planned meal slots.
 
 ## Settings And Icon Assignment
 
@@ -134,8 +135,8 @@ Next major planning expansion:
 - [x] Icon manifest is loaded from `frontend/public/icons/manifest.json`.
 - [x] Icon library browsing exists.
 - [x] Category icon assignments persist through the API.
-- [ ] Add meal slot management.
-- [ ] Add category-to-slot assignment.
+- [x] Add meal slot management.
+- [x] Add category-to-slot assignment.
 - [ ] Improve icon search/filtering if the icon library remains large.
 - [ ] Add validation/reporting for categories referencing missing icon IDs.
 - [ ] Decide whether user-uploaded icons are out of scope permanently or deferred.

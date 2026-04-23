@@ -77,6 +77,29 @@ describe("weekly plan routes", () => {
     ]);
   });
 
+  it("filters saved grocery output by meal slot", async () => {
+    const app = createApp();
+    const weekStartDate = "2099-07-13";
+    const mealsResponse = await request(app).get("/api/meals");
+    const spaghettiNight = mealsResponse.body.meals.find((meal: { slug?: string }) => meal.slug === "spaghetti-night");
+    const breakfastForDinner = mealsResponse.body.meals.find(
+      (meal: { slug?: string }) => meal.slug === "breakfast-for-dinner",
+    );
+
+    const saveResponse = await request(app).put(`/api/weekly-plans/${weekStartDate}`).send({
+      selections: [
+        { day: "Monday", slotSlug: "breakfast", mealId: breakfastForDinner.id },
+        { day: "Monday", slotSlug: "dinner", mealId: spaghettiNight.id },
+      ],
+    });
+    const fetchResponse = await request(app).get(`/api/weekly-plans/${weekStartDate}?slotSlugs=breakfast`);
+
+    expect(saveResponse.status).toBe(200);
+    expect(fetchResponse.status).toBe(200);
+    expect(fetchResponse.body.groceryList.map((item: { name: string }) => item.name)).toContain("Eggs");
+    expect(fetchResponse.body.groceryList.map((item: { name: string }) => item.name)).not.toContain("Spaghetti");
+  });
+
   it("rejects two selections for the same day and slot", async () => {
     const app = createApp();
     const mealsResponse = await request(app).get("/api/meals");

@@ -1,18 +1,24 @@
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { SectionCard } from "../../components/SectionCard";
 import {
   createCategory,
+  createPlanSlot,
   createStoreTag,
   deleteCategory,
+  deletePlanSlot,
   deleteStoreTag,
   getCategories,
   getIconManifest,
+  getPlanSlots,
   getStoreTags,
+  reorderPlanSlots,
   updateCategory,
+  updatePlanSlot,
   updateStoreTag,
   type ApiCategory,
+  type ApiPlanSlot,
   type IconManifest,
   type IconManifestEntry,
   type ApiStoreTag,
@@ -22,12 +28,30 @@ type CategoryDraft = {
   name: string;
   slug: string;
   iconId: string;
+  slotSlugs: string[];
+  weeklyMinCount: string;
+  weeklyMaxCount: string;
 };
 
 const emptyCategoryDraft: CategoryDraft = {
   name: "",
   slug: "",
   iconId: "",
+  slotSlugs: [],
+  weeklyMinCount: "",
+  weeklyMaxCount: "",
+};
+
+type PlanSlotDraft = {
+  name: string;
+  slug: string;
+  isEnabled: boolean;
+};
+
+const emptyPlanSlotDraft: PlanSlotDraft = {
+  name: "",
+  slug: "",
+  isEnabled: true,
 };
 
 type StoreTagDraft = {
@@ -54,6 +78,19 @@ function getCategoryDraft(category: ApiCategory, drafts: Record<string, Category
       name: category.name,
       slug: category.slug,
       iconId: category.iconId ?? "",
+      slotSlugs: category.slotSlugs,
+      weeklyMinCount: category.weeklyMinCount?.toString() ?? "",
+      weeklyMaxCount: category.weeklyMaxCount?.toString() ?? "",
+    }
+  );
+}
+
+function getPlanSlotDraft(planSlot: ApiPlanSlot, drafts: Record<string, PlanSlotDraft>) {
+  return (
+    drafts[planSlot.id] ?? {
+      name: planSlot.name,
+      slug: planSlot.slug,
+      isEnabled: planSlot.isEnabled,
     }
   );
 }
@@ -73,6 +110,44 @@ function getMutationErrorMessage(error: unknown, fallback: string) {
 
 function getIconSearchText(icon: IconManifestEntry) {
   return `${icon.name} ${icon.slug} ${icon.aiGenerated ? "ai" : ""} ${icon.confidence}`.toLowerCase();
+}
+
+function getDefaultCategorySlotSlugs(planSlots: ApiPlanSlot[]) {
+  const dinnerSlot = planSlots.find((slot) => slot.slug === "dinner");
+  const firstEnabledSlot = planSlots.find((slot) => slot.isEnabled);
+  const defaultSlot = dinnerSlot ?? firstEnabledSlot ?? planSlots[0];
+
+  return defaultSlot ? [defaultSlot.slug] : [];
+}
+
+function getEmptyCategoryDraft(planSlots: ApiPlanSlot[]): CategoryDraft {
+  return {
+    ...emptyCategoryDraft,
+    slotSlugs: getDefaultCategorySlotSlugs(planSlots),
+  };
+}
+
+function parseOptionalCount(value: string) {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  const parsedValue = Number(trimmedValue);
+
+  return Number.isInteger(parsedValue) && parsedValue >= 0 ? parsedValue : null;
+}
+
+function areStringArraysEqual(left: string[], right: string[]) {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const sortedLeft = [...left].sort();
+  const sortedRight = [...right].sort();
+
+  return sortedLeft.every((value, index) => value === sortedRight[index]);
 }
 
 type IconPickerProps = {
@@ -176,8 +251,14 @@ export function SettingsScreen() {
   const queryClient = useQueryClient();
   const [newCategory, setNewCategory] = useState<CategoryDraft>(emptyCategoryDraft);
   const [categoryDrafts, setCategoryDrafts] = useState<Record<string, CategoryDraft>>({});
+  const [newPlanSlot, setNewPlanSlot] = useState<PlanSlotDraft>(emptyPlanSlotDraft);
+  const [planSlotDrafts, setPlanSlotDrafts] = useState<Record<string, PlanSlotDraft>>({});
   const [newStoreTag, setNewStoreTag] = useState<StoreTagDraft>(emptyStoreTagDraft);
   const [storeTagDrafts, setStoreTagDrafts] = useState<Record<string, StoreTagDraft>>({});
+  const planSlotsQuery = useQuery({
+    queryKey: ["plan-slots"],
+    queryFn: getPlanSlots,
+  });
   const categoriesQuery = useQuery({
     queryKey: ["categories", "settings"],
     queryFn: getCategories,
@@ -191,21 +272,33 @@ export function SettingsScreen() {
     queryFn: getIconManifest,
   });
   const updateCategoryMutation = useMutation({
-    mutationFn: (payload: { categoryId: string; name: string; slug: string; iconId?: string | null }) =>
+    mutationFn: (payload: { categoryId: string; draft: CategoryDraft }) =>
       updateCategory(payload.categoryId, {
-        name: payload.name,
-        slug: payload.slug,
-        iconId: payload.iconId,
+        name: payload.draft.name,
+        slug: payload.draft.slug,
+        iconId: payload.draft.iconId || null,
+        slotSlugs: payload.draft.slotSlugs,
+        weeklyMinCount: parseOptionalCount(payload.draft.weeklyMinCount),
+        weeklyMaxCount: parseOptionalCount(payload.draft.weeklyMaxCount),
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["categories"] });
       void queryClient.invalidateQueries({ queryKey: ["meals"] });
+      void queryClient.invalidateQueries({ queryKey: ["weekly-plan"] });
     },
   });
   const createCategoryMutation = useMutation({
-    mutationFn: (payload: { name: string; slug: string; iconId?: string | null }) => createCategory(payload),
+    mutationFn: (draft: CategoryDraft) =>
+      createCategory({
+        name: draft.name,
+        slug: draft.slug,
+        iconId: draft.iconId || null,
+        slotSlugs: draft.slotSlugs,
+        weeklyMinCount: parseOptionalCount(draft.weeklyMinCount),
+        weeklyMaxCount: parseOptionalCount(draft.weeklyMaxCount),
+      }),
     onSuccess: () => {
-      setNewCategory(emptyCategoryDraft);
+      setNewCategory(getEmptyCategoryDraft(planSlotsQuery.data?.planSlots ?? []));
       void queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
@@ -214,6 +307,45 @@ export function SettingsScreen() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["categories"] });
       void queryClient.invalidateQueries({ queryKey: ["meals"] });
+    },
+  });
+  const createPlanSlotMutation = useMutation({
+    mutationFn: (payload: PlanSlotDraft) =>
+      createPlanSlot({
+        name: payload.name,
+        slug: payload.slug,
+        isEnabled: payload.isEnabled,
+      }),
+    onSuccess: () => {
+      setNewPlanSlot(emptyPlanSlotDraft);
+      void queryClient.invalidateQueries({ queryKey: ["plan-slots"] });
+    },
+  });
+  const updatePlanSlotMutation = useMutation({
+    mutationFn: (payload: { planSlotId: string; draft: PlanSlotDraft; sortOrder: number }) =>
+      updatePlanSlot(payload.planSlotId, {
+        name: payload.draft.name,
+        slug: payload.draft.slug,
+        isEnabled: payload.draft.isEnabled,
+        sortOrder: payload.sortOrder,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["plan-slots"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["weekly-plan"] });
+    },
+  });
+  const reorderPlanSlotsMutation = useMutation({
+    mutationFn: reorderPlanSlots,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["plan-slots"] });
+    },
+  });
+  const deletePlanSlotMutation = useMutation({
+    mutationFn: deletePlanSlot,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["plan-slots"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
   const createStoreTagMutation = useMutation({
@@ -244,17 +376,44 @@ export function SettingsScreen() {
 
   const iconManifest = iconManifestQuery.data;
   const iconById = new Map(iconManifest?.icons.map((icon) => [icon.id, icon]) ?? []);
+  const planSlots = planSlotsQuery.data?.planSlots ?? [];
   const categoryErrorMessage = deleteCategoryMutation.isError
     ? getMutationErrorMessage(deleteCategoryMutation.error, "Category could not be deleted.")
     : updateCategoryMutation.isError
-      ? "Category could not be saved. Please check for duplicate slugs."
+      ? getMutationErrorMessage(updateCategoryMutation.error, "Category could not be saved. Please check for duplicate slugs.")
       : createCategoryMutation.isError
-        ? "Category could not be created. Please check for duplicate slugs."
+        ? getMutationErrorMessage(createCategoryMutation.error, "Category could not be created. Please check for duplicate slugs.")
         : "";
+  const planSlotErrorMessage = deletePlanSlotMutation.isError
+    ? getMutationErrorMessage(deletePlanSlotMutation.error, "Meal slot could not be deleted.")
+    : updatePlanSlotMutation.isError
+      ? getMutationErrorMessage(updatePlanSlotMutation.error, "Meal slot could not be saved.")
+      : createPlanSlotMutation.isError
+        ? getMutationErrorMessage(createPlanSlotMutation.error, "Meal slot could not be created.")
+        : reorderPlanSlotsMutation.isError
+          ? getMutationErrorMessage(reorderPlanSlotsMutation.error, "Meal slots could not be reordered.")
+          : "";
   const isCategoryMutationPending =
     updateCategoryMutation.isPending || createCategoryMutation.isPending || deleteCategoryMutation.isPending;
+  const isPlanSlotMutationPending =
+    createPlanSlotMutation.isPending ||
+    updatePlanSlotMutation.isPending ||
+    reorderPlanSlotsMutation.isPending ||
+    deletePlanSlotMutation.isPending;
   const isStoreTagMutationPending =
     createStoreTagMutation.isPending || updateStoreTagMutation.isPending || deleteStoreTagMutation.isPending;
+
+  useEffect(() => {
+    if (planSlots.length === 0) {
+      return;
+    }
+
+    if (newCategory.name || newCategory.slug || newCategory.iconId || newCategory.slotSlugs.length > 0) {
+      return;
+    }
+
+    setNewCategory(getEmptyCategoryDraft(planSlots));
+  }, [newCategory, planSlots]);
 
   function updateCategoryDraft(category: ApiCategory, patch: Partial<CategoryDraft>) {
     setCategoryDrafts((current) => ({
@@ -264,6 +423,45 @@ export function SettingsScreen() {
         ...patch,
       },
     }));
+  }
+
+  function updatePlanSlotDraft(planSlot: ApiPlanSlot, patch: Partial<PlanSlotDraft>) {
+    setPlanSlotDrafts((current) => ({
+      ...current,
+      [planSlot.id]: {
+        ...getPlanSlotDraft(planSlot, current),
+        ...patch,
+      },
+    }));
+  }
+
+  function updateCategorySlotDraft(category: ApiCategory, slotSlug: string, isChecked: boolean) {
+    const draft = getCategoryDraft(category, categoryDrafts);
+    const slotSlugs = isChecked
+      ? [...new Set([...draft.slotSlugs, slotSlug])]
+      : draft.slotSlugs.filter((currentSlug) => currentSlug !== slotSlug);
+
+    updateCategoryDraft(category, { slotSlugs });
+  }
+
+  function movePlanSlot(planSlot: ApiPlanSlot, direction: -1 | 1) {
+    const currentIndex = planSlots.findIndex((slot) => slot.id === planSlot.id);
+    const nextIndex = currentIndex + direction;
+
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= planSlots.length) {
+      return;
+    }
+
+    const reordered = [...planSlots];
+    const [movedSlot] = reordered.splice(currentIndex, 1);
+
+    if (!movedSlot) {
+      return;
+    }
+
+    reordered.splice(nextIndex, 0, movedSlot);
+
+    reorderPlanSlotsMutation.mutate(reordered.map((slot) => slot.id));
   }
 
   function updateStoreTagDraft(storeTag: ApiStoreTag, patch: Partial<StoreTagDraft>) {
@@ -286,7 +484,24 @@ export function SettingsScreen() {
     createCategoryMutation.mutate({
       name: newCategory.name.trim(),
       slug: newCategory.slug.trim(),
-      iconId: newCategory.iconId || null,
+      iconId: newCategory.iconId,
+      slotSlugs: newCategory.slotSlugs.length > 0 ? newCategory.slotSlugs : getDefaultCategorySlotSlugs(planSlots),
+      weeklyMinCount: newCategory.weeklyMinCount,
+      weeklyMaxCount: newCategory.weeklyMaxCount,
+    });
+  }
+
+  function handleCreatePlanSlot(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!newPlanSlot.name.trim() || !newPlanSlot.slug.trim()) {
+      return;
+    }
+
+    createPlanSlotMutation.mutate({
+      name: newPlanSlot.name.trim(),
+      slug: newPlanSlot.slug.trim(),
+      isEnabled: newPlanSlot.isEnabled,
     });
   }
 
@@ -313,15 +528,46 @@ export function SettingsScreen() {
     updateCategoryMutation.mutate(
       {
         categoryId: category.id,
-        name: draft.name.trim(),
-        slug: draft.slug.trim(),
-        iconId: draft.iconId || null,
+        draft: {
+          ...draft,
+          name: draft.name.trim(),
+          slug: draft.slug.trim(),
+        },
       },
       {
         onSuccess: () => {
           setCategoryDrafts((current) => {
             const next = { ...current };
             delete next[category.id];
+            return next;
+          });
+        },
+      },
+    );
+  }
+
+  function handleSavePlanSlot(planSlot: ApiPlanSlot) {
+    const draft = getPlanSlotDraft(planSlot, planSlotDrafts);
+
+    if (!draft.name.trim() || !draft.slug.trim()) {
+      return;
+    }
+
+    updatePlanSlotMutation.mutate(
+      {
+        planSlotId: planSlot.id,
+        draft: {
+          ...draft,
+          name: draft.name.trim(),
+          slug: draft.slug.trim(),
+        },
+        sortOrder: planSlot.sortOrder,
+      },
+      {
+        onSuccess: () => {
+          setPlanSlotDrafts((current) => {
+            const next = { ...current };
+            delete next[planSlot.id];
             return next;
           });
         },
@@ -358,6 +604,137 @@ export function SettingsScreen() {
     <div className="screen-layout">
       <SectionCard title="Reference Data" subtitle="A lightweight admin-style view for category and store-tag vocab.">
         <div className="reference-grid">
+          <div className="mini-panel">
+            <h3>Meal Slots</h3>
+            {planSlotErrorMessage ? (
+              <div className="status-message status-error" role="status">
+                <p>{planSlotErrorMessage}</p>
+              </div>
+            ) : null}
+            <form className="category-editor-form category-create-form" onSubmit={handleCreatePlanSlot}>
+              <label>
+                <span>Name</span>
+                <input
+                  value={newPlanSlot.name}
+                  placeholder="Dinner"
+                  onChange={(event) => {
+                    const name = event.target.value;
+                    setNewPlanSlot((current) => ({
+                      ...current,
+                      name,
+                      slug: slugify(name),
+                    }));
+                  }}
+                />
+              </label>
+              <label>
+                <span>Slug</span>
+                <input
+                  value={newPlanSlot.slug}
+                  placeholder="dinner"
+                  onChange={(event) => setNewPlanSlot((current) => ({ ...current, slug: slugify(event.target.value) }))}
+                />
+              </label>
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={newPlanSlot.isEnabled}
+                  onChange={(event) => setNewPlanSlot((current) => ({ ...current, isEnabled: event.target.checked }))}
+                />
+                <span>Enabled for planning</span>
+              </label>
+              <button type="submit" className="primary-button" disabled={isPlanSlotMutationPending}>
+                Add meal slot
+              </button>
+            </form>
+            {planSlotsQuery.isLoading ? <p>Loading meal slots...</p> : null}
+            <ul className="settings-record-list">
+              {planSlots.map((planSlot, index) => {
+                const draft = getPlanSlotDraft(planSlot, planSlotDrafts);
+                const isDirty =
+                  draft.name !== planSlot.name || draft.slug !== planSlot.slug || draft.isEnabled !== planSlot.isEnabled;
+
+                return (
+                  <li key={planSlot.id} className="settings-record-row">
+                    <div className="settings-record-heading">
+                      <div>
+                        <strong>{planSlot.name}</strong> <span className="muted-text">/{planSlot.slug}</span>
+                      </div>
+                      <span className={planSlot.isEnabled ? "pill-muted" : "pill-muted pill-disabled"}>
+                        {planSlot.isEnabled ? "Enabled" : "Disabled"}
+                      </span>
+                    </div>
+                    <div className="category-editor-form">
+                      <label>
+                        <span>Name</span>
+                        <input
+                          value={draft.name}
+                          onChange={(event) => updatePlanSlotDraft(planSlot, { name: event.target.value })}
+                        />
+                      </label>
+                      <label>
+                        <span>Slug</span>
+                        <input
+                          value={draft.slug}
+                          onChange={(event) => updatePlanSlotDraft(planSlot, { slug: slugify(event.target.value) })}
+                        />
+                      </label>
+                      <label className="checkbox-row">
+                        <input
+                          type="checkbox"
+                          checked={draft.isEnabled}
+                          onChange={(event) => updatePlanSlotDraft(planSlot, { isEnabled: event.target.checked })}
+                        />
+                        <span>Enabled for planning</span>
+                      </label>
+                      <div className="category-editor-actions">
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          disabled={index === 0 || isPlanSlotMutationPending}
+                          onClick={() => movePlanSlot(planSlot, -1)}
+                        >
+                          Move up
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          disabled={index === planSlots.length - 1 || isPlanSlotMutationPending}
+                          onClick={() => movePlanSlot(planSlot, 1)}
+                        >
+                          Move down
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          disabled={!isDirty || isPlanSlotMutationPending}
+                          onClick={() => handleSavePlanSlot(planSlot)}
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary-button danger-button"
+                          disabled={isPlanSlotMutationPending}
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `Delete "${planSlot.name}"? Meal slots used by plans or categories cannot be deleted.`,
+                              )
+                            ) {
+                              deletePlanSlotMutation.mutate(planSlot.id);
+                            }
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
           <div className="mini-panel">
             <h3>Categories</h3>
             {categoryErrorMessage ? (
@@ -398,6 +775,52 @@ export function SettingsScreen() {
                   onChange={(iconId) => setNewCategory((current) => ({ ...current, iconId }))}
                 />
               </label>
+              <fieldset className="settings-fieldset">
+                <legend>Meal slots</legend>
+                <div className="slot-checkbox-grid">
+                  {planSlots.map((planSlot) => (
+                    <label key={planSlot.id} className="checkbox-row">
+                      <input
+                        type="checkbox"
+                        checked={newCategory.slotSlugs.includes(planSlot.slug)}
+                        onChange={(event) =>
+                          setNewCategory((current) => ({
+                            ...current,
+                            slotSlugs: event.target.checked
+                              ? [...new Set([...current.slotSlugs, planSlot.slug])]
+                              : current.slotSlugs.filter((slotSlug) => slotSlug !== planSlot.slug),
+                          }))
+                        }
+                      />
+                      <span>{planSlot.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <div className="settings-inline-fields">
+                <label>
+                  <span>Weekly min</span>
+                  <input
+                    inputMode="numeric"
+                    value={newCategory.weeklyMinCount}
+                    placeholder="Optional"
+                    onChange={(event) =>
+                      setNewCategory((current) => ({ ...current, weeklyMinCount: event.target.value }))
+                    }
+                  />
+                </label>
+                <label>
+                  <span>Weekly max</span>
+                  <input
+                    inputMode="numeric"
+                    value={newCategory.weeklyMaxCount}
+                    placeholder="Optional"
+                    onChange={(event) =>
+                      setNewCategory((current) => ({ ...current, weeklyMaxCount: event.target.value }))
+                    }
+                  />
+                </label>
+              </div>
               <button type="submit" className="primary-button" disabled={isCategoryMutationPending}>
                 Add category
               </button>
@@ -406,7 +829,12 @@ export function SettingsScreen() {
               {categoriesQuery.data?.categories.map((category) => {
                 const draft = getCategoryDraft(category, categoryDrafts);
                 const isDirty =
-                  draft.name !== category.name || draft.slug !== category.slug || draft.iconId !== (category.iconId ?? "");
+                  draft.name !== category.name ||
+                  draft.slug !== category.slug ||
+                  draft.iconId !== (category.iconId ?? "") ||
+                  !areStringArraysEqual(draft.slotSlugs, category.slotSlugs) ||
+                  draft.weeklyMinCount !== (category.weeklyMinCount?.toString() ?? "") ||
+                  draft.weeklyMaxCount !== (category.weeklyMaxCount?.toString() ?? "");
 
                 return (
                   <li key={category.id} className="category-icon-row">
@@ -445,6 +873,41 @@ export function SettingsScreen() {
                           onChange={(iconId) => updateCategoryDraft(category, { iconId })}
                         />
                       </label>
+                      <fieldset className="settings-fieldset">
+                        <legend>Meal slots</legend>
+                        <div className="slot-checkbox-grid">
+                          {planSlots.map((planSlot) => (
+                            <label key={planSlot.id} className="checkbox-row">
+                              <input
+                                type="checkbox"
+                                checked={draft.slotSlugs.includes(planSlot.slug)}
+                                onChange={(event) => updateCategorySlotDraft(category, planSlot.slug, event.target.checked)}
+                              />
+                              <span>{planSlot.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                      <div className="settings-inline-fields">
+                        <label>
+                          <span>Weekly min</span>
+                          <input
+                            inputMode="numeric"
+                            value={draft.weeklyMinCount}
+                            placeholder="Optional"
+                            onChange={(event) => updateCategoryDraft(category, { weeklyMinCount: event.target.value })}
+                          />
+                        </label>
+                        <label>
+                          <span>Weekly max</span>
+                          <input
+                            inputMode="numeric"
+                            value={draft.weeklyMaxCount}
+                            placeholder="Optional"
+                            onChange={(event) => updateCategoryDraft(category, { weeklyMaxCount: event.target.value })}
+                          />
+                        </label>
+                      </div>
                       <div className="category-editor-actions">
                         <button
                           type="button"

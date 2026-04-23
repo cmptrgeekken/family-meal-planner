@@ -20,6 +20,17 @@ export type ApiCategory = {
   name: string;
   slug: string;
   iconId?: string;
+  slotSlugs: string[];
+  weeklyMinCount?: number;
+  weeklyMaxCount?: number;
+};
+
+export type ApiPlanSlot = {
+  id: string;
+  name: string;
+  slug: string;
+  sortOrder: number;
+  isEnabled: boolean;
 };
 
 export type ApiStoreTag = {
@@ -43,6 +54,9 @@ export type ApiMeal = {
   category: string;
   categorySlug: string;
   categoryIconId?: string;
+  categorySlotSlugs?: string[];
+  categoryWeeklyMinCount?: number;
+  categoryWeeklyMaxCount?: number;
   costTier: "budget" | "standard" | "premium";
   kidFavorite: boolean;
   lowEffort: boolean;
@@ -63,7 +77,8 @@ export type ApiMealPayload = {
 
 export type ApiPlanSelection = {
   day: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
-  slot: "Dinner";
+  slot: string;
+  slotSlug: string;
   mealId: string;
 };
 
@@ -77,6 +92,16 @@ export type ApiValidationIssue = {
   code: string;
   message: string;
   mealId?: string;
+  categorySlug?: string;
+  planSlotSlug?: string;
+};
+
+export type ApiGroceryUsage = {
+  day: ApiPlanSelection["day"];
+  slotName: string;
+  slotSlug: string;
+  mealName: string;
+  mealId: string;
 };
 
 export type ApiGroceryListItem = {
@@ -85,6 +110,7 @@ export type ApiGroceryListItem = {
   quantityLabels: string[];
   storeTags: string[];
   usedInMeals: string[];
+  usedIn: ApiGroceryUsage[];
 };
 
 function apiUrl(path: string) {
@@ -115,7 +141,16 @@ export function getCategories() {
   return fetchJson<{ categories: ApiCategory[] }>("/categories");
 }
 
-export function createCategory(payload: { name: string; slug: string; iconId?: string | null }) {
+export type ApiCategoryPayload = {
+  name: string;
+  slug: string;
+  iconId?: string | null;
+  slotSlugs?: string[];
+  weeklyMinCount?: number | null;
+  weeklyMaxCount?: number | null;
+};
+
+export function createCategory(payload: ApiCategoryPayload) {
   return fetch(apiUrl("/categories"), {
     method: "POST",
     headers: {
@@ -133,7 +168,7 @@ export function createCategory(payload: { name: string; slug: string; iconId?: s
   });
 }
 
-export function updateCategory(categoryId: string, payload: { name: string; slug: string; iconId?: string | null }) {
+export function updateCategory(categoryId: string, payload: ApiCategoryPayload) {
   return fetch(apiUrl(`/categories/${categoryId}`), {
     method: "PUT",
     headers: {
@@ -148,6 +183,84 @@ export function updateCategory(categoryId: string, payload: { name: string; slug
     }
 
     return data;
+  });
+}
+
+export function getPlanSlots() {
+  return fetchJson<{ planSlots: ApiPlanSlot[] }>("/plan-slots");
+}
+
+export type ApiPlanSlotPayload = {
+  name: string;
+  slug: string;
+  sortOrder?: number;
+  isEnabled?: boolean;
+};
+
+export function createPlanSlot(payload: ApiPlanSlotPayload) {
+  return fetch(apiUrl("/plan-slots"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }).then(async (response) => {
+    const data = (await response.json()) as { planSlot: ApiPlanSlot; message?: string };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Meal slot create failed: ${response.status}`);
+    }
+
+    return data;
+  });
+}
+
+export function updatePlanSlot(planSlotId: string, payload: ApiPlanSlotPayload) {
+  return fetch(apiUrl(`/plan-slots/${planSlotId}`), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }).then(async (response) => {
+    const data = (await response.json()) as { planSlot: ApiPlanSlot; message?: string };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Meal slot update failed: ${response.status}`);
+    }
+
+    return data;
+  });
+}
+
+export function reorderPlanSlots(planSlotIds: string[]) {
+  return fetch(apiUrl("/plan-slots/reorder"), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ planSlotIds }),
+  }).then(async (response) => {
+    const data = (await response.json()) as { planSlots: ApiPlanSlot[]; message?: string };
+
+    if (!response.ok) {
+      throw new Error(data.message ?? `Meal slot reorder failed: ${response.status}`);
+    }
+
+    return data;
+  });
+}
+
+export function deletePlanSlot(planSlotId: string) {
+  return fetch(apiUrl(`/plan-slots/${planSlotId}`), {
+    method: "DELETE",
+  }).then(async (response) => {
+    if (response.status === 204) {
+      return;
+    }
+
+    const data = (await response.json()) as { message?: string };
+    throw new Error(data.message ?? `Meal slot delete failed: ${response.status}`);
   });
 }
 
@@ -284,8 +397,16 @@ export function deleteMeal(mealId: string) {
   });
 }
 
-export function getWeeklyPlan(weekStartDate: string) {
-  return fetch(apiUrl(`/weekly-plans/${weekStartDate}`)).then(async (response) => {
+export function getWeeklyPlan(weekStartDate: string, filters?: { slotSlugs?: string[] }) {
+  const params = new URLSearchParams();
+
+  if (filters?.slotSlugs && filters.slotSlugs.length > 0) {
+    params.set("slotSlugs", filters.slotSlugs.join(","));
+  }
+
+  const query = params.toString();
+
+  return fetch(apiUrl(`/weekly-plans/${weekStartDate}${query ? `?${query}` : ""}`)).then(async (response) => {
     if (response.status === 404) {
       return null;
     }
@@ -305,7 +426,10 @@ export function getWeeklyPlan(weekStartDate: string) {
   });
 }
 
-export function previewWeeklyPlan(payload: { weekStartDate: string; selections: Array<{ day: string; mealId: string }> }) {
+export function previewWeeklyPlan(payload: {
+  weekStartDate: string;
+  selections: Array<{ day: string; slotSlug: string; mealId: string }>;
+}) {
   return fetch(apiUrl("/weekly-plans/preview"), {
     method: "POST",
     headers: {
@@ -328,7 +452,10 @@ export function previewWeeklyPlan(payload: { weekStartDate: string; selections: 
   });
 }
 
-export function saveWeeklyPlan(payload: { weekStartDate: string; selections: Array<{ day: string; mealId: string }> }) {
+export function saveWeeklyPlan(payload: {
+  weekStartDate: string;
+  selections: Array<{ day: string; slotSlug: string; mealId: string }>;
+}) {
   return fetch(apiUrl(`/weekly-plans/${payload.weekStartDate}`), {
     method: "PUT",
     headers: {

@@ -4,10 +4,23 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { EmptyState } from "../../components/EmptyState";
 import { SectionCard } from "../../components/SectionCard";
 import { StatusMessage } from "../../components/StatusMessage";
-import { getCategories, getMeals, getWeeklyPlan, previewWeeklyPlan, saveWeeklyPlan, type ApiMeal } from "../shared/api";
-import { getPlannerRuleHints, plannerWeekdays, type PlannerSelections } from "./planning-rule-hints";
+import {
+  getCategories,
+  getMeals,
+  getPlanSlots,
+  getWeeklyPlan,
+  previewWeeklyPlan,
+  saveWeeklyPlan,
+  type ApiCategory,
+  type ApiMeal,
+  type ApiPlanSlot,
+} from "../shared/api";
+import { plannerWeekdays, type PlannerWeekday } from "./planning-rule-hints";
 
 const weekdays = plannerWeekdays;
+
+type PlanCellKey = `${PlannerWeekday}:${string}`;
+type PlannerSelections = Record<string, string>;
 
 export function PlanScreen() {
   const queryClient = useQueryClient();
@@ -20,29 +33,38 @@ export function PlanScreen() {
     queryKey: ["categories", "plan-screen"],
     queryFn: getCategories,
   });
+  const planSlotsQuery = useQuery({
+    queryKey: ["plan-slots"],
+    queryFn: getPlanSlots,
+  });
   const savedPlanQuery = useQuery({
     queryKey: ["weekly-plan", weekStartDate],
     queryFn: () => getWeeklyPlan(weekStartDate),
   });
   const meals = mealsQuery.data?.meals ?? [];
   const categories = categoriesQuery.data?.categories ?? [];
+  const planSlots = planSlotsQuery.data?.planSlots ?? [];
+  const visiblePlanSlots = useMemo(
+    () => getVisiblePlanSlots(planSlots, savedPlanQuery.data?.weeklyPlan.selections ?? []),
+    [planSlots, savedPlanQuery.data?.weeklyPlan.selections],
+  );
 
-  const [selections, setSelections] = useState<Record<(typeof weekdays)[number], string>>(getEmptySelections);
-  const [categorySelections, setCategorySelections] =
-    useState<Record<(typeof weekdays)[number], string>>(getEmptySelections);
+  const [selections, setSelections] = useState<PlannerSelections>({});
+  const [categorySelections, setCategorySelections] = useState<PlannerSelections>({});
 
+  const selectedMeals = useMemo(() => getSelectedMeals(selections), [selections]);
   const preview = useMutation({
     mutationFn: () =>
       previewWeeklyPlan({
         weekStartDate,
-        selections: getSelectedMeals(selections),
+        selections: selectedMeals,
       }),
   });
   const savePlan = useMutation({
     mutationFn: () =>
       saveWeeklyPlan({
         weekStartDate,
-        selections: getSelectedMeals(selections),
+        selections: selectedMeals,
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["weekly-plan", weekStartDate] });
@@ -50,6 +72,7 @@ export function PlanScreen() {
   });
 
   const mealById = useMemo(() => new Map(meals.map((meal) => [meal.id, meal])), [meals]);
+  const categoryBySlug = useMemo(() => new Map(categories.map((category) => [category.slug, category])), [categories]);
   const mealsByCategorySlug = useMemo(() => {
     const map = new Map<string, ApiMeal[]>();
 
@@ -59,54 +82,65 @@ export function PlanScreen() {
 
     return map;
   }, [meals]);
-  const hasSelections = weekdays.some((day) => selections[day]);
+  const categoryCounts = useMemo(() => getCategoryCounts(selections, mealById), [mealById, selections]);
+  const plannedCount = selectedMeals.length;
+  const cellCount = weekdays.length * Math.max(1, visiblePlanSlots.length);
   const feedbackData = preview.data ?? savePlan.data;
-  const plannerRuleHints = useMemo(() => getPlannerRuleHints(selections, mealById), [mealById, selections]);
-  const hasPlannerRuleHints = Object.values(plannerRuleHints.byDay).some((messages) => messages.length > 0);
+  const blockingIssues = feedbackData?.validationIssues.filter((issue) => issue.code !== "category_minimum_unmet") ?? [];
+  const minimumIssues = feedbackData?.validationIssues.filter((issue) => issue.code === "category_minimum_unmet") ?? [];
 
   useEffect(() => {
     if (!savedPlanQuery.data?.weeklyPlan) {
       return;
     }
 
-    const nextSelections = getEmptySelections();
-    const nextCategorySelections = getEmptySelections();
+    const nextSelections: PlannerSelections = {};
+    const nextCategorySelections: PlannerSelections = {};
 
     for (const selection of savedPlanQuery.data.weeklyPlan.selections) {
-      nextSelections[selection.day] = selection.mealId;
-      nextCategorySelections[selection.day] = mealById.get(selection.mealId)?.categorySlug ?? "";
+      const key = getCellKey(selection.day, selection.slotSlug);
+      nextSelections[key] = selection.mealId;
+      nextCategorySelections[key] = mealById.get(selection.mealId)?.categorySlug ?? "";
     }
 
     setSelections(nextSelections);
     setCategorySelections(nextCategorySelections);
   }, [mealById, savedPlanQuery.data]);
 
-  function clearDay(day: (typeof weekdays)[number]) {
-    setSelections((current) => ({
-      ...current,
-      [day]: "",
-    }));
+  function clearCell(day: PlannerWeekday, slotSlug: string) {
+    const key = getCellKey(day, slotSlug);
+
+    setSelections((current) => omitKey(current, key));
+    setCategorySelections((current) => omitKey(current, key));
+  }
+
+  function selectCategory(day: PlannerWeekday, slot: ApiPlanSlot, category: ApiCategory) {
+    const key = getCellKey(day, slot.slug);
+    const selectedMeal = mealById.get(selections[key] ?? "");
+    const shouldKeepMeal = selectedMeal?.categorySlug === category.slug;
+
     setCategorySelections((current) => ({
       ...current,
-      [day]: "",
+      [key]: category.slug,
     }));
+    setSelections((current) => (shouldKeepMeal ? current : omitKey(current, key)));
   }
 
   return (
     <div className="screen-layout">
       <SectionCard
         title="Weekly Plan"
-        subtitle={`Build and save dinners for the week of ${weekStartDate}.`}
+        subtitle={`Build and save meals for the week of ${weekStartDate}.`}
         actions={
           <div className="toggle-row planner-action-row">
             <button
               type="button"
               className="secondary-button"
               onClick={() => {
-                setSelections(getEmptySelections());
-                setCategorySelections(getEmptySelections());
+                setSelections({});
+                setCategorySelections({});
               }}
-              disabled={!hasSelections || savePlan.isPending || preview.isPending}
+              disabled={plannedCount === 0 || savePlan.isPending || preview.isPending}
             >
               Clear Week
             </button>
@@ -114,7 +148,7 @@ export function PlanScreen() {
               type="button"
               className="secondary-button"
               onClick={() => preview.mutate()}
-              disabled={preview.isPending || meals.length === 0 || !hasSelections}
+              disabled={preview.isPending || meals.length === 0 || plannedCount === 0}
             >
               {preview.isPending ? "Previewing..." : "Preview Week"}
             </button>
@@ -122,14 +156,14 @@ export function PlanScreen() {
               type="button"
               className="primary-button"
               onClick={() => savePlan.mutate()}
-              disabled={savePlan.isPending || meals.length === 0 || !hasSelections}
+              disabled={savePlan.isPending || meals.length === 0 || plannedCount === 0}
             >
               {savePlan.isPending ? "Saving..." : "Save Week"}
             </button>
           </div>
         }
       >
-        {mealsQuery.isLoading ? <p>Loading meals...</p> : null}
+        {mealsQuery.isLoading || categoriesQuery.isLoading || planSlotsQuery.isLoading ? <p>Loading planner data...</p> : null}
         {mealsQuery.isError ? (
           <StatusMessage
             tone="error"
@@ -144,9 +178,16 @@ export function PlanScreen() {
             message="The planner needs category data before category-first planning can work."
           />
         ) : null}
+        {planSlotsQuery.isError ? (
+          <StatusMessage
+            tone="error"
+            title="Meal slots unavailable"
+            message="The planner needs meal slot data before the week grid can be built."
+          />
+        ) : null}
         {savedPlanQuery.isLoading ? <p>Checking for a saved plan...</p> : null}
         {savePlan.isSuccess ? (
-          <StatusMessage tone="success" title="Week saved" message="This dinner plan is now persisted." />
+          <StatusMessage tone="success" title="Week saved" message="This meal plan is now persisted." />
         ) : null}
         {savePlan.isError ? (
           <StatusMessage
@@ -161,92 +202,110 @@ export function PlanScreen() {
             message="Add or seed meals in the backend first, then this screen can become the main planning workflow."
           />
         ) : null}
-        {meals.length > 0 ? (
+        {!planSlotsQuery.isLoading && visiblePlanSlots.length === 0 ? (
+          <EmptyState title="No enabled meal slots" message="Enable or create a meal slot in Settings before planning." />
+        ) : null}
+        {meals.length > 0 && visiblePlanSlots.length > 0 ? (
           <>
             <div className="plan-summary-bar" aria-live="polite">
-              <strong>{weekdays.filter((day) => selections[day]).length}/7 dinners planned</strong>
-              <span className={hasPlannerRuleHints ? "rule-hint-text" : "muted-text"}>
-                {hasPlannerRuleHints
+              <strong>
+                {plannedCount}/{cellCount} meals planned
+              </strong>
+              <span className={blockingIssues.length > 0 ? "rule-hint-text" : "muted-text"}>
+                {blockingIssues.length > 0
                   ? "Some choices need attention before saving."
-                  : "Preview before saving to catch repeat or premium limits."}
+                  : "Preview before saving to catch repeat, premium, or category limits."}
               </span>
             </div>
             <div className="day-stack">
-              {weekdays.map((day) => {
-                const selectedMeal = mealById.get(selections[day]);
+              {weekdays.map((day) => (
+                <article key={day} className="day-card plan-day-card">
+                  <div className="day-card-copy">
+                    <p className="day-label">{day}</p>
+                  </div>
+                  <div className="plan-slot-stack">
+                    {visiblePlanSlots.map((slot) => {
+                      const key = getCellKey(day, slot.slug);
+                      const selectedMeal = mealById.get(selections[key] ?? "");
+                      const selectedCategorySlug = categorySelections[key] ?? selectedMeal?.categorySlug ?? "";
+                      const eligibleCategories = categories.filter((category) => category.slotSlugs.includes(slot.slug));
 
-                return (
-                  <label key={day} className="day-card">
-                    <div className="day-card-copy">
-                      <p className="day-label">{day}</p>
-                      <span className="slot-pill">Dinner</span>
-                    </div>
-                    <div className="planner-category-grid" aria-label={`${day} category`}>
-                      {categories.map((category) => (
-                        <button
-                          key={category.id}
-                          type="button"
-                          className={
-                            categorySelections[day] === category.slug
-                              ? "planner-category-button planner-category-button-active"
-                              : "planner-category-button"
-                          }
-                          onClick={() => {
-                            setCategorySelections((current) => ({
-                              ...current,
-                              [day]: category.slug,
-                            }));
-                            setSelections((current) => ({
-                              ...current,
-                              [day]: mealById.get(current[day])?.categorySlug === category.slug ? current[day] : "",
-                            }));
-                          }}
-                        >
-                          {category.iconId ? <img src={`/icons/${category.iconId}.svg`} alt="" /> : null}
-                          <span>{category.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                    <select
-                      aria-label={`${day} dinner meal`}
-                      value={selections[day]}
-                      disabled={!categorySelections[day]}
-                      onChange={(event) =>
-                        setSelections((current) => ({
-                          ...current,
-                          [day]: event.target.value,
-                        }))
-                      }
-                    >
-                      <option value="">
-                        {categorySelections[day] ? "Choose a meal" : "Choose a category first"}
-                      </option>
-                      {(mealsByCategorySlug.get(categorySelections[day]) ?? []).map((meal) => (
-                        <option key={meal.id} value={meal.id}>
-                          {meal.name}
-                        </option>
-                      ))}
-                    </select>
-                    {selectedMeal ? <MealSummaryChip meal={selectedMeal} /> : null}
-                    {plannerRuleHints.byDay[day].length > 0 ? (
-                      <ul className="rule-hint-list" aria-label={`${day} planning rule hints`}>
-                        {plannerRuleHints.byDay[day].map((message) => (
-                          <li key={message}>{message}</li>
-                        ))}
-                      </ul>
-                    ) : null}
-                    {selectedMeal ? (
-                      <button
-                        type="button"
-                        className="secondary-button day-remove-button"
-                        onClick={() => clearDay(day)}
-                      >
-                        Remove {day}
-                      </button>
-                    ) : null}
-                  </label>
-                );
-              })}
+                      return (
+                        <div key={key} className="plan-slot-cell">
+                          <div className="day-card-copy">
+                            <span className={slot.isEnabled ? "slot-pill" : "slot-pill slot-pill-disabled"}>
+                              {slot.name}
+                              {slot.isEnabled ? "" : " (disabled)"}
+                            </span>
+                          </div>
+                          {eligibleCategories.length === 0 ? (
+                            <p className="muted-text">No categories are assigned to this slot.</p>
+                          ) : (
+                            <div className="planner-category-grid" aria-label={`${day} ${slot.name} category`}>
+                              {eligibleCategories.map((category) => {
+                                const availability = getCategoryAvailability(category, key, selections, mealById, categoryCounts);
+
+                                return (
+                                  <button
+                                    key={category.id}
+                                    type="button"
+                                    className={
+                                      selectedCategorySlug === category.slug
+                                        ? "planner-category-button planner-category-button-active"
+                                        : "planner-category-button"
+                                    }
+                                    disabled={!availability.available}
+                                    title={availability.reason}
+                                    aria-label={availability.reason ? `${category.name}: ${availability.reason}` : category.name}
+                                    onClick={() => selectCategory(day, slot, category)}
+                                  >
+                                    {category.iconId ? <img src={`/icons/${category.iconId}.svg`} alt="" /> : null}
+                                    <span>{category.name}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                          <select
+                            aria-label={`${day} ${slot.name} meal`}
+                            value={selections[key] ?? ""}
+                            disabled={!selectedCategorySlug}
+                            onChange={(event) =>
+                              setSelections((current) =>
+                                event.target.value
+                                  ? {
+                                      ...current,
+                                      [key]: event.target.value,
+                                    }
+                                  : omitKey(current, key),
+                              )
+                            }
+                          >
+                            <option value="">
+                              {selectedCategorySlug ? "Choose a meal" : "Choose a category first"}
+                            </option>
+                            {(mealsByCategorySlug.get(selectedCategorySlug) ?? []).map((meal) => (
+                              <option key={meal.id} value={meal.id}>
+                                {meal.name}
+                              </option>
+                            ))}
+                          </select>
+                          {selectedMeal ? <MealSummaryChip meal={selectedMeal} /> : null}
+                          {selectedMeal ? (
+                            <button
+                              type="button"
+                              className="secondary-button day-remove-button"
+                              onClick={() => clearCell(day, slot.slug)}
+                            >
+                              Remove {slot.name}
+                            </button>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </article>
+              ))}
             </div>
           </>
         ) : null}
@@ -259,7 +318,7 @@ export function PlanScreen() {
         {preview.isIdle ? (
           <EmptyState
             title="Nothing previewed yet"
-            message="Pick a few dinners, then preview the week to see validation and grocery grouping."
+            message="Pick a few meals, then preview the week to see validation and grocery grouping."
           />
         ) : null}
         {preview.isError ? (
@@ -273,18 +332,16 @@ export function PlanScreen() {
           <div className="preview-grid">
             <div className="mini-panel">
               <h3>Validation</h3>
-              {feedbackData.validationIssues.length === 0 && plannerRuleHints.summary.length === 0 ? (
+              {feedbackData.validationIssues.length === 0 ? (
                 <p>No rule violations in this preview.</p>
               ) : (
                 <ul className="plain-list">
-                  {plannerRuleHints.summary.map((message) => (
-                    <li key={message}>{message}</li>
-                  ))}
                   {feedbackData.validationIssues.map((issue) => (
-                    <li key={`${issue.code}-${issue.mealId ?? issue.message}`}>{issue.message}</li>
+                    <li key={`${issue.code}-${issue.mealId ?? issue.categorySlug ?? issue.message}`}>{issue.message}</li>
                   ))}
                 </ul>
               )}
+              {minimumIssues.length > 0 ? <p className="muted-text">Minimums are guidance and do not block saving.</p> : null}
             </div>
             <div className="mini-panel">
               <h3>Grocery Snapshot</h3>
@@ -307,20 +364,79 @@ export function PlanScreen() {
   );
 }
 
-function getEmptySelections(): PlannerSelections {
+function getCellKey(day: PlannerWeekday, slotSlug: string): PlanCellKey {
+  return `${day}:${slotSlug}`;
+}
+
+function getCategoryCounts(selections: PlannerSelections, mealById: Map<string, ApiMeal>) {
+  const counts = new Map<string, number>();
+
+  Object.values(selections).forEach((mealId) => {
+    const categorySlug = mealById.get(mealId)?.categorySlug;
+
+    if (!categorySlug) {
+      return;
+    }
+
+    counts.set(categorySlug, (counts.get(categorySlug) ?? 0) + 1);
+  });
+
+  return counts;
+}
+
+function getCategoryAvailability(
+  category: ApiCategory,
+  cellKey: string,
+  selections: PlannerSelections,
+  mealById: Map<string, ApiMeal>,
+  categoryCounts: Map<string, number>,
+) {
+  const selectedMeal = mealById.get(selections[cellKey] ?? "");
+  const currentCellUsesCategory = selectedMeal?.categorySlug === category.slug;
+  const count = categoryCounts.get(category.slug) ?? 0;
+
+  if (category.weeklyMaxCount != null && count >= category.weeklyMaxCount && !currentCellUsesCategory) {
+    return {
+      available: false,
+      reason: `${category.name} limit reached for this week.`,
+    };
+  }
+
   return {
-    Monday: "",
-    Tuesday: "",
-    Wednesday: "",
-    Thursday: "",
-    Friday: "",
-    Saturday: "",
-    Sunday: "",
+    available: true,
+    reason: "",
   };
 }
 
-function getSelectedMeals(selections: Record<(typeof weekdays)[number], string>) {
-  return weekdays.filter((day) => selections[day]).map((day) => ({ day, mealId: selections[day] as string }));
+function getVisiblePlanSlots(planSlots: ApiPlanSlot[], selections: Array<{ slot: string; slotSlug: string }>) {
+  const slotBySlug = new Map(planSlots.map((slot) => [slot.slug, slot]));
+  const visibleSlots = planSlots.filter((slot) => slot.isEnabled);
+
+  for (const selection of selections) {
+    const slot = slotBySlug.get(selection.slotSlug);
+
+    if (slot && !visibleSlots.some((visibleSlot) => visibleSlot.slug === slot.slug)) {
+      visibleSlots.push(slot);
+    }
+  }
+
+  return visibleSlots.sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
+}
+
+function omitKey<T>(record: Record<string, T>, key: string) {
+  const next = { ...record };
+  delete next[key];
+  return next;
+}
+
+function getSelectedMeals(selections: PlannerSelections) {
+  return Object.entries(selections)
+    .filter((entry): entry is [PlanCellKey, string] => Boolean(entry[1]))
+    .map(([key, mealId]) => {
+      const [day, slotSlug] = key.split(":") as [PlannerWeekday, string];
+
+      return { day, slotSlug, mealId };
+    });
 }
 
 function MealSummaryChip({ meal }: { meal: ApiMeal }) {

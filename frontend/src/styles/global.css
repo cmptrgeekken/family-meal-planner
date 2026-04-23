@@ -379,6 +379,12 @@ button:disabled {
   color: var(--accent-green);
 }
 
+.slot-pill-disabled,
+.pill-disabled {
+  background: rgba(112, 78, 44, 0.08);
+  color: var(--muted);
+}
+
 .category-pill {
   gap: 0.35rem;
 }
@@ -427,6 +433,24 @@ button:disabled {
   background: rgba(209, 77, 77, 0.08);
   color: #803029;
   font-size: 0.9rem;
+}
+
+.plan-day-card {
+  align-content: start;
+}
+
+.plan-slot-stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.plan-slot-cell {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border: 1px solid rgba(112, 78, 44, 0.12);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .preview-grid,
@@ -496,6 +520,13 @@ button:disabled {
   border: 1px solid var(--border);
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.52);
+}
+
+.settings-record-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .category-icon-row {
@@ -574,6 +605,36 @@ button:disabled {
   min-height: 2.75rem;
   padding: 0.7rem 0.8rem;
   color: var(--text);
+}
+
+.settings-fieldset {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(112, 78, 44, 0.16);
+  border-radius: 0.85rem;
+}
+
+.settings-fieldset legend {
+  padding: 0 0.3rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.slot-checkbox-grid,
+.settings-inline-fields {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.settings-inline-fields label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .icon-combobox {
@@ -880,6 +941,24 @@ button:disabled {
   height: 100%;
   border-radius: inherit;
   background: var(--accent-green);
+}
+
+.slot-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 0.85rem;
+}
+
+.slot-filter-chip {
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.slot-filter-chip input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
 }
 
 .grocery-diagnostics {

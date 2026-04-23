@@ -32,6 +32,21 @@ const weekParamSchema = z.object({
   weekStartDate: z.string().date(),
 });
 
+const weeklyPlanQuerySchema = z.object({
+  slotSlugs: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .transform((value) => {
+      if (!value) {
+        return undefined;
+      }
+
+      const values = Array.isArray(value) ? value : value.split(",");
+
+      return values.map((slotSlug) => slotSlug.trim()).filter(Boolean);
+    }),
+});
+
 const recentPlansQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(20).optional(),
 });
@@ -68,15 +83,20 @@ weeklyPlansRouter.get(
   "/:weekStartDate",
   asyncHandler(async (request, response) => {
     const params = weekParamSchema.parse(request.params);
+    const query = weeklyPlanQuerySchema.parse(request.query);
     const weeklyPlan = await getWeeklyPlanByWeekStartDate(new Date(params.weekStartDate));
 
     if (!weeklyPlan) {
       throw new HttpError(404, "Weekly plan not found.");
     }
 
+    if (query.slotSlugs) {
+      await assertKnownSlotSlugs(query.slotSlugs);
+    }
+
     const meals = await listMeals();
     const validationIssues = validateWeeklyPlan(weeklyPlan, meals);
-    const groceryList = buildGroceryList(weeklyPlan, meals);
+    const groceryList = buildGroceryList(weeklyPlan, meals, query.slotSlugs);
 
     response.json({
       weeklyPlan,

@@ -23,6 +23,7 @@ function category(id: string, name: string, iconId = id): ApiCategory {
     name,
     slug: name.toLowerCase().replace(/\s+/g, "-"),
     iconId,
+    slotSlugs: ["dinner"],
   };
 }
 
