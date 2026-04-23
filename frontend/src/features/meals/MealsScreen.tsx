@@ -110,6 +110,26 @@ function formToPayload(form: MealFormState): ApiMealPayload {
   };
 }
 
+function getMealValidationMessage(meal: ApiMealPayload) {
+  if (!meal.name) {
+    return "Meal name is required.";
+  }
+
+  if (!meal.slug) {
+    return "Meal slug is required.";
+  }
+
+  if (!meal.categorySlug) {
+    return "Choose a category before saving.";
+  }
+
+  if (meal.ingredients.length === 0) {
+    return "Add at least one ingredient with a name.";
+  }
+
+  return null;
+}
+
 export function MealsScreen() {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
@@ -121,6 +141,7 @@ export function MealsScreen() {
   });
   const [mealForm, setMealForm] = useState<MealFormState>(emptyMealForm);
   const [isMealEditorOpen, setIsMealEditorOpen] = useState(false);
+  const [mealFormError, setMealFormError] = useState<string | null>(null);
 
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
@@ -192,6 +213,7 @@ export function MealsScreen() {
 
   function resetMealForm() {
     setMealForm(buildEmptyMealForm(categories[0]?.slug ?? ""));
+    setMealFormError(null);
   }
 
   function openCreateMealModal() {
@@ -216,6 +238,7 @@ export function MealsScreen() {
   }
 
   function updateIngredient(index: number, patch: Partial<MealFormIngredient>) {
+    setMealFormError(null);
     setMealForm((current) => ({
       ...current,
       ingredients: current.ingredients.map((ingredient, ingredientIndex) =>
@@ -225,12 +248,46 @@ export function MealsScreen() {
   }
 
   function removeIngredient(index: number) {
+    setMealFormError(null);
     setMealForm((current) => ({
       ...current,
       ingredients:
         current.ingredients.length === 1
           ? [{ ...emptyIngredient }]
           : current.ingredients.filter((_ingredient, ingredientIndex) => ingredientIndex !== index),
+    }));
+  }
+
+  function moveIngredient(index: number, direction: -1 | 1) {
+    setMealFormError(null);
+    setMealForm((current) => {
+      const nextIndex = index + direction;
+
+      if (nextIndex < 0 || nextIndex >= current.ingredients.length) {
+        return current;
+      }
+
+      const ingredients = [...current.ingredients];
+      const [ingredient] = ingredients.splice(index, 1);
+
+      if (!ingredient) {
+        return current;
+      }
+
+      ingredients.splice(nextIndex, 0, ingredient);
+
+      return {
+        ...current,
+        ingredients,
+      };
+    });
+  }
+
+  function addIngredient() {
+    setMealFormError(null);
+    setMealForm((current) => ({
+      ...current,
+      ingredients: [...current.ingredients, { ...emptyIngredient }],
     }));
   }
 
@@ -242,7 +299,10 @@ export function MealsScreen() {
       categorySlug: activeCategorySlug,
     });
 
-    if (!meal.name || !meal.slug || !meal.categorySlug || meal.ingredients.length === 0) {
+    const validationMessage = getMealValidationMessage(meal);
+
+    if (validationMessage) {
+      setMealFormError(validationMessage);
       return;
     }
 
@@ -406,6 +466,7 @@ export function MealsScreen() {
                 placeholder="Taco bowls"
                 onChange={(event) => {
                   const name = event.target.value;
+                  setMealFormError(null);
                   setMealForm((current) => ({
                     ...current,
                     name,
@@ -419,14 +480,20 @@ export function MealsScreen() {
               <input
                 value={mealForm.slug}
                 placeholder="taco-bowls"
-                onChange={(event) => setMealForm((current) => ({ ...current, slug: slugify(event.target.value) }))}
+                onChange={(event) => {
+                  setMealFormError(null);
+                  setMealForm((current) => ({ ...current, slug: slugify(event.target.value) }));
+                }}
               />
             </label>
             <label>
               <span>Category</span>
               <select
                 value={activeCategorySlug}
-                onChange={(event) => setMealForm((current) => ({ ...current, categorySlug: event.target.value }))}
+                onChange={(event) => {
+                  setMealFormError(null);
+                  setMealForm((current) => ({ ...current, categorySlug: event.target.value }));
+                }}
               >
                 <option value="" disabled>
                   Choose a category
@@ -442,9 +509,10 @@ export function MealsScreen() {
               <span>Cost tier</span>
               <select
                 value={mealForm.costTier}
-                onChange={(event) =>
-                  setMealForm((current) => ({ ...current, costTier: event.target.value as ApiMeal["costTier"] }))
-                }
+                onChange={(event) => {
+                  setMealFormError(null);
+                  setMealForm((current) => ({ ...current, costTier: event.target.value as ApiMeal["costTier"] }));
+                }}
               >
                 <option value="budget">Budget</option>
                 <option value="standard">Standard</option>
@@ -458,7 +526,10 @@ export function MealsScreen() {
             <textarea
               value={mealForm.notes}
               placeholder="Add peppers, Greek yogurt, or a quick salad."
-              onChange={(event) => setMealForm((current) => ({ ...current, notes: event.target.value }))}
+              onChange={(event) => {
+                setMealFormError(null);
+                setMealForm((current) => ({ ...current, notes: event.target.value }));
+              }}
             />
           </label>
 
@@ -466,14 +537,20 @@ export function MealsScreen() {
             <button
               type="button"
               className={mealForm.kidFavorite ? "filter-chip filter-chip-active" : "filter-chip"}
-              onClick={() => setMealForm((current) => ({ ...current, kidFavorite: !current.kidFavorite }))}
+              onClick={() => {
+                setMealFormError(null);
+                setMealForm((current) => ({ ...current, kidFavorite: !current.kidFavorite }));
+              }}
             >
               Kid favorite
             </button>
             <button
               type="button"
               className={mealForm.lowEffort ? "filter-chip filter-chip-active" : "filter-chip"}
-              onClick={() => setMealForm((current) => ({ ...current, lowEffort: !current.lowEffort }))}
+              onClick={() => {
+                setMealFormError(null);
+                setMealForm((current) => ({ ...current, lowEffort: !current.lowEffort }));
+              }}
             >
               Low effort
             </button>
@@ -482,18 +559,7 @@ export function MealsScreen() {
           <div className="ingredient-editor-list">
             <div className="meal-form-section-heading">
               <h3>Ingredients</h3>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() =>
-                  setMealForm((current) => ({
-                    ...current,
-                    ingredients: [...current.ingredients, { ...emptyIngredient }],
-                  }))
-                }
-              >
-                Add ingredient
-              </button>
+              <p>Order ingredients the way you want them to appear in grocery output.</p>
             </div>
             {mealForm.ingredients.map((ingredient, index) => (
               <div key={index} className="ingredient-editor-row">
@@ -543,10 +609,32 @@ export function MealsScreen() {
                 <button type="button" className="secondary-button danger-button" onClick={() => removeIngredient(index)}>
                   Remove
                 </button>
+                <div className="ingredient-row-actions">
+                  <button
+                    type="button"
+                    className="secondary-button ingredient-order-button"
+                    onClick={() => moveIngredient(index, -1)}
+                    disabled={index === 0}
+                  >
+                    Up
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button ingredient-order-button"
+                    onClick={() => moveIngredient(index, 1)}
+                    disabled={index === mealForm.ingredients.length - 1}
+                  >
+                    Down
+                  </button>
+                </div>
               </div>
             ))}
+            <button type="button" className="secondary-button ingredient-add-button" onClick={addIngredient}>
+              Add ingredient
+            </button>
           </div>
 
+          {mealFormError ? <p className="form-error-text">{mealFormError}</p> : null}
           <div className="toggle-row modal-action-row">
             <button type="submit" className="primary-button" disabled={isMealMutationPending}>
               {mealForm.id ? "Save meal" : "Add meal"}
@@ -556,7 +644,13 @@ export function MealsScreen() {
             </button>
           </div>
           {createMealMutation.isError || updateMealMutation.isError ? (
-            <p className="muted-text">Meal could not be saved. Check required fields and duplicate slugs.</p>
+            <p className="form-error-text">
+              {createMealMutation.error instanceof Error
+                ? createMealMutation.error.message
+                : updateMealMutation.error instanceof Error
+                  ? updateMealMutation.error.message
+                  : "Meal could not be saved. Check required fields and duplicate slugs."}
+            </p>
           ) : null}
         </form>
       </Modal>
