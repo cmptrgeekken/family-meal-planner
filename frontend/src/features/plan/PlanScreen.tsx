@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { EmptyState } from "../../components/EmptyState";
@@ -127,7 +127,7 @@ export function PlanScreen() {
   }
 
   return (
-    <div className="screen-layout">
+    <div className="screen-layout plan-screen-layout">
       <SectionCard
         title="Weekly Plan"
         subtitle={`Build and save meals for the week of ${weekStartDate}.`}
@@ -217,13 +217,20 @@ export function PlanScreen() {
                   : "Preview before saving to catch repeat, premium, or category limits."}
               </span>
             </div>
-            <div className="day-stack">
+            <div className="day-stack planner-week-grid">
               {weekdays.map((day) => (
                 <article key={day} className="day-card plan-day-card">
-                  <div className="day-card-copy">
+                  <div className="day-card-copy plan-day-heading">
                     <p className="day-label">{day}</p>
                   </div>
-                  <div className="plan-slot-stack">
+                  <div
+                    className="plan-slot-stack"
+                    style={
+                      {
+                        "--plan-slot-count": Math.max(1, visiblePlanSlots.length),
+                      } as CSSProperties
+                    }
+                  >
                     {visiblePlanSlots.map((slot) => {
                       const key = getCellKey(day, slot.slug);
                       const selectedMeal = mealById.get(selections[key] ?? "");
