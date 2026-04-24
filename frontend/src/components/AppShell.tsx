@@ -5,6 +5,7 @@ import type { AppTab } from "../app/App";
 type AppShellProps = {
   activeTab: AppTab;
   onTabChange: (tab: AppTab) => void;
+  weekNavigator?: ReactNode;
   children: ReactNode;
 };
 
@@ -16,7 +17,7 @@ const tabs: Array<{ id: AppTab; label: string; description: string; href: string
   { id: "settings", label: "Settings", description: "Reference data", href: "/settings" },
 ];
 
-export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
+export function AppShell({ activeTab, onTabChange, weekNavigator, children }: AppShellProps) {
   const [isDesktopNavCompact, setIsDesktopNavCompact] = useState(false);
 
   useEffect(() => {
@@ -61,6 +62,8 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
           ))}
         </nav>
       </div>
+
+      {weekNavigator ? <div className="week-navigator-shell">{weekNavigator}</div> : null}
 
       <main className="app-main">{children}</main>
 

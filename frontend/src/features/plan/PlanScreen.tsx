@@ -23,9 +23,12 @@ const weekdays = plannerWeekdays;
 type PlanCellKey = `${PlannerWeekday}:${string}`;
 type PlannerSelections = Record<string, string>;
 
-export function PlanScreen() {
+type PlanScreenProps = {
+  weekStartDate: string;
+};
+
+export function PlanScreen({ weekStartDate }: PlanScreenProps) {
   const queryClient = useQueryClient();
-  const weekStartDate = useMemo(getUpcomingMondayIso, []);
   const mealsQuery = useQuery({
     queryKey: ["meals", "plan-screen"],
     queryFn: () => getMeals({}),
@@ -108,6 +111,18 @@ export function PlanScreen() {
   }, [blockingIssues.length, feedbackData, minimumIssues.length]);
 
   useEffect(() => {
+    setSelections({});
+    setCategorySelections({});
+    setActiveEditorCellKey(null);
+    preview.reset();
+    savePlan.reset();
+  }, [weekStartDate]);
+
+  useEffect(() => {
+    if (savedPlanQuery.isLoading) {
+      return;
+    }
+
     if (!savedPlanQuery.data?.weeklyPlan) {
       return;
     }
@@ -123,7 +138,8 @@ export function PlanScreen() {
 
     setSelections(nextSelections);
     setCategorySelections(nextCategorySelections);
-  }, [mealById, savedPlanQuery.data]);
+    setActiveEditorCellKey(null);
+  }, [mealById, savedPlanQuery.data, savedPlanQuery.isLoading]);
 
   function clearCell(day: PlannerWeekday, slotSlug: string) {
     const key = getCellKey(day, slotSlug);
@@ -598,12 +614,4 @@ function MealSummaryChip({ meal }: { meal: ApiMeal }) {
       <span>{meal.lowEffort ? "Low effort" : "Longer cook"}</span>
     </div>
   );
-}
-
-function getUpcomingMondayIso() {
-  const current = new Date();
-  const day = current.getDay();
-  const daysUntilMonday = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
-  current.setDate(current.getDate() + daysUntilMonday);
-  return current.toISOString().slice(0, 10);
 }

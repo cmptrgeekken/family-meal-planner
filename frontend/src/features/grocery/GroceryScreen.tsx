@@ -6,8 +6,11 @@ import { SectionCard } from "../../components/SectionCard";
 import { StatusMessage } from "../../components/StatusMessage";
 import { getPlanSlots, getWeeklyPlan, type ApiPlanSlot, type ApiWeeklyPlan } from "../shared/api";
 
-export function GroceryScreen() {
-  const weekStartDate = useMemo(getUpcomingMondayIso, []);
+type GroceryScreenProps = {
+  weekStartDate: string;
+};
+
+export function GroceryScreen({ weekStartDate }: GroceryScreenProps) {
   const [selectedSlotSlugs, setSelectedSlotSlugs] = useState<Set<string>>(new Set());
   const slotFilterKey = [...selectedSlotSlugs].sort().join(",");
   const storageKey = `family-meal-planner:grocery-checked:${weekStartDate}:${slotFilterKey || "all"}`;
@@ -38,6 +41,10 @@ export function GroceryScreen() {
   const groceryList = groceryQuery.data?.groceryList ?? [];
   const checkedCount = groceryList.filter((item) => checkedItems.has(getGroceryItemKey(item.group, item.name))).length;
   const groceryGroups = useMemo(() => Array.from(new Set(groceryList.map((item) => item.group))), [groceryList]);
+
+  useEffect(() => {
+    setSelectedSlotSlugs(new Set());
+  }, [weekStartDate]);
 
   useEffect(() => {
     if (selectedSlotSlugs.size > 0 || slotOptions.length === 0) {
@@ -256,12 +263,4 @@ function formatUsageList(usedIn: Array<{ day: string; slotName: string; mealName
   }
 
   return usedIn.map((usage) => `${usage.day} ${usage.slotName} (${usage.mealName})`).join(", ");
-}
-
-function getUpcomingMondayIso() {
-  const current = new Date();
-  const day = current.getDay();
-  const daysUntilMonday = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
-  current.setDate(current.getDate() + daysUntilMonday);
-  return current.toISOString().slice(0, 10);
 }

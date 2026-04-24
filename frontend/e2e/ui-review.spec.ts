@@ -95,6 +95,11 @@ test("captures desktop UI review screenshots for core screens", async ({ page })
 test("uses category-first planning and shows preview feedback in a modal", async ({ page }) => {
   await page.goto("/plan");
 
+  const weekInput = page.locator('input[type="date"]').first();
+  await expect(weekInput).toHaveValue("2026-04-27");
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(weekInput).toHaveValue("2026-05-04");
+
   await expect(page.locator('select[aria-label="Monday Breakfast meal"]')).toHaveCount(0);
   await page.getByRole("button", { name: "Edit" }).first().click();
   await expect(page.locator('select[aria-label="Monday Breakfast meal"]')).toBeVisible();
@@ -124,6 +129,11 @@ test("uses category-first planning and shows preview feedback in a modal", async
   await expect(previewDialog).toHaveCount(0);
   await page.getByRole("button", { name: "View details" }).click();
   await expect(previewDialog).toBeVisible();
+  await previewDialog.getByRole("button", { name: "Close dialog" }).click();
+  await expect(previewDialog).toHaveCount(0);
+
+  await page.getByRole("link", { name: /Grocery/i }).click();
+  await expect(page.locator('input[type="date"]').first()).toHaveValue("2026-05-04");
 });
 
 function meal(

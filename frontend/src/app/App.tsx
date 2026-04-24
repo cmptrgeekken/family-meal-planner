@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "../components/AppShell";
+import { WeekNavigator } from "../components/WeekNavigator";
 import { MealsScreen } from "../features/meals/MealsScreen";
 import { MagnetsScreen } from "../features/magnets/MagnetsScreen";
 import { PlanScreen } from "../features/plan/PlanScreen";
 import { GroceryScreen } from "../features/grocery/GroceryScreen";
+import { getDefaultPlanningWeekStartDate, normalizeWeekStartDate, shiftWeekStartDate } from "../features/shared/week";
 import { SettingsScreen } from "../features/settings/SettingsScreen";
 
 export type AppTab = "plan" | "meals" | "grocery" | "magnets" | "settings";
@@ -28,6 +30,8 @@ function getPathForTab(tab: AppTab) {
 
 export function App() {
   const [activeTab, setActiveTab] = useState<AppTab>(getTabFromLocation);
+  const [selectedWeekStartDate, setSelectedWeekStartDate] = useState(getDefaultPlanningWeekStartDate);
+  const defaultWeekStartDate = getDefaultPlanningWeekStartDate();
 
   useEffect(() => {
     function handlePopState() {
@@ -48,11 +52,34 @@ export function App() {
     setActiveTab(tab);
   }
 
+  function handleWeekChange(weekStartDate: string) {
+    setSelectedWeekStartDate(normalizeWeekStartDate(weekStartDate));
+  }
+
+  function handleShiftWeek(weekDelta: number) {
+    setSelectedWeekStartDate((current) => shiftWeekStartDate(current, weekDelta));
+  }
+
+  const showWeekNavigator = activeTab === "plan" || activeTab === "grocery";
+
   return (
-    <AppShell activeTab={activeTab} onTabChange={handleTabChange}>
-      {activeTab === "plan" ? <PlanScreen /> : null}
+    <AppShell
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      weekNavigator={
+        showWeekNavigator ? (
+          <WeekNavigator
+            weekStartDate={selectedWeekStartDate}
+            defaultWeekStartDate={defaultWeekStartDate}
+            onWeekChange={handleWeekChange}
+            onShiftWeek={handleShiftWeek}
+          />
+        ) : null
+      }
+    >
+      {activeTab === "plan" ? <PlanScreen weekStartDate={selectedWeekStartDate} /> : null}
       {activeTab === "meals" ? <MealsScreen /> : null}
-      {activeTab === "grocery" ? <GroceryScreen /> : null}
+      {activeTab === "grocery" ? <GroceryScreen weekStartDate={selectedWeekStartDate} /> : null}
       {activeTab === "magnets" ? <MagnetsScreen /> : null}
       {activeTab === "settings" ? <SettingsScreen /> : null}
     </AppShell>
