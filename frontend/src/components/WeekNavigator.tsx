@@ -15,18 +15,21 @@ export function WeekNavigator({
 }: WeekNavigatorProps) {
   return (
     <section className="week-navigator" aria-label="Week navigation">
-      <div className="week-navigator-copy">
-        <span className="week-navigator-label">Week of</span>
-        <strong>{formatWeekRangeLabel(weekStartDate)}</strong>
-      </div>
       <div className="week-navigator-controls">
-        <button type="button" className="secondary-button week-nav-button" onClick={() => onShiftWeek(-1)}>
-          Previous
+        <button
+          type="button"
+          className="secondary-button week-nav-button week-nav-button-icon"
+          aria-label="Previous week"
+          title="Previous week"
+          onClick={() => onShiftWeek(-1)}
+        >
+          &lt;
         </button>
         <label className="week-navigator-input">
-          <span className="sr-only">Week start date</span>
-          <input type="date" value={weekStartDate} onChange={(event) => onWeekChange(event.target.value)} />
+          <span className="week-navigator-label">Week of</span>
+          <input type="date" value={weekStartDate} aria-label="Week start date" onChange={(event) => onWeekChange(event.target.value)} />
         </label>
+        <span className="week-navigator-range">{formatWeekRangeLabel(weekStartDate)}</span>
         <button
           type="button"
           className="secondary-button week-nav-button"
@@ -35,8 +38,14 @@ export function WeekNavigator({
         >
           Current
         </button>
-        <button type="button" className="secondary-button week-nav-button" onClick={() => onShiftWeek(1)}>
-          Next
+        <button
+          type="button"
+          className="secondary-button week-nav-button week-nav-button-icon"
+          aria-label="Next week"
+          title="Next week"
+          onClick={() => onShiftWeek(1)}
+        >
+          &gt;
         </button>
       </div>
     </section>
