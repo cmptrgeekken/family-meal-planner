@@ -684,6 +684,10 @@ button:disabled {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.grocery-screen-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .settings-section-nav {
   display: flex;
   flex-wrap: wrap;
@@ -1275,6 +1279,36 @@ button:disabled {
   background: var(--accent-green);
 }
 
+.grocery-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.grocery-summary-card {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.grocery-summary-card strong {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.grocery-summary-card span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.grocery-item-grid {
+  align-items: start;
+}
+
 .slot-filter-row {
   display: flex;
   flex-wrap: wrap;
@@ -1584,6 +1618,10 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .grocery-screen-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .meals-screen-layout {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1598,6 +1636,10 @@ button:disabled {
   }
 
   .preview-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .grocery-summary-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
@@ -1659,6 +1701,10 @@ button:disabled {
   .grocery-item {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
+  }
+
+  .grocery-item-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .grocery-store-tag {

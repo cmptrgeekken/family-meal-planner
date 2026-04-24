@@ -37,6 +37,7 @@ export function GroceryScreen() {
   });
   const groceryList = groceryQuery.data?.groceryList ?? [];
   const checkedCount = groceryList.filter((item) => checkedItems.has(getGroceryItemKey(item.group, item.name))).length;
+  const groceryGroups = useMemo(() => Array.from(new Set(groceryList.map((item) => item.group))), [groceryList]);
 
   useEffect(() => {
     if (selectedSlotSlugs.size > 0 || slotOptions.length === 0) {
@@ -95,7 +96,7 @@ export function GroceryScreen() {
   }
 
   return (
-    <div className="screen-layout">
+    <div className="screen-layout grocery-screen-layout">
       <SectionCard
         title="Grocery List"
         subtitle={`Generated from the saved plan for the week of ${weekStartDate}. ${checkedCount}/${groceryList.length} checked.`}
@@ -159,10 +160,28 @@ export function GroceryScreen() {
         ) : null}
         {groceryList.length > 0 ? (
           <>
+            <div className="grocery-summary-grid" aria-label="Grocery summary">
+              <div className="grocery-summary-card">
+                <strong>{groceryList.length}</strong>
+                <span>{groceryList.length === 1 ? "item to shop" : "items to shop"}</span>
+              </div>
+              <div className="grocery-summary-card">
+                <strong>{checkedCount}</strong>
+                <span>{checkedCount === 1 ? "item checked" : "items checked"}</span>
+              </div>
+              <div className="grocery-summary-card">
+                <strong>{groceryGroups.length}</strong>
+                <span>{groceryGroups.length === 1 ? "ingredient group" : "ingredient groups"}</span>
+              </div>
+              <div className="grocery-summary-card">
+                <strong>{selectedSlotSlugs.size}</strong>
+                <span>{selectedSlotSlugs.size === 1 ? "meal slot shown" : "meal slots shown"}</span>
+              </div>
+            </div>
             <div className="grocery-progress-bar" aria-hidden="true">
               <span style={{ width: `${groceryList.length === 0 ? 0 : (checkedCount / groceryList.length) * 100}%` }} />
             </div>
-            <div className="grocery-group-list">
+            <div className="grocery-group-list grocery-item-grid">
               {groceryList.map((item) => {
                 const itemKey = getGroceryItemKey(item.group, item.name);
                 const isChecked = checkedItems.has(itemKey);
