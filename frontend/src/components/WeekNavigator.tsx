@@ -1,4 +1,4 @@
-import { formatWeekRangeLabel } from "../features/shared/week";
+import { mondayInputAnchorDate } from "../features/shared/week";
 
 type WeekNavigatorProps = {
   weekStartDate: string;
@@ -25,11 +25,15 @@ export function WeekNavigator({
         >
           &lt;
         </button>
-        <label className="week-navigator-input">
-          <span className="week-navigator-label">Week of</span>
-          <input type="date" value={weekStartDate} aria-label="Week start date" onChange={(event) => onWeekChange(event.target.value)} />
-        </label>
-        <span className="week-navigator-range">{formatWeekRangeLabel(weekStartDate)}</span>
+        <input
+          className="week-navigator-date-input"
+          type="date"
+          min={mondayInputAnchorDate}
+          step={7}
+          value={weekStartDate}
+          aria-label="Planning week"
+          onChange={(event) => onWeekChange(event.target.value)}
+        />
         <button
           type="button"
           className="secondary-button week-nav-button"

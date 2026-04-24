@@ -28,24 +28,66 @@ function getPathForTab(tab: AppTab) {
   return tab === "plan" ? "/plan" : `/${tab}`;
 }
 
+function getWeekFromLocation() {
+  const params = new URLSearchParams(window.location.search);
+  const week = params.get("week");
+  return week ? normalizeWeekStartDate(week) : null;
+}
+
+function buildUrl(tab: AppTab, weekStartDate: string) {
+  const path = getPathForTab(tab);
+  const params = new URLSearchParams();
+  params.set("week", weekStartDate);
+  return `${path}?${params.toString()}`;
+}
+
 export function App() {
   const [activeTab, setActiveTab] = useState<AppTab>(getTabFromLocation);
-  const [selectedWeekStartDate, setSelectedWeekStartDate] = useState(getDefaultPlanningWeekStartDate);
+  const [selectedWeekStartDate, setSelectedWeekStartDate] = useState(() => {
+    const weekFromLocation = getWeekFromLocation();
+
+    if (weekFromLocation) {
+      return weekFromLocation;
+    }
+
+    try {
+      const storedWeek = window.localStorage.getItem("family-meal-planner:selected-week");
+      return storedWeek ? normalizeWeekStartDate(storedWeek) : getDefaultPlanningWeekStartDate();
+    } catch {
+      return getDefaultPlanningWeekStartDate();
+    }
+  });
   const defaultWeekStartDate = getDefaultPlanningWeekStartDate();
 
   useEffect(() => {
     function handlePopState() {
       setActiveTab(getTabFromLocation());
+      setSelectedWeekStartDate(getWeekFromLocation() ?? getDefaultPlanningWeekStartDate());
     }
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  function handleTabChange(tab: AppTab) {
-    const nextPath = getPathForTab(tab);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("family-meal-planner:selected-week", selectedWeekStartDate);
+    } catch {
+      // Keeping the selected week across refreshes is a convenience feature.
+    }
 
-    if (window.location.pathname !== nextPath) {
+    const nextUrl = buildUrl(activeTab, selectedWeekStartDate);
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [activeTab, selectedWeekStartDate]);
+
+  function handleTabChange(tab: AppTab) {
+    const nextPath = buildUrl(tab, selectedWeekStartDate);
+
+    if (`${window.location.pathname}${window.location.search}` !== nextPath) {
       window.history.pushState(null, "", nextPath);
     }
 

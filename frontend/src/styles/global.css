@@ -125,18 +125,12 @@ button:disabled {
 
 .week-navigator {
   display: block;
-  padding: 0.55rem 0.7rem;
+  padding: 0.45rem 0.55rem;
   border: 1px solid var(--border);
   border-radius: 1rem;
   background: rgba(255, 250, 243, 0.76);
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 18px rgba(64, 38, 16, 0.06);
-}
-
-.week-navigator-label {
-  color: var(--muted);
-  font-size: 0.76rem;
-  font-weight: 700;
 }
 
 .week-navigator-controls {
@@ -147,15 +141,7 @@ button:disabled {
   min-width: 0;
 }
 
-.week-navigator-input {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-width: 0;
-  flex: 0 1 auto;
-}
-
-.week-navigator-input input {
+.week-navigator-date-input {
   width: 10.1rem;
   min-height: 2.2rem;
   padding: 0.45rem 0.7rem;
@@ -163,6 +149,7 @@ button:disabled {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.9);
   font-size: 0.9rem;
+  flex: 0 0 auto;
 }
 
 .week-nav-button {
@@ -176,15 +163,6 @@ button:disabled {
   min-width: 2.2rem;
   width: 2.2rem;
   padding: 0.45rem;
-}
-
-.week-navigator-range {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--muted);
-  font-size: 0.88rem;
 }
 
 .screen-layout {
@@ -1809,10 +1787,6 @@ button:disabled {
 
   .week-navigator-controls {
     justify-content: flex-start;
-  }
-
-  .week-navigator-range {
-    margin-left: auto;
   }
 
   .section-card-header {

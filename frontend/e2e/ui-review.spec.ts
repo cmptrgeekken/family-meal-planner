@@ -97,7 +97,9 @@ test("uses category-first planning and shows preview feedback in a modal", async
 
   const weekInput = page.locator('input[type="date"]').first();
   await expect(weekInput).toHaveValue("2026-04-27");
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next week" }).click();
+  await expect(weekInput).toHaveValue("2026-05-04");
+  await weekInput.fill("2026-05-07");
   await expect(weekInput).toHaveValue("2026-05-04");
 
   await expect(page.locator('select[aria-label="Monday Breakfast meal"]')).toHaveCount(0);
@@ -133,6 +135,8 @@ test("uses category-first planning and shows preview feedback in a modal", async
   await expect(previewDialog).toHaveCount(0);
 
   await page.getByRole("link", { name: /Grocery/i }).click();
+  await expect(page.locator('input[type="date"]').first()).toHaveValue("2026-05-04");
+  await page.reload();
   await expect(page.locator('input[type="date"]').first()).toHaveValue("2026-05-04");
 });
 
