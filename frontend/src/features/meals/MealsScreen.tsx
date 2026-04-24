@@ -116,7 +116,7 @@ function getMealValidationMessage(meal: ApiMealPayload) {
   }
 
   if (!meal.slug) {
-    return "Meal slug is required.";
+    return "Meal name is required.";
   }
 
   if (!meal.categorySlug) {
@@ -409,12 +409,31 @@ export function MealsScreen() {
           <div className="meal-card-grid">
             {visibleMeals.map((meal) => (
               <article key={meal.id} className="meal-card">
-                <div className="meal-card-topline">
-                  <span className="pill-muted category-pill">
-                    {meal.categoryIconId ? <img src={`/icons/${meal.categoryIconId}.svg`} alt="" /> : null}
-                    {meal.category}
-                  </span>
-                  <span className={`pill-cost pill-cost-${meal.costTier}`}>{meal.costTier}</span>
+                <div className="meal-card-header">
+                  <div className="meal-card-topline">
+                    <span className="pill-muted category-pill">
+                      {meal.categoryIconId ? <img src={`/icons/${meal.categoryIconId}.svg`} alt="" /> : null}
+                      {meal.category}
+                    </span>
+                    <span className={`pill-cost pill-cost-${meal.costTier}`}>{meal.costTier}</span>
+                  </div>
+                  <div className="meal-card-actions">
+                    <button type="button" className="secondary-button" onClick={() => openEditMealModal(meal)}>
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-button danger-button"
+                      disabled={isMealMutationPending}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${meal.name}"? Meals used in saved plans cannot be deleted.`)) {
+                          deleteMealMutation.mutate(meal.id);
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
                 <h3>{meal.name}</h3>
                 <p>{meal.notes ?? "No notes yet."}</p>
@@ -427,23 +446,6 @@ export function MealsScreen() {
                     <span key={`${meal.id}-${ingredient.name}`}>{ingredient.name}</span>
                   ))}
                   {meal.ingredients.length > 4 ? <span>+{meal.ingredients.length - 4} more</span> : null}
-                </div>
-                <div className="meal-card-actions">
-                  <button type="button" className="secondary-button" onClick={() => openEditMealModal(meal)}>
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-button danger-button"
-                    disabled={isMealMutationPending}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${meal.name}"? Meals used in saved plans cannot be deleted.`)) {
-                        deleteMealMutation.mutate(meal.id);
-                      }
-                    }}
-                  >
-                    Delete
-                  </button>
                 </div>
               </article>
             ))}
@@ -472,17 +474,6 @@ export function MealsScreen() {
                     name,
                     slug: current.id ? current.slug : slugify(name),
                   }));
-                }}
-              />
-            </label>
-            <label>
-              <span>Slug</span>
-              <input
-                value={mealForm.slug}
-                placeholder="taco-bowls"
-                onChange={(event) => {
-                  setMealFormError(null);
-                  setMealForm((current) => ({ ...current, slug: slugify(event.target.value) }));
                 }}
               />
             </label>
@@ -649,7 +640,7 @@ export function MealsScreen() {
                 ? createMealMutation.error.message
                 : updateMealMutation.error instanceof Error
                   ? updateMealMutation.error.message
-                  : "Meal could not be saved. Check required fields and duplicate slugs."}
+                  : "Meal could not be saved. Check required fields and duplicate names."}
             </p>
           ) : null}
         </form>

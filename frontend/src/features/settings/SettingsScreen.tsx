@@ -14,7 +14,6 @@ import {
   getIconManifest,
   getPlanSlots,
   getStoreTags,
-  reorderPlanSlots,
   updateCategory,
   updatePlanSlot,
   updateStoreTag,
@@ -363,12 +362,6 @@ export function SettingsScreen() {
       void queryClient.invalidateQueries({ queryKey: ["weekly-plan"] });
     },
   });
-  const reorderPlanSlotsMutation = useMutation({
-    mutationFn: reorderPlanSlots,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["plan-slots"] });
-    },
-  });
   const deletePlanSlotMutation = useMutation({
     mutationFn: deletePlanSlot,
     onSuccess: () => {
@@ -416,9 +409,9 @@ export function SettingsScreen() {
   const categoryErrorMessage = deleteCategoryMutation.isError
     ? getMutationErrorMessage(deleteCategoryMutation.error, "Category could not be deleted.")
     : updateCategoryMutation.isError
-      ? getMutationErrorMessage(updateCategoryMutation.error, "Category could not be saved. Please check for duplicate slugs.")
+      ? getMutationErrorMessage(updateCategoryMutation.error, "Category could not be saved. Please check for duplicate names.")
       : createCategoryMutation.isError
-        ? getMutationErrorMessage(createCategoryMutation.error, "Category could not be created. Please check for duplicate slugs.")
+        ? getMutationErrorMessage(createCategoryMutation.error, "Category could not be created. Please check for duplicate names.")
         : "";
   const planSlotErrorMessage = deletePlanSlotMutation.isError
     ? getMutationErrorMessage(deletePlanSlotMutation.error, "Meal slot could not be deleted.")
@@ -426,13 +419,11 @@ export function SettingsScreen() {
       ? getMutationErrorMessage(updatePlanSlotMutation.error, "Meal slot could not be saved.")
       : createPlanSlotMutation.isError
         ? getMutationErrorMessage(createPlanSlotMutation.error, "Meal slot could not be created.")
-        : reorderPlanSlotsMutation.isError
-          ? getMutationErrorMessage(reorderPlanSlotsMutation.error, "Meal slots could not be reordered.")
-          : "";
+        : "";
   const storeTagErrorMessage = createStoreTagMutation.isError
-    ? getMutationErrorMessage(createStoreTagMutation.error, "Store tag could not be created. Please check for duplicate slugs.")
+    ? getMutationErrorMessage(createStoreTagMutation.error, "Store tag could not be created. Please check for duplicate names.")
     : updateStoreTagMutation.isError
-      ? getMutationErrorMessage(updateStoreTagMutation.error, "Store tag could not be saved. Please check for duplicate slugs.")
+      ? getMutationErrorMessage(updateStoreTagMutation.error, "Store tag could not be saved. Please check for duplicate names.")
       : deleteStoreTagMutation.isError
         ? getMutationErrorMessage(deleteStoreTagMutation.error, "Store tag could not be deleted.")
         : "";
@@ -441,7 +432,6 @@ export function SettingsScreen() {
   const isPlanSlotMutationPending =
     createPlanSlotMutation.isPending ||
     updatePlanSlotMutation.isPending ||
-    reorderPlanSlotsMutation.isPending ||
     deletePlanSlotMutation.isPending;
   const isStoreTagMutationPending =
     createStoreTagMutation.isPending || updateStoreTagMutation.isPending || deleteStoreTagMutation.isPending;
@@ -485,26 +475,6 @@ export function SettingsScreen() {
       : draft.slotSlugs.filter((currentSlug) => currentSlug !== slotSlug);
 
     updateCategoryDraft(category, { slotSlugs });
-  }
-
-  function movePlanSlot(planSlot: ApiPlanSlot, direction: -1 | 1) {
-    const currentIndex = planSlots.findIndex((slot) => slot.id === planSlot.id);
-    const nextIndex = currentIndex + direction;
-
-    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= planSlots.length) {
-      return;
-    }
-
-    const reordered = [...planSlots];
-    const [movedSlot] = reordered.splice(currentIndex, 1);
-
-    if (!movedSlot) {
-      return;
-    }
-
-    reordered.splice(nextIndex, 0, movedSlot);
-
-    reorderPlanSlotsMutation.mutate(reordered.map((slot) => slot.id));
   }
 
   function updateStoreTagDraft(storeTag: ApiStoreTag, patch: Partial<StoreTagDraft>) {
@@ -778,7 +748,6 @@ export function SettingsScreen() {
                   <div className="settings-record-heading">
                     <div className="settings-record-copy">
                       <strong>{planSlot.name}</strong>
-                      <span className="muted-text">/{planSlot.slug}</span>
                     </div>
                     <span className={planSlot.isEnabled ? "pill-muted" : "pill-muted pill-disabled"}>
                       {planSlot.isEnabled ? "Enabled" : "Disabled"}
@@ -787,23 +756,7 @@ export function SettingsScreen() {
                   <div className="settings-record-meta">
                     <span className="pill-muted">Position {index + 1}</span>
                   </div>
-                  <div className="category-editor-actions">
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      disabled={index === 0 || isPlanSlotMutationPending}
-                      onClick={() => movePlanSlot(planSlot, -1)}
-                    >
-                      Move up
-                    </button>
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      disabled={index === planSlots.length - 1 || isPlanSlotMutationPending}
-                      onClick={() => movePlanSlot(planSlot, 1)}
-                    >
-                      Move down
-                    </button>
+                  <div className="category-editor-actions settings-card-actions">
                     <button type="button" className="secondary-button" onClick={() => setPlanSlotEditorId(planSlot.id)}>
                       Edit
                     </button>
@@ -850,7 +803,6 @@ export function SettingsScreen() {
                     </div>
                     <div className="category-icon-copy">
                       <strong>{category.name}</strong>
-                      <span className="muted-text">/{category.slug}</span>
                     </div>
                     <div className="settings-record-meta">
                       <span className="pill-muted">
@@ -867,7 +819,7 @@ export function SettingsScreen() {
                       {category.weeklyMinCount != null ? <span className="pill-muted">Min {category.weeklyMinCount}</span> : null}
                       {category.weeklyMaxCount != null ? <span className="pill-muted">Max {category.weeklyMaxCount}</span> : null}
                     </div>
-                    <div className="category-editor-actions">
+                    <div className="category-editor-actions settings-card-actions">
                       <button type="button" className="secondary-button" onClick={() => setCategoryEditorId(category.id)}>
                         Edit
                       </button>
@@ -903,7 +855,6 @@ export function SettingsScreen() {
                   <div className="settings-record-heading">
                     <div className="settings-record-copy">
                       <strong>{storeTag.name}</strong>
-                      <span className="muted-text">/{storeTag.slug}</span>
                     </div>
                   </div>
                   <div className="settings-record-meta">
@@ -911,7 +862,7 @@ export function SettingsScreen() {
                       {storeTag.ingredientCount} {storeTag.ingredientCount === 1 ? "ingredient" : "ingredients"}
                     </span>
                   </div>
-                  <div className="category-editor-actions">
+                  <div className="category-editor-actions settings-card-actions">
                     <button type="button" className="secondary-button" onClick={() => setStoreTagEditorId(storeTag.id)}>
                       Edit
                     </button>
@@ -971,14 +922,6 @@ export function SettingsScreen() {
               }}
             />
           </label>
-          <label>
-            <span>Slug</span>
-            <input
-              value={newPlanSlot.slug}
-              placeholder="dinner"
-              onChange={(event) => setNewPlanSlot((current) => ({ ...current, slug: slugify(event.target.value) }))}
-            />
-          </label>
           <label className="checkbox-row">
             <input
               type="checkbox"
@@ -1009,7 +952,7 @@ export function SettingsScreen() {
       <Modal
         isOpen={Boolean(editingPlanSlot && editingPlanSlotDraft)}
         title="Edit Meal Slot"
-        description="Update the slot name, slug, and enabled state in one focused view."
+        description="Update the slot name and planning availability in one focused view."
         onClose={() => setPlanSlotEditorId(null)}
       >
         {editingPlanSlot && editingPlanSlotDraft ? (
@@ -1025,13 +968,6 @@ export function SettingsScreen() {
               <input
                 value={editingPlanSlotDraft.name}
                 onChange={(event) => updatePlanSlotDraft(editingPlanSlot, { name: event.target.value })}
-              />
-            </label>
-            <label>
-              <span>Slug</span>
-              <input
-                value={editingPlanSlotDraft.slug}
-                onChange={(event) => updatePlanSlotDraft(editingPlanSlot, { slug: slugify(event.target.value) })}
               />
             </label>
             <label className="checkbox-row">
@@ -1074,14 +1010,6 @@ export function SettingsScreen() {
                 const name = event.target.value;
                 setNewCategory((current) => ({ ...current, name, slug: slugify(name) }));
               }}
-            />
-          </label>
-          <label>
-            <span>Slug</span>
-            <input
-              value={newCategory.slug}
-              placeholder="pizza-night"
-              onChange={(event) => setNewCategory((current) => ({ ...current, slug: slugify(event.target.value) }))}
             />
           </label>
           <label>
@@ -1173,13 +1101,6 @@ export function SettingsScreen() {
               <input
                 value={editingCategoryDraft.name}
                 onChange={(event) => updateCategoryDraft(editingCategory, { name: event.target.value })}
-              />
-            </label>
-            <label>
-              <span>Slug</span>
-              <input
-                value={editingCategoryDraft.slug}
-                onChange={(event) => updateCategoryDraft(editingCategory, { slug: slugify(event.target.value) })}
               />
             </label>
             <label>
@@ -1325,14 +1246,6 @@ export function SettingsScreen() {
               }}
             />
           </label>
-          <label>
-            <span>Slug</span>
-            <input
-              value={newStoreTag.slug}
-              placeholder="aldi"
-              onChange={(event) => setNewStoreTag((current) => ({ ...current, slug: slugify(event.target.value) }))}
-            />
-          </label>
           {storeTagErrorMessage ? <p className="form-error-text">{storeTagErrorMessage}</p> : null}
           <div className="category-editor-actions">
             <button type="submit" className="primary-button" disabled={isStoreTagMutationPending}>
@@ -1371,13 +1284,6 @@ export function SettingsScreen() {
               <input
                 value={editingStoreTagDraft.name}
                 onChange={(event) => updateStoreTagDraft(editingStoreTag, { name: event.target.value })}
-              />
-            </label>
-            <label>
-              <span>Slug</span>
-              <input
-                value={editingStoreTagDraft.slug}
-                onChange={(event) => updateStoreTagDraft(editingStoreTag, { slug: slugify(event.target.value) })}
               />
             </label>
             {storeTagErrorMessage ? <p className="form-error-text">{storeTagErrorMessage}</p> : null}

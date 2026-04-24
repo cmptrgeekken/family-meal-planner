@@ -954,6 +954,28 @@ button:disabled {
   color: var(--text);
 }
 
+.category-editor-form .checkbox-row {
+  width: auto;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid rgba(112, 78, 44, 0.16);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.56);
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.category-editor-form .checkbox-row input[type="checkbox"],
+.category-editor-form .checkbox-row input[type="radio"] {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
 .settings-fieldset {
   display: grid;
   gap: 0.55rem;
@@ -975,6 +997,10 @@ button:disabled {
 .settings-inline-fields {
   display: grid;
   gap: 0.55rem;
+}
+
+.slot-checkbox-grid {
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
 }
 
 .settings-inline-fields label {
@@ -1082,6 +1108,15 @@ button:disabled {
   gap: 0.55rem;
 }
 
+.settings-card-actions {
+  justify-content: flex-end;
+}
+
+.settings-card-actions > button {
+  min-height: 2.35rem;
+  padding: 0.5rem 0.7rem;
+}
+
 .category-editor-actions > button {
   flex: 0 0 auto;
 }
@@ -1185,12 +1220,26 @@ button:disabled {
   line-height: 1.5;
 }
 
-.meal-card-topline,
 .meal-card-flags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
   margin-bottom: 0.65rem;
+}
+
+.meal-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.meal-card-topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 .meal-card-flags span,
@@ -1206,8 +1255,19 @@ button:disabled {
   margin-top: 0.75rem;
 }
 
+.meal-card-header .meal-card-actions {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
 .meal-card-actions button {
   flex: 1 1 8rem;
+}
+
+.meal-card-header .meal-card-actions button {
+  flex: 0 0 auto;
+  min-height: 2.35rem;
+  padding: 0.5rem 0.7rem;
 }
 
 .meal-card-ingredients span {
@@ -1952,22 +2012,22 @@ button:disabled {
   }
 
   .settings-record-list-compact .settings-record-row {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
     min-height: 100%;
   }
 
   .settings-record-list-compact .settings-record-heading,
   .settings-record-list-compact .settings-record-meta {
-    grid-column: auto;
+    grid-column: 1;
   }
 
   .settings-record-list-compact .category-editor-actions {
-    grid-column: auto;
-    grid-row: auto;
-    justify-content: flex-start;
-    align-self: end;
-    margin-top: auto;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    justify-content: flex-end;
+    align-self: start;
+    margin-top: 0;
   }
 
   .settings-category-grid {
@@ -1975,7 +2035,7 @@ button:disabled {
   }
 
   .settings-category-grid .category-icon-row {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: start;
     min-height: 100%;
   }
@@ -1987,11 +2047,11 @@ button:disabled {
   }
 
   .settings-category-grid .category-icon-row .category-editor-actions {
-    grid-column: 1 / -1;
-    grid-row: auto;
-    justify-content: flex-start;
-    align-self: end;
-    margin-top: auto;
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    justify-content: flex-end;
+    align-self: start;
+    margin-top: 0;
   }
 
   .magnet-screen {

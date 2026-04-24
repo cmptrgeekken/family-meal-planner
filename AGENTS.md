@@ -27,6 +27,91 @@ Core product values:
 - Safe defaults over heavy configuration.
 - Progressively enhanced UX over premature complexity.
 
+## Getting Started For New Agent Chats
+
+Start each meaningful coding task by getting oriented before editing:
+
+1. Read this file, [README.md](README.md), and the relevant product context in [docs/prd-v1.md](docs/prd-v1.md).
+2. Check the current worktree with `git status --short` and preserve any user changes already present.
+3. Inspect the files closest to the requested behavior before proposing or implementing changes.
+4. Identify the right validation commands before editing so tests are not an afterthought.
+
+Local development prerequisites:
+
+- Node.js and npm.
+- Docker with Docker Compose available as `docker compose` or `docker-compose`.
+- Docker daemon access for commands that start the development or test databases.
+- Optional local overrides in `.env`, copied from `.env.example`.
+
+Install dependencies from the repository root:
+
+```bash
+npm install
+```
+
+Run the full hot-reload stack from the repository root:
+
+```bash
+npm run dev
+```
+
+This starts the development PostgreSQL container, generates the Prisma client, applies migrations, seeds development data, and starts both the backend API and Vite frontend.
+
+Useful local URLs and ports:
+
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:3001`
+- App database: `localhost:5432`
+- Test database: `localhost:5433`
+- Playwright dev server: `http://127.0.0.1:3100`
+
+Useful commands:
+
+```bash
+# Root
+npm run dev
+npm run dev:db
+npm run test:e2e
+
+# Backend
+npm test -w backend
+npm run test:unit -w backend
+npm run typecheck -w backend
+npm run build -w backend
+npm run prisma:generate -w backend
+npm run prisma:migrate -w backend
+npm run prisma:seed -w backend
+
+# Frontend
+npm test -w frontend
+npm run typecheck -w frontend
+npm run build -w frontend
+npm run test:e2e -w frontend
+```
+
+Testing notes:
+
+- `npm test -w backend` is the normal backend validation path. It starts the isolated `db-test` container, applies migrations, seeds test data, runs Vitest/Supertest, and stops the test database.
+- `npm run test:unit -w backend` runs Vitest directly. Use it only when the database is already prepared or the test does not touch persistence.
+- `npm test -w frontend` runs frontend unit tests under `frontend/src`.
+- `npm run build -w frontend` runs TypeScript with `tsconfig.app.json` and then builds the Vite app.
+- `npm run test:e2e -w frontend` runs Playwright from `frontend/e2e`; artifacts are written under `/tmp/family-meal-planner-playwright`.
+- On a fresh Linux/WSL environment, Playwright may need `npx playwright install chromium` and native browser dependencies before E2E can run.
+
+Important project map:
+
+- `backend/src/domain/`: business rules for planning, grocery generation, slots, and models.
+- `backend/src/repositories/`: Prisma persistence boundaries.
+- `backend/src/routes/`: API validation and HTTP behavior.
+- `backend/src/test/`: backend unit and integration tests.
+- `frontend/src/features/`: product screens and feature-local helpers.
+- `frontend/src/components/`: shared UI shell and reusable components.
+- `frontend/src/styles/global.css`: global design system and responsive layout rules.
+- `frontend/e2e/`: Playwright user-flow and UI review coverage.
+- `docs/backend-api.md`: API contract reference.
+- `docs/decisions/`: architecture and product decision records.
+- `docs/project-checklist.md`: current project status and remaining work.
+
 ## Collaboration Rules
 
 When working in this repository, contributors should:
@@ -294,6 +379,11 @@ Recommended guidance:
 - Add regression tests for every bug that is fixed.
 - Prefer stable selectors and user-visible assertions in UI and E2E tests.
 - Keep E2E focused on highest-value journeys rather than duplicating all unit coverage.
+- Update backend route/integration tests whenever API validation, persistence behavior, or response shapes change.
+- Update frontend unit tests for pure UI helpers, export generators, planner hint logic, and other deterministic behavior.
+- Add or update Playwright E2E tests when changing a critical workflow, cross-screen behavior, routing, modal-heavy UI, responsive layout risk, or anything that needs browser confidence.
+- For UI-only polish, at minimum run frontend build/typecheck and consider E2E or screenshot coverage when the change affects core screens, layout, or accessibility.
+- If a change spans frontend and backend, validate both sides and add tests at the lowest layer that catches the rule plus an integration or E2E test when the contract between layers is important.
 
 ### Validation Before Commit
 
@@ -301,8 +391,8 @@ Before committing meaningful code, run the relevant local validation for the sco
 
 Typical expectation:
 
-- Linting passes.
-- Type checking passes.
+- Type checking passes for touched packages.
+- Build passes for touched packages when a build script exists.
 - Unit and integration tests relevant to the changed area pass.
 - E2E tests pass for affected critical flows when UI behavior changed substantially.
 
