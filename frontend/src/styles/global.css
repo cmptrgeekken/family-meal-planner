@@ -273,37 +273,95 @@ button:disabled {
 
 .planner-category-grid {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.55rem;
-  overflow-x: auto;
-  padding: 0.1rem 0 0.35rem;
-  scroll-snap-type: x proximity;
+  padding: 0.1rem 0 0.2rem;
 }
 
 .planner-category-button {
+  position: relative;
   flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 2.75rem;
-  padding: 0.55rem 0.75rem;
+  display: inline-grid;
+  place-items: center;
+  gap: 0.35rem;
+  width: 5rem;
+  min-width: 5rem;
+  min-height: 4.9rem;
+  padding: 0.5rem 0.4rem;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 0.95rem;
   background: rgba(255, 255, 255, 0.82);
   color: var(--muted);
   font-weight: 700;
-  scroll-snap-align: start;
 }
 
 .planner-category-button img {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.8rem;
+  height: 1.8rem;
   object-fit: contain;
+}
+
+.planner-category-label {
+  display: block;
+  max-width: 100%;
+  color: inherit;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.planner-category-button::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.45rem);
+  transform: translateX(-50%) translateY(0.2rem);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(31, 27, 24, 0.92);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.planner-category-button:hover::after,
+.planner-category-button:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .planner-category-button-active {
   background: rgba(196, 95, 45, 0.14);
   color: var(--accent);
   border-color: rgba(196, 95, 45, 0.32);
+  box-shadow:
+    inset 0 0 0 1px rgba(196, 95, 45, 0.14),
+    0 10px 20px rgba(196, 95, 45, 0.12);
+}
+
+.planner-selection-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.planner-selection-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2rem;
+}
+
+.planner-selection-summary img {
+  width: 1.35rem;
+  height: 1.35rem;
+  object-fit: contain;
 }
 
 .day-card select,
@@ -495,6 +553,42 @@ button:disabled {
   background: rgba(255, 255, 255, 0.5);
 }
 
+.planner-planned-summary {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(112, 78, 44, 0.12);
+  border-radius: 0.95rem;
+  background: rgba(255, 250, 243, 0.88);
+}
+
+.planner-planned-summary-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.planner-planned-summary-copy strong {
+  font-size: 1rem;
+}
+
+.planner-planned-summary-copy span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.planner-planned-summary-actions,
+.planner-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.planner-inline-button {
+  min-height: 2.35rem;
+  padding: 0.55rem 0.8rem;
+}
+
 .plan-screen-layout .section-card {
   min-width: 0;
 }
@@ -503,6 +597,41 @@ button:disabled {
 .reference-grid {
   display: grid;
   gap: 0.85rem;
+}
+
+.preview-modal-stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.preview-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.preview-summary-card {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.preview-summary-card strong {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.preview-summary-card span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.preview-summary-card-alert {
+  border-color: rgba(163, 61, 51, 0.26);
+  background: rgba(209, 77, 77, 0.08);
 }
 
 .mini-panel,
@@ -1325,6 +1454,19 @@ button:disabled {
 }
 
 @media (min-width: 820px) {
+  .planner-category-button {
+    gap: 0;
+    width: 3rem;
+    min-width: 3rem;
+    height: 3rem;
+    min-height: 3rem;
+    padding: 0.45rem;
+  }
+
+  .planner-category-label {
+    display: none;
+  }
+
   .app-shell {
     padding: 1.25rem 1.5rem 1.5rem;
   }
@@ -1420,7 +1562,7 @@ button:disabled {
   }
 
   .plan-screen-layout {
-    grid-template-columns: minmax(0, 1.4fr) minmax(22rem, 0.8fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .meals-screen-layout {
@@ -1434,6 +1576,10 @@ button:disabled {
   .preview-grid,
   .reference-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .preview-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .meal-card-grid {

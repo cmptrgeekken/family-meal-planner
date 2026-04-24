@@ -2,6 +2,7 @@ import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { EmptyState } from "../../components/EmptyState";
+import { Modal } from "../../components/Modal";
 import { SectionCard } from "../../components/SectionCard";
 import { StatusMessage } from "../../components/StatusMessage";
 import {
@@ -51,6 +52,8 @@ export function PlanScreen() {
 
   const [selections, setSelections] = useState<PlannerSelections>({});
   const [categorySelections, setCategorySelections] = useState<PlannerSelections>({});
+  const [isPreviewModalOpen, setPreviewModalOpen] = useState(false);
+  const [activeEditorCellKey, setActiveEditorCellKey] = useState<string | null>(null);
 
   const selectedMeals = useMemo(() => getSelectedMeals(selections), [selections]);
   const preview = useMutation({
@@ -88,6 +91,12 @@ export function PlanScreen() {
   const feedbackData = preview.data ?? savePlan.data;
   const blockingIssues = feedbackData?.validationIssues.filter((issue) => issue.code !== "category_minimum_unmet") ?? [];
   const minimumIssues = feedbackData?.validationIssues.filter((issue) => issue.code === "category_minimum_unmet") ?? [];
+  const previewBlockingIssues = preview.data?.validationIssues.filter((issue) => issue.code !== "category_minimum_unmet") ?? [];
+  const previewMinimumIssues = preview.data?.validationIssues.filter((issue) => issue.code === "category_minimum_unmet") ?? [];
+  const previewGroceryGroups = useMemo(
+    () => Array.from(new Set(preview.data?.groceryList.map((item) => item.group) ?? [])),
+    [preview.data],
+  );
 
   useEffect(() => {
     if (!savedPlanQuery.data?.weeklyPlan) {
@@ -112,6 +121,7 @@ export function PlanScreen() {
 
     setSelections((current) => omitKey(current, key));
     setCategorySelections((current) => omitKey(current, key));
+    setActiveEditorCellKey((current) => (current === key ? null : current));
   }
 
   function selectCategory(day: PlannerWeekday, slot: ApiPlanSlot, category: ApiCategory) {
@@ -124,6 +134,13 @@ export function PlanScreen() {
       [key]: category.slug,
     }));
     setSelections((current) => (shouldKeepMeal ? current : omitKey(current, key)));
+    setActiveEditorCellKey(key);
+  }
+
+  function openPreviewModal() {
+    preview.reset();
+    setPreviewModalOpen(true);
+    preview.mutate();
   }
 
   return (
@@ -147,7 +164,7 @@ export function PlanScreen() {
             <button
               type="button"
               className="secondary-button"
-              onClick={() => preview.mutate()}
+              onClick={openPreviewModal}
               disabled={preview.isPending || meals.length === 0 || plannedCount === 0}
             >
               {preview.isPending ? "Previewing..." : "Preview Week"}
@@ -235,7 +252,9 @@ export function PlanScreen() {
                       const key = getCellKey(day, slot.slug);
                       const selectedMeal = mealById.get(selections[key] ?? "");
                       const selectedCategorySlug = categorySelections[key] ?? selectedMeal?.categorySlug ?? "";
+                      const selectedCategory = categoryBySlug.get(selectedCategorySlug);
                       const eligibleCategories = categories.filter((category) => category.slotSlugs.includes(slot.slug));
+                      const isEditingCell = !selectedMeal || activeEditorCellKey === key;
 
                       return (
                         <div key={key} className="plan-slot-cell">
@@ -247,65 +266,111 @@ export function PlanScreen() {
                           </div>
                           {eligibleCategories.length === 0 ? (
                             <p className="muted-text">No categories are assigned to this slot.</p>
-                          ) : (
-                            <div className="planner-category-grid" aria-label={`${day} ${slot.name} category`}>
-                              {eligibleCategories.map((category) => {
-                                const availability = getCategoryAvailability(category, key, selections, mealById, categoryCounts);
+                          ) : isEditingCell ? (
+                            <>
+                              <div className="planner-category-grid" aria-label={`${day} ${slot.name} category`}>
+                                {eligibleCategories.map((category) => {
+                                  const availability = getCategoryAvailability(category, key, selections, mealById, categoryCounts);
 
-                                return (
-                                  <button
-                                    key={category.id}
-                                    type="button"
-                                    className={
-                                      selectedCategorySlug === category.slug
-                                        ? "planner-category-button planner-category-button-active"
-                                        : "planner-category-button"
-                                    }
-                                    disabled={!availability.available}
-                                    title={availability.reason}
-                                    aria-label={availability.reason ? `${category.name}: ${availability.reason}` : category.name}
-                                    onClick={() => selectCategory(day, slot, category)}
-                                  >
-                                    {category.iconId ? <img src={`/icons/${category.iconId}.svg`} alt="" /> : null}
-                                    <span>{category.name}</span>
-                                  </button>
-                                );
-                              })}
+                                  return (
+                                    <button
+                                      key={category.id}
+                                      type="button"
+                                      data-label={category.name}
+                                      className={
+                                        selectedCategorySlug === category.slug
+                                          ? "planner-category-button planner-category-button-active"
+                                          : "planner-category-button"
+                                      }
+                                      disabled={!availability.available}
+                                      title={availability.reason || category.name}
+                                      aria-label={availability.reason ? `${category.name}: ${availability.reason}` : category.name}
+                                      onClick={() => selectCategory(day, slot, category)}
+                                    >
+                                      {category.iconId ? <img src={`/icons/${category.iconId}.svg`} alt="" /> : null}
+                                      <span className="planner-category-label">{category.name}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <div className="planner-selection-summary" aria-live="polite">
+                                {selectedCategory?.iconId ? <img src={`/icons/${selectedCategory.iconId}.svg`} alt="" /> : null}
+                                <p className="planner-selection-hint">
+                                  {selectedCategory
+                                    ? `Selected category: ${selectedCategory.name}. Choose a meal next.`
+                                    : "Choose a category to unlock meals for this slot."}
+                                </p>
+                              </div>
+                            </>
+                          ) : selectedMeal ? (
+                            <div className="planner-planned-summary" aria-live="polite">
+                              <div className="planner-planned-summary-copy">
+                                <strong>{selectedMeal.name}</strong>
+                                <span>{selectedCategory?.name ?? selectedMeal.category}</span>
+                                <span>{selectedMeal.lowEffort ? "Low effort" : "Longer cook"}</span>
+                              </div>
+                              <div className="planner-planned-summary-actions">
+                                <button
+                                  type="button"
+                                  className="secondary-button planner-inline-button"
+                                  onClick={() => setActiveEditorCellKey(key)}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  className="secondary-button planner-inline-button"
+                                  onClick={() => clearCell(day, slot.slug)}
+                                >
+                                  Remove
+                                </button>
+                              </div>
                             </div>
-                          )}
-                          <select
-                            aria-label={`${day} ${slot.name} meal`}
-                            value={selections[key] ?? ""}
-                            disabled={!selectedCategorySlug}
-                            onChange={(event) =>
-                              setSelections((current) =>
-                                event.target.value
-                                  ? {
-                                      ...current,
-                                      [key]: event.target.value,
-                                    }
-                                  : omitKey(current, key),
-                              )
-                            }
-                          >
-                            <option value="">
-                              {selectedCategorySlug ? "Choose a meal" : "Choose a category first"}
-                            </option>
-                            {(mealsByCategorySlug.get(selectedCategorySlug) ?? []).map((meal) => (
-                              <option key={meal.id} value={meal.id}>
-                                {meal.name}
-                              </option>
-                            ))}
-                          </select>
-                          {selectedMeal ? <MealSummaryChip meal={selectedMeal} /> : null}
-                          {selectedMeal ? (
-                            <button
-                              type="button"
-                              className="secondary-button day-remove-button"
-                              onClick={() => clearCell(day, slot.slug)}
+                          ) : null}
+                          {selectedCategorySlug && isEditingCell ? (
+                            <select
+                              aria-label={`${day} ${slot.name} meal`}
+                              value={selections[key] ?? ""}
+                              onChange={(event) => {
+                                const nextMealId = event.target.value;
+
+                                setSelections((current) =>
+                                  nextMealId
+                                    ? {
+                                        ...current,
+                                        [key]: nextMealId,
+                                      }
+                                    : omitKey(current, key),
+                                );
+                                setActiveEditorCellKey(nextMealId ? null : key);
+                              }}
                             >
-                              Remove {slot.name}
-                            </button>
+                              <option value="">Choose a meal</option>
+                              {(mealsByCategorySlug.get(selectedCategorySlug) ?? []).map((meal) => (
+                                <option key={meal.id} value={meal.id}>
+                                  {meal.name}
+                                </option>
+                              ))}
+                            </select>
+                          ) : null}
+                          {selectedMeal && isEditingCell ? <MealSummaryChip meal={selectedMeal} /> : null}
+                          {selectedMeal && isEditingCell ? (
+                            <div className="planner-editor-actions">
+                              <button
+                                type="button"
+                                className="secondary-button planner-inline-button"
+                                onClick={() => setActiveEditorCellKey(null)}
+                              >
+                                Done
+                              </button>
+                              <button
+                                type="button"
+                                className="secondary-button day-remove-button"
+                                onClick={() => clearCell(day, slot.slug)}
+                              >
+                                Remove {slot.name}
+                              </button>
+                            </div>
                           ) : null}
                         </div>
                       );
@@ -317,11 +382,13 @@ export function PlanScreen() {
           </>
         ) : null}
       </SectionCard>
-
-      <SectionCard
+      <Modal
         title="Preview Feedback"
-        subtitle="Rule feedback and grocery output show up here before the plan is saved."
+        description="Rule feedback and grocery output appear here before the plan is saved."
+        isOpen={isPreviewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
       >
+        {preview.isPending ? <p>Previewing this week...</p> : null}
         {preview.isIdle ? (
           <EmptyState
             title="Nothing previewed yet"
@@ -335,28 +402,63 @@ export function PlanScreen() {
             message="The API could not preview the current selections. Check that the backend is running and seeded."
           />
         ) : null}
-        {feedbackData ? (
-          <div className="preview-grid">
+        {preview.data ? (
+          <div className="preview-modal-stack">
+            <div className="preview-summary-grid" aria-label="Preview summary">
+              <div className={previewBlockingIssues.length > 0 ? "preview-summary-card preview-summary-card-alert" : "preview-summary-card"}>
+                <strong>{previewBlockingIssues.length}</strong>
+                <span>{previewBlockingIssues.length === 1 ? "blocking issue" : "blocking issues"}</span>
+              </div>
+              <div className="preview-summary-card">
+                <strong>{previewMinimumIssues.length}</strong>
+                <span>{previewMinimumIssues.length === 1 ? "guidance note" : "guidance notes"}</span>
+              </div>
+              <div className="preview-summary-card">
+                <strong>{preview.data.groceryList.length}</strong>
+                <span>{preview.data.groceryList.length === 1 ? "grocery item" : "grocery items"}</span>
+              </div>
+              <div className="preview-summary-card">
+                <strong>{previewGroceryGroups.length}</strong>
+                <span>{previewGroceryGroups.length === 1 ? "grocery group" : "grocery groups"}</span>
+              </div>
+            </div>
             <div className="mini-panel">
-              <h3>Validation</h3>
-              {feedbackData.validationIssues.length === 0 ? (
-                <p>No rule violations in this preview.</p>
+              <h3>Needs Attention</h3>
+              {previewBlockingIssues.length === 0 ? (
+                <p>No blocking rule issues in this preview.</p>
               ) : (
                 <ul className="plain-list">
-                  {feedbackData.validationIssues.map((issue) => (
+                  {previewBlockingIssues.map((issue) => (
                     <li key={`${issue.code}-${issue.mealId ?? issue.categorySlug ?? issue.message}`}>{issue.message}</li>
                   ))}
                 </ul>
               )}
-              {minimumIssues.length > 0 ? <p className="muted-text">Minimums are guidance and do not block saving.</p> : null}
+            </div>
+            <div className="mini-panel">
+              <h3>Guidance</h3>
+              {previewMinimumIssues.length === 0 ? (
+                <p>No guidance-only reminders in this preview.</p>
+              ) : (
+                <ul className="plain-list">
+                  {previewMinimumIssues.map((issue) => (
+                    <li key={`${issue.code}-${issue.mealId ?? issue.categorySlug ?? issue.message}`}>{issue.message}</li>
+                  ))}
+                </ul>
+              )}
+              <p className="muted-text">Guidance helps balance the week and does not block saving.</p>
             </div>
             <div className="mini-panel">
               <h3>Grocery Snapshot</h3>
-              {feedbackData.groceryList.length === 0 ? (
+              <p className="muted-text">
+                {preview.data.groceryList.length === 0
+                  ? "No grouped items yet."
+                  : `Previewing ${preview.data.groceryList.length} items across ${previewGroceryGroups.length} groups.`}
+              </p>
+              {preview.data.groceryList.length === 0 ? (
                 <p>No grocery items generated yet.</p>
               ) : (
                 <ul className="plain-list">
-                  {feedbackData.groceryList.slice(0, 8).map((item) => (
+                  {preview.data.groceryList.slice(0, 8).map((item) => (
                     <li key={`${item.group}-${item.name}`}>
                       <strong>{item.name}</strong> <span className="muted-text">({item.group})</span>
                     </li>
@@ -366,7 +468,7 @@ export function PlanScreen() {
             </div>
           </div>
         ) : null}
-      </SectionCard>
+      </Modal>
     </div>
   );
 }

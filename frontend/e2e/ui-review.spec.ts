@@ -91,6 +91,36 @@ test("captures desktop UI review screenshots for core screens", async ({ page })
   }
 });
 
+test("uses category-first planning and shows preview feedback in a modal", async ({ page }) => {
+  await page.goto("/plan");
+
+  await expect(page.locator('select[aria-label="Monday Breakfast meal"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Edit" }).first().click();
+  await expect(page.locator('select[aria-label="Monday Breakfast meal"]')).toBeVisible();
+
+  const mealSelect = page.locator('select[aria-label="Wednesday Breakfast meal"]');
+  await expect(mealSelect).toHaveCount(0);
+
+  await page
+    .locator('[aria-label="Wednesday Breakfast category"]')
+    .getByRole("button", { name: "Bagel Bar" })
+    .click();
+
+  await expect(page.locator('select[aria-label="Wednesday Breakfast meal"]')).toBeVisible();
+
+  await page.getByRole("button", { name: "Preview Week" }).click();
+
+  const previewDialog = page.getByRole("dialog", { name: "Preview Feedback" });
+  await expect(previewDialog).toBeVisible();
+  await expect(previewDialog.getByRole("heading", { name: "Needs Attention" })).toBeVisible();
+  await expect(previewDialog.getByRole("heading", { name: "Guidance" })).toBeVisible();
+  await expect(previewDialog.getByRole("heading", { name: "Grocery Snapshot" })).toBeVisible();
+  await expect(previewDialog.getByText("1 blocking issue")).toBeVisible();
+
+  await previewDialog.getByRole("button", { name: "Close dialog" }).click();
+  await expect(previewDialog).toHaveCount(0);
+});
+
 function meal(
   id: string,
   slug: string,
@@ -148,6 +178,27 @@ async function mockApi(page: Page) {
   await page.route("http://localhost:3001/api/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname.replace("/api", "");
+
+    if (path === "/weekly-plans/preview") {
+      await route.fulfill({
+        json: {
+          preview: {
+            weekStartDate: weeklyPlan.weekStartDate,
+            selections: weeklyPlan.selections,
+          },
+          validationIssues: [
+            {
+              code: "meal_repeat_limit_exceeded",
+              mealId: "meal_spaghetti",
+              message: 'Meal "Spaghetti Night" exceeds the weekly repeat limit.',
+            },
+          ],
+          groceryList,
+          persisted: false,
+        },
+      });
+      return;
+    }
 
     if (path === "/plan-slots") {
       await route.fulfill({ json: { planSlots } });
