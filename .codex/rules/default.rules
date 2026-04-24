@@ -1,0 +1,34 @@
+# Allow local staging commands in this repository.
+prefix_rule(
+    pattern = ["git", "add"],
+    decision = "allow",
+    justification = "Allow local staging commands without repeated approval prompts in this repo.",
+)
+
+# Allow local commit creation in this repository.
+prefix_rule(
+    pattern = ["git", "commit"],
+    decision = "allow",
+    justification = "Allow local commits without repeated approval prompts in this repo.",
+)
+
+# Allow npm script execution in this repository.
+prefix_rule(
+    pattern = ["npm", "run"],
+    decision = "allow",
+    justification = "Allow npm run commands without repeated approval prompts in this repo.",
+)
+
+# Allow npm test execution in this repository.
+prefix_rule(
+    pattern = ["npm", "test"],
+    decision = "allow",
+    justification = "Allow npm test commands without repeated approval prompts in this repo.",
+)
+
+# Allow Prisma commands via npx in this repository.
+prefix_rule(
+    pattern = ["npx", "prisma"],
+    decision = "allow",
+    justification = "Allow Prisma commands without repeated approval prompts in this repo.",
+)
