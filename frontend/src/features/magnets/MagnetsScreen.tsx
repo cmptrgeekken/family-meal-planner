@@ -484,7 +484,18 @@ export function MagnetsScreen() {
             background extends to the outer diameter.
           </p>
 
-          <div className="toggle-row">
+          <div className="magnet-summary-grid" aria-label="Magnet export summary">
+            <div className="magnet-summary-card">
+              <strong>{selectedCategories.length}</strong>
+              <span>{selectedCategories.length === 1 ? "category selected" : "categories selected"}</span>
+            </div>
+            <div className="magnet-summary-card">
+              <strong>{rowLayout.columns}</strong>
+              <span>{rowLayout.columns === 1 ? "magnet per row" : "magnets per row"}</span>
+            </div>
+          </div>
+
+          <div className="toggle-row magnet-export-actions">
             <button
               type="button"
               className="filter-chip"
@@ -545,6 +556,11 @@ export function MagnetsScreen() {
                 checked={selectedCategoryIds.has(category.id)}
                 onChange={() => toggleCategory(category.id)}
               />
+              {category.iconId && iconManifestQuery.data ? (
+                <span className="magnet-category-icon" aria-hidden="true">
+                  <img src={`${iconManifestQuery.data.assetBasePath}/${category.iconId}.svg`} alt="" />
+                </span>
+              ) : null}
               <span>{category.name}</span>
             </label>
           ))}

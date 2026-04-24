@@ -148,3 +148,8 @@ frontend/test-results/
 
 # AI
 .codex
+!.codex/
+.codex/*
+!.codex/rules/
+.codex/rules/*
+!.codex/rules/default.rules
