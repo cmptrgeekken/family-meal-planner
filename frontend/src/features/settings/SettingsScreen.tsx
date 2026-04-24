@@ -682,7 +682,7 @@ export function SettingsScreen() {
               </div>
             ) : null}
             {planSlotsQuery.isLoading ? <p>Loading meal slots...</p> : null}
-            <ul className="settings-record-list">
+            <ul className="settings-record-list settings-record-list-compact">
               {planSlots.map((planSlot, index) => (
                 <li key={planSlot.id} className="settings-record-row">
                   <div className="settings-record-heading">
@@ -745,7 +745,7 @@ export function SettingsScreen() {
                 <p>{categoryErrorMessage}</p>
               </div>
             ) : null}
-            <ul className="category-icon-list">
+            <ul className="category-icon-list settings-category-grid">
               {categories.map((category) => {
                 const draft = getCategoryDraft(category, categoryDrafts);
 
@@ -808,7 +808,7 @@ export function SettingsScreen() {
                 <p>{storeTagErrorMessage}</p>
               </div>
             ) : null}
-            <ul className="settings-record-list">
+            <ul className="settings-record-list settings-record-list-compact settings-store-tag-grid">
               {storeTags.map((storeTag) => (
                 <li key={storeTag.id} className="settings-record-row">
                   <div className="settings-record-heading">

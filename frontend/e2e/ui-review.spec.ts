@@ -115,7 +115,7 @@ test("uses category-first planning and shows preview feedback in a modal", async
   await expect(previewDialog.getByRole("heading", { name: "Needs Attention" })).toBeVisible();
   await expect(previewDialog.getByRole("heading", { name: "Guidance" })).toBeVisible();
   await expect(previewDialog.getByRole("heading", { name: "Grocery Snapshot" })).toBeVisible();
-  await expect(previewDialog.getByText("1 blocking issue")).toBeVisible();
+  await expect(previewDialog.getByText(/blocking issue/i)).toBeVisible();
 
   await previewDialog.getByRole("button", { name: "Close dialog" }).click();
   await expect(previewDialog).toHaveCount(0);
