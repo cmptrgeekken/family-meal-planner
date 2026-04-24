@@ -150,6 +150,10 @@ export function PlanScreen() {
         subtitle={`Build and save meals for the week of ${weekStartDate}.`}
         actions={
           <div className="toggle-row planner-action-row">
+            <div className={blockingIssues.length > 0 ? "planner-command-pill planner-command-pill-alert" : "planner-command-pill"}>
+              <strong>{plannedCount}/{cellCount}</strong>
+              <span>{blockingIssues.length > 0 ? "needs review" : "planned"}</span>
+            </div>
             <button
               type="button"
               className="secondary-button"
@@ -298,7 +302,7 @@ export function PlanScreen() {
                                 <p className="planner-selection-hint">
                                   {selectedCategory
                                     ? `Selected category: ${selectedCategory.name}. Choose a meal next.`
-                                    : "Choose a category to unlock meals for this slot."}
+                                    : `Pick from ${eligibleCategories.length} ${eligibleCategories.length === 1 ? "category" : "categories"}.`}
                                 </p>
                               </div>
                             </>
