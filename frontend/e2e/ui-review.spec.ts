@@ -96,9 +96,9 @@ test("uses category-first planning and shows preview feedback in a modal", async
   await page.goto("/plan");
 
   const weekInput = page.locator('input[type="date"]').first();
-  await expect(weekInput).toHaveValue("2026-04-27");
+  await expect(weekInput).toHaveValue("2026-04-20");
   await page.getByRole("button", { name: "Next week" }).click();
-  await expect(weekInput).toHaveValue("2026-05-04");
+  await expect(weekInput).toHaveValue("2026-04-27");
   await weekInput.fill("2026-05-07");
   await expect(weekInput).toHaveValue("2026-05-04");
 

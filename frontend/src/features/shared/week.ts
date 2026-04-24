@@ -3,8 +3,8 @@ export const mondayInputAnchorDate = "2024-01-01";
 export function getDefaultPlanningWeekStartDate() {
   const current = new Date();
   const day = current.getDay();
-  const daysUntilMonday = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
-  current.setDate(current.getDate() + daysUntilMonday);
+  const daysSinceMonday = day === 0 ? 6 : day - 1;
+  current.setDate(current.getDate() - daysSinceMonday);
   return current.toISOString().slice(0, 10);
 }
 
