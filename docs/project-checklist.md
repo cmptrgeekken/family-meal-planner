@@ -118,6 +118,7 @@ Next UI focus:
 - [x] Filter planner category choices by slot eligibility.
 - [x] Add configurable category weekly minimum/maximum counts.
 - [x] Disable or visually cross out category choices that have reached their weekly maximum.
+- [x] Tighten populated slot-cell density and surface the latest preview feedback inline.
 - [ ] Add fast parent weekly planning workflow polish.
 - [x] Explore a desktop planner grid with days as rows and meal slots as columns.
 - [ ] Add child-friendly visual meal picker/magnet board interactions. Category buttons exist; drag/drop magnet board remains deferred.

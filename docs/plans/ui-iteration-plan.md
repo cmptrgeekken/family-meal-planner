@@ -187,9 +187,8 @@ Completed slices so far:
 The next UI steps are now narrower and more concrete:
 
 1. Planner interaction polish:
-   - reduce remaining vertical space inside populated slot cells
-   - make category and meal editing in a cell feel faster than the current stacked controls
-   - review the command bar and preview relationship after more real-data usage
+   - keep tightening category and meal editing in a cell so it feels faster than the current stacked controls
+   - review the new inline preview digest after more real-data usage and decide whether it is sufficient or still needs a stronger summary state
 2. Navigation polish:
    - revisit active-page highlighting in both expanded and compact sticky-nav states
 3. Settings follow-up polish:

@@ -91,12 +91,21 @@ export function PlanScreen() {
   const feedbackData = preview.data ?? savePlan.data;
   const blockingIssues = feedbackData?.validationIssues.filter((issue) => issue.code !== "category_minimum_unmet") ?? [];
   const minimumIssues = feedbackData?.validationIssues.filter((issue) => issue.code === "category_minimum_unmet") ?? [];
-  const previewBlockingIssues = preview.data?.validationIssues.filter((issue) => issue.code !== "category_minimum_unmet") ?? [];
-  const previewMinimumIssues = preview.data?.validationIssues.filter((issue) => issue.code === "category_minimum_unmet") ?? [];
-  const previewGroceryGroups = useMemo(
-    () => Array.from(new Set(preview.data?.groceryList.map((item) => item.group) ?? [])),
-    [preview.data],
+  const feedbackGroceryGroups = useMemo(
+    () => Array.from(new Set(feedbackData?.groceryList.map((item) => item.group) ?? [])),
+    [feedbackData],
   );
+  const feedbackSummary = useMemo(() => {
+    if (!feedbackData) {
+      return "";
+    }
+
+    return [
+      `${blockingIssues.length} ${blockingIssues.length === 1 ? "blocking issue" : "blocking issues"}`,
+      `${minimumIssues.length} ${minimumIssues.length === 1 ? "guidance note" : "guidance notes"}`,
+      `${feedbackData.groceryList.length} ${feedbackData.groceryList.length === 1 ? "grocery item" : "grocery items"}`,
+    ].join(" • ");
+  }, [blockingIssues.length, feedbackData, minimumIssues.length]);
 
   useEffect(() => {
     if (!savedPlanQuery.data?.weeklyPlan) {
@@ -229,14 +238,33 @@ export function PlanScreen() {
         {meals.length > 0 && visiblePlanSlots.length > 0 ? (
           <>
             <div className="plan-summary-bar" aria-live="polite">
-              <strong>
-                {plannedCount}/{cellCount} meals planned
-              </strong>
-              <span className={blockingIssues.length > 0 ? "rule-hint-text" : "muted-text"}>
-                {blockingIssues.length > 0
-                  ? "Some choices need attention before saving."
-                  : "Preview before saving to catch repeat, premium, or category limits."}
-              </span>
+              <div className="plan-summary-copy">
+                <strong>
+                  {plannedCount}/{cellCount} meals planned
+                </strong>
+                <span className={blockingIssues.length > 0 ? "rule-hint-text" : "muted-text"}>
+                  {blockingIssues.length > 0
+                    ? "Some choices need attention before saving."
+                    : "Preview before saving to catch repeat, premium, or category limits."}
+                </span>
+              </div>
+              {feedbackData ? (
+                <div
+                  className={
+                    blockingIssues.length > 0
+                      ? "planner-feedback-inline planner-feedback-inline-alert"
+                      : "planner-feedback-inline"
+                  }
+                >
+                  <div className="planner-feedback-inline-copy">
+                    <strong>{preview.isSuccess ? "Latest preview" : "Saved week feedback"}</strong>
+                    <span>{feedbackSummary}</span>
+                  </div>
+                  <button type="button" className="secondary-button planner-inline-button" onClick={() => setPreviewModalOpen(true)}>
+                    View details
+                  </button>
+                </div>
+              ) : null}
             </div>
             <div className="day-stack planner-week-grid">
               {weekdays.map((day) => (
@@ -309,9 +337,14 @@ export function PlanScreen() {
                           ) : selectedMeal ? (
                             <div className="planner-planned-summary" aria-live="polite">
                               <div className="planner-planned-summary-copy">
-                                <strong>{selectedMeal.name}</strong>
-                                <span>{selectedCategory?.name ?? selectedMeal.category}</span>
-                                <span>{selectedMeal.lowEffort ? "Low effort" : "Longer cook"}</span>
+                                <div className="planner-planned-summary-headline">
+                                  <strong>{selectedMeal.name}</strong>
+                                  <span className={`pill-cost pill-cost-${selectedMeal.costTier}`}>{selectedMeal.costTier}</span>
+                                </div>
+                                <div className="planner-planned-summary-meta">
+                                  <span className="pill-muted">{selectedCategory?.name ?? selectedMeal.category}</span>
+                                  <span className="pill-muted">{selectedMeal.lowEffort ? "Low effort" : "Longer cook"}</span>
+                                </div>
                               </div>
                               <div className="planner-planned-summary-actions">
                                 <button
@@ -393,46 +426,46 @@ export function PlanScreen() {
         onClose={() => setPreviewModalOpen(false)}
       >
         {preview.isPending ? <p>Previewing this week...</p> : null}
-        {preview.isIdle ? (
+        {preview.isIdle && !feedbackData ? (
           <EmptyState
             title="Nothing previewed yet"
             message="Pick a few meals, then preview the week to see validation and grocery grouping."
           />
         ) : null}
-        {preview.isError ? (
+        {preview.isError && !feedbackData ? (
           <StatusMessage
             tone="error"
             title="Preview failed"
             message="The API could not preview the current selections. Check that the backend is running and seeded."
           />
         ) : null}
-        {preview.data ? (
+        {feedbackData ? (
           <div className="preview-modal-stack">
             <div className="preview-summary-grid" aria-label="Preview summary">
-              <div className={previewBlockingIssues.length > 0 ? "preview-summary-card preview-summary-card-alert" : "preview-summary-card"}>
-                <strong>{previewBlockingIssues.length}</strong>
-                <span>{previewBlockingIssues.length === 1 ? "blocking issue" : "blocking issues"}</span>
+              <div className={blockingIssues.length > 0 ? "preview-summary-card preview-summary-card-alert" : "preview-summary-card"}>
+                <strong>{blockingIssues.length}</strong>
+                <span>{blockingIssues.length === 1 ? "blocking issue" : "blocking issues"}</span>
               </div>
               <div className="preview-summary-card">
-                <strong>{previewMinimumIssues.length}</strong>
-                <span>{previewMinimumIssues.length === 1 ? "guidance note" : "guidance notes"}</span>
+                <strong>{minimumIssues.length}</strong>
+                <span>{minimumIssues.length === 1 ? "guidance note" : "guidance notes"}</span>
               </div>
               <div className="preview-summary-card">
-                <strong>{preview.data.groceryList.length}</strong>
-                <span>{preview.data.groceryList.length === 1 ? "grocery item" : "grocery items"}</span>
+                <strong>{feedbackData.groceryList.length}</strong>
+                <span>{feedbackData.groceryList.length === 1 ? "grocery item" : "grocery items"}</span>
               </div>
               <div className="preview-summary-card">
-                <strong>{previewGroceryGroups.length}</strong>
-                <span>{previewGroceryGroups.length === 1 ? "grocery group" : "grocery groups"}</span>
+                <strong>{feedbackGroceryGroups.length}</strong>
+                <span>{feedbackGroceryGroups.length === 1 ? "grocery group" : "grocery groups"}</span>
               </div>
             </div>
             <div className="mini-panel">
               <h3>Needs Attention</h3>
-              {previewBlockingIssues.length === 0 ? (
+              {blockingIssues.length === 0 ? (
                 <p>No blocking rule issues in this preview.</p>
               ) : (
                 <ul className="plain-list">
-                  {previewBlockingIssues.map((issue) => (
+                  {blockingIssues.map((issue) => (
                     <li key={`${issue.code}-${issue.mealId ?? issue.categorySlug ?? issue.message}`}>{issue.message}</li>
                   ))}
                 </ul>
@@ -440,11 +473,11 @@ export function PlanScreen() {
             </div>
             <div className="mini-panel">
               <h3>Guidance</h3>
-              {previewMinimumIssues.length === 0 ? (
+              {minimumIssues.length === 0 ? (
                 <p>No guidance-only reminders in this preview.</p>
               ) : (
                 <ul className="plain-list">
-                  {previewMinimumIssues.map((issue) => (
+                  {minimumIssues.map((issue) => (
                     <li key={`${issue.code}-${issue.mealId ?? issue.categorySlug ?? issue.message}`}>{issue.message}</li>
                   ))}
                 </ul>
@@ -454,15 +487,15 @@ export function PlanScreen() {
             <div className="mini-panel">
               <h3>Grocery Snapshot</h3>
               <p className="muted-text">
-                {preview.data.groceryList.length === 0
+                {feedbackData.groceryList.length === 0
                   ? "No grouped items yet."
-                  : `Previewing ${preview.data.groceryList.length} items across ${previewGroceryGroups.length} groups.`}
+                  : `Previewing ${feedbackData.groceryList.length} items across ${feedbackGroceryGroups.length} groups.`}
               </p>
-              {preview.data.groceryList.length === 0 ? (
+              {feedbackData.groceryList.length === 0 ? (
                 <p>No grocery items generated yet.</p>
               ) : (
                 <ul className="plain-list">
-                  {preview.data.groceryList.slice(0, 8).map((item) => (
+                  {feedbackData.groceryList.slice(0, 8).map((item) => (
                     <li key={`${item.group}-${item.name}`}>
                       <strong>{item.name}</strong> <span className="muted-text">({item.group})</span>
                     </li>

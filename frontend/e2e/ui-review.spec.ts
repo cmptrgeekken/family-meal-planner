@@ -112,6 +112,8 @@ test("uses category-first planning and shows preview feedback in a modal", async
 
   const previewDialog = page.getByRole("dialog", { name: "Preview Feedback" });
   await expect(previewDialog).toBeVisible();
+  await expect(page.getByText("Latest preview")).toBeVisible();
+  await expect(page.getByText(/1 blocking issue/i)).toBeVisible();
   await expect(previewDialog.getByRole("heading", { name: "Needs Attention" })).toBeVisible();
   await expect(previewDialog.getByRole("heading", { name: "Guidance" })).toBeVisible();
   await expect(previewDialog.getByRole("heading", { name: "Grocery Snapshot" })).toBeVisible();
@@ -119,6 +121,8 @@ test("uses category-first planning and shows preview feedback in a modal", async
 
   await previewDialog.getByRole("button", { name: "Close dialog" }).click();
   await expect(previewDialog).toHaveCount(0);
+  await page.getByRole("button", { name: "View details" }).click();
+  await expect(previewDialog).toBeVisible();
 });
 
 function meal(

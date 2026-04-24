@@ -259,12 +259,17 @@ button:disabled {
 
 .plan-summary-bar {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.75rem;
   margin-bottom: 0.85rem;
   padding: 0.85rem;
   border: 1px solid rgba(85, 124, 153, 0.18);
   border-radius: 1rem;
   background: rgba(85, 124, 153, 0.08);
+}
+
+.plan-summary-copy {
+  display: grid;
+  gap: 0.25rem;
 }
 
 .planner-action-row {
@@ -295,6 +300,34 @@ button:disabled {
 .planner-command-pill-alert {
   border-color: rgba(163, 61, 51, 0.22);
   background: rgba(209, 77, 77, 0.08);
+}
+
+.planner-feedback-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(85, 124, 153, 0.18);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.planner-feedback-inline-alert {
+  border-color: rgba(163, 61, 51, 0.2);
+  background: rgba(209, 77, 77, 0.08);
+}
+
+.planner-feedback-inline-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.planner-feedback-inline-copy span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .day-remove-button {
@@ -576,17 +609,20 @@ button:disabled {
 
 .plan-slot-cell {
   display: grid;
-  gap: 0.65rem;
-  padding: 0.8rem;
+  gap: 0.55rem;
+  padding: 0.75rem;
   border: 1px solid rgba(112, 78, 44, 0.12);
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.5);
 }
 
 .planner-planned-summary {
-  display: grid;
-  gap: 0.7rem;
-  padding: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
   border: 1px solid rgba(112, 78, 44, 0.12);
   border-radius: 0.95rem;
   background: rgba(255, 250, 243, 0.88);
@@ -594,17 +630,31 @@ button:disabled {
 
 .planner-planned-summary-copy {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.planner-planned-summary-headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
 }
 
 .planner-planned-summary-copy strong {
   font-size: 1rem;
 }
 
-.planner-planned-summary-copy span {
-  color: var(--muted);
-  font-size: 0.88rem;
-  line-height: 1.35;
+.planner-planned-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.planner-planned-summary-meta .pill-muted,
+.planner-planned-summary-meta .pill-cost {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
 }
 
 .planner-planned-summary-actions,
@@ -612,11 +662,12 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
+  align-items: center;
 }
 
 .planner-inline-button {
-  min-height: 2.35rem;
-  padding: 0.55rem 0.8rem;
+  min-height: 2.2rem;
+  padding: 0.5rem 0.8rem;
 }
 
 .plan-screen-layout .section-card {
@@ -1748,7 +1799,7 @@ button:disabled {
   .plan-slot-cell {
     align-content: start;
     min-width: 0;
-    padding: 0.7rem;
+    padding: 0.65rem;
   }
 
   .plan-slot-cell .day-card-copy {
