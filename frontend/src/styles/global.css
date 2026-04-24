@@ -616,12 +616,21 @@ button:disabled {
   background: rgba(255, 255, 255, 0.5);
 }
 
-.planner-planned-summary {
+.planner-slot-header {
+  align-items: flex-start;
+}
+
+.planner-slot-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.6rem;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.planner-planned-summary {
+  display: grid;
+  gap: 0.45rem;
   padding: 0.65rem 0.75rem;
   border: 1px solid rgba(112, 78, 44, 0.12);
   border-radius: 0.95rem;
@@ -657,17 +666,16 @@ button:disabled {
   font-size: 0.75rem;
 }
 
-.planner-planned-summary-actions,
-.planner-editor-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  align-items: center;
-}
-
 .planner-inline-button {
   min-height: 2.2rem;
   padding: 0.5rem 0.8rem;
+}
+
+.planner-inline-button-compact {
+  min-height: 1.95rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .plan-screen-layout .section-card {

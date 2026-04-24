@@ -290,11 +290,50 @@ export function PlanScreen() {
 
                       return (
                         <div key={key} className="plan-slot-cell">
-                          <div className="day-card-copy">
+                          <div className="day-card-copy planner-slot-header">
                             <span className={slot.isEnabled ? "slot-pill" : "slot-pill slot-pill-disabled"}>
                               {slot.name}
                               {slot.isEnabled ? "" : " (disabled)"}
                             </span>
+                            {selectedMeal ? (
+                              <div className="planner-slot-actions">
+                                {isEditingCell ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="secondary-button planner-inline-button planner-inline-button-compact"
+                                      onClick={() => setActiveEditorCellKey(null)}
+                                    >
+                                      Done
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="secondary-button planner-inline-button planner-inline-button-compact"
+                                      onClick={() => clearCell(day, slot.slug)}
+                                    >
+                                      Remove
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="secondary-button planner-inline-button planner-inline-button-compact"
+                                      onClick={() => setActiveEditorCellKey(key)}
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="secondary-button planner-inline-button planner-inline-button-compact"
+                                      onClick={() => clearCell(day, slot.slug)}
+                                    >
+                                      Remove
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            ) : null}
                           </div>
                           {eligibleCategories.length === 0 ? (
                             <p className="muted-text">No categories are assigned to this slot.</p>
@@ -346,22 +385,6 @@ export function PlanScreen() {
                                   <span className="pill-muted">{selectedMeal.lowEffort ? "Low effort" : "Longer cook"}</span>
                                 </div>
                               </div>
-                              <div className="planner-planned-summary-actions">
-                                <button
-                                  type="button"
-                                  className="secondary-button planner-inline-button"
-                                  onClick={() => setActiveEditorCellKey(key)}
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  className="secondary-button planner-inline-button"
-                                  onClick={() => clearCell(day, slot.slug)}
-                                >
-                                  Remove
-                                </button>
-                              </div>
                             </div>
                           ) : null}
                           {selectedCategorySlug && isEditingCell ? (
@@ -391,24 +414,6 @@ export function PlanScreen() {
                             </select>
                           ) : null}
                           {selectedMeal && isEditingCell ? <MealSummaryChip meal={selectedMeal} /> : null}
-                          {selectedMeal && isEditingCell ? (
-                            <div className="planner-editor-actions">
-                              <button
-                                type="button"
-                                className="secondary-button planner-inline-button"
-                                onClick={() => setActiveEditorCellKey(null)}
-                              >
-                                Done
-                              </button>
-                              <button
-                                type="button"
-                                className="secondary-button day-remove-button"
-                                onClick={() => clearCell(day, slot.slug)}
-                              >
-                                Remove {slot.name}
-                              </button>
-                            </div>
-                          ) : null}
                         </div>
                       );
                     })}
