@@ -24,6 +24,7 @@ function category(id: string, name: string, iconId = id): ApiCategory {
     slug: name.toLowerCase().replace(/\s+/g, "-"),
     iconId,
     slotSlugs: ["dinner"],
+    mealCount: 0,
   };
 }
 

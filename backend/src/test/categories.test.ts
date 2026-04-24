@@ -22,6 +22,7 @@ describe("category routes", () => {
     expect(createResponse.body.category.slotSlugs).toEqual(["breakfast", "dinner"]);
     expect(createResponse.body.category.weeklyMinCount).toBe(1);
     expect(createResponse.body.category.weeklyMaxCount).toBe(3);
+    expect(createResponse.body.category.mealCount).toBe(0);
 
     const categoryId = createResponse.body.category.id;
 
@@ -53,16 +54,71 @@ describe("category routes", () => {
     expect(deleteResponse.status).toBe(204);
   });
 
-  it("prevents deleting a category that is in use by meals", async () => {
+  it("requires a replacement when deleting a category that is in use by meals", async () => {
     const app = createApp();
-    const categoriesResponse = await request(app).get("/api/categories");
-    const chickenCategory = categoriesResponse.body.categories.find(
-      (category: { slug?: string }) => category.slug === "chicken-night",
-    );
+    const uniqueSuffix = Date.now().toString();
+    const sourceCategoryResponse = await request(app).post("/api/categories").send({
+      name: `TEST__Source ${uniqueSuffix}`,
+      slug: `test-artifact-category-source-${uniqueSuffix}`,
+    });
+    const sourceCategory = sourceCategoryResponse.body.category;
 
-    const deleteResponse = await request(app).delete(`/api/categories/${chickenCategory.id}`);
+    await request(app).post("/api/meals").send({
+      name: `Test Artifact Meal ${uniqueSuffix}`,
+      slug: `test-artifact-meal-${uniqueSuffix}`,
+      categorySlug: sourceCategory.slug,
+      costTier: "budget",
+      kidFavorite: true,
+      lowEffort: true,
+      ingredients: [{ name: `TEST__Rice ${uniqueSuffix}`, group: "carb", quantityLabel: "1 box" }],
+    });
+
+    const deleteResponse = await request(app).delete(`/api/categories/${sourceCategory.id}`);
 
     expect(deleteResponse.status).toBe(409);
+    expect(deleteResponse.body.message).toMatch(/choose a replacement category/i);
+  });
+
+  it("migrates meals to a replacement category before deleting", async () => {
+    const app = createApp();
+    const uniqueSuffix = `${Date.now()}-migrate`;
+    const sourceCategoryResponse = await request(app).post("/api/categories").send({
+      name: `TEST__Source ${uniqueSuffix}`,
+      slug: `test-artifact-category-source-${uniqueSuffix}`,
+    });
+    const replacementCategoryResponse = await request(app).post("/api/categories").send({
+      name: `TEST__Replacement ${uniqueSuffix}`,
+      slug: `test-artifact-category-target-${uniqueSuffix}`,
+    });
+    const sourceCategory = sourceCategoryResponse.body.category;
+    const replacementCategory = replacementCategoryResponse.body.category;
+
+    await request(app).post("/api/meals").send({
+      name: `Test Artifact Meal ${uniqueSuffix}`,
+      slug: `test-artifact-meal-${uniqueSuffix}`,
+      categorySlug: sourceCategory.slug,
+      costTier: "budget",
+      kidFavorite: true,
+      lowEffort: true,
+      ingredients: [{ name: `TEST__Chicken Thighs ${uniqueSuffix}`, group: "protein", quantityLabel: "1 pack" }],
+    });
+
+    const mealsBeforeResponse = await request(app).get(`/api/meals?categorySlug=${replacementCategory.slug}`);
+
+    const deleteResponse = await request(app).delete(
+      `/api/categories/${sourceCategory.id}?replacementCategoryId=${replacementCategory.id}`,
+    );
+
+    expect(deleteResponse.status).toBe(204);
+
+    const mealsAfterResponse = await request(app).get(`/api/meals?categorySlug=${replacementCategory.slug}`);
+    expect(mealsAfterResponse.body.meals.length).toBeGreaterThan(mealsBeforeResponse.body.meals.length);
+    expect(
+      mealsAfterResponse.body.meals.some((meal: { name?: string }) => meal.name === `Test Artifact Meal ${uniqueSuffix}`),
+    ).toBe(true);
+
+    const deletedCategoryResponse = await request(app).get(`/api/categories/${sourceCategory.id}`);
+    expect(deletedCategoryResponse.status).toBe(404);
   });
 
   it("returns a conflict when creating a duplicate category slug", async () => {

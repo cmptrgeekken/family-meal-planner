@@ -60,6 +60,11 @@ type StoreTagDraft = {
   slug: string;
 };
 
+type CategoryDeleteState = {
+  categoryId: string;
+  replacementCategoryId: string;
+};
+
 type SettingsSection = "plan-slots" | "categories" | "store-tags" | "icon-library";
 
 const emptyStoreTagDraft: StoreTagDraft = {
@@ -260,6 +265,7 @@ export function SettingsScreen() {
   const [newStoreTag, setNewStoreTag] = useState<StoreTagDraft>(emptyStoreTagDraft);
   const [storeTagDrafts, setStoreTagDrafts] = useState<Record<string, StoreTagDraft>>({});
   const [categoryEditorId, setCategoryEditorId] = useState<string | null>(null);
+  const [categoryDeleteState, setCategoryDeleteState] = useState<CategoryDeleteState | null>(null);
   const [planSlotEditorId, setPlanSlotEditorId] = useState<string | null>(null);
   const [storeTagEditorId, setStoreTagEditorId] = useState<string | null>(null);
   const [isCategoryCreateOpen, setIsCategoryCreateOpen] = useState(false);
@@ -314,10 +320,13 @@ export function SettingsScreen() {
     },
   });
   const deleteCategoryMutation = useMutation({
-    mutationFn: deleteCategory,
+    mutationFn: (payload: { categoryId: string; replacementCategoryId?: string }) =>
+      deleteCategory(payload.categoryId, payload.replacementCategoryId),
     onSuccess: () => {
+      setCategoryDeleteState(null);
       void queryClient.invalidateQueries({ queryKey: ["categories"] });
       void queryClient.invalidateQueries({ queryKey: ["meals"] });
+      void queryClient.invalidateQueries({ queryKey: ["weekly-plan"] });
     },
   });
   const createPlanSlotMutation = useMutation({
@@ -569,6 +578,34 @@ export function SettingsScreen() {
     );
   }
 
+  function openCategoryDeleteModal(category: ApiCategory) {
+    setCategoryDeleteState({
+      categoryId: category.id,
+      replacementCategoryId: "",
+    });
+  }
+
+  function handleDeleteCategory() {
+    if (!categoryDeleteState) {
+      return;
+    }
+
+    const category = categories.find((entry) => entry.id === categoryDeleteState.categoryId);
+
+    if (!category) {
+      return;
+    }
+
+    if (category.mealCount > 0 && !categoryDeleteState.replacementCategoryId) {
+      return;
+    }
+
+    deleteCategoryMutation.mutate({
+      categoryId: category.id,
+      replacementCategoryId: category.mealCount > 0 ? categoryDeleteState.replacementCategoryId : undefined,
+    });
+  }
+
   function handleSavePlanSlot(planSlot: ApiPlanSlot) {
     const draft = getPlanSlotDraft(planSlot, planSlotDrafts);
 
@@ -626,11 +663,15 @@ export function SettingsScreen() {
   }
 
   const editingCategory = categoryEditorId ? categories.find((category) => category.id === categoryEditorId) ?? null : null;
+  const deletingCategory = categoryDeleteState
+    ? categories.find((category) => category.id === categoryDeleteState.categoryId) ?? null
+    : null;
   const editingPlanSlot = planSlotEditorId ? planSlots.find((planSlot) => planSlot.id === planSlotEditorId) ?? null : null;
   const editingStoreTag = storeTagEditorId ? storeTags.find((storeTag) => storeTag.id === storeTagEditorId) ?? null : null;
   const editingCategoryDraft = editingCategory ? getCategoryDraft(editingCategory, categoryDrafts) : null;
   const editingPlanSlotDraft = editingPlanSlot ? getPlanSlotDraft(editingPlanSlot, planSlotDrafts) : null;
   const editingStoreTagDraft = editingStoreTag ? getStoreTagDraft(editingStoreTag, storeTagDrafts) : null;
+  const categoryDeleteOptions = deletingCategory ? categories.filter((category) => category.id !== deletingCategory.id) : [];
   const settingsSections: Array<{ id: SettingsSection; label: string }> = [
     { id: "categories", label: "Categories" },
     { id: "plan-slots", label: "Meal Slots" },
@@ -763,6 +804,9 @@ export function SettingsScreen() {
                       <span className="muted-text">/{category.slug}</span>
                     </div>
                     <div className="settings-record-meta">
+                      <span className="pill-muted">
+                        {category.mealCount} {category.mealCount === 1 ? "meal" : "meals"}
+                      </span>
                       {category.slotSlugs.map((slotSlug) => {
                         const slot = planSlots.find((candidate) => candidate.slug === slotSlug);
                         return (
@@ -782,11 +826,7 @@ export function SettingsScreen() {
                         type="button"
                         className="secondary-button danger-button"
                         disabled={isCategoryMutationPending}
-                        onClick={() => {
-                          if (window.confirm(`Delete "${category.name}"? Categories used by meals cannot be deleted.`)) {
-                            deleteCategoryMutation.mutate(category.id);
-                          }
-                        }}
+                        onClick={() => openCategoryDeleteModal(category)}
                       >
                         Delete
                       </button>
@@ -1146,6 +1186,71 @@ export function SettingsScreen() {
               </button>
             </div>
           </form>
+        ) : null}
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(deletingCategory && categoryDeleteState)}
+        title="Delete Category"
+        description={
+          deletingCategory?.mealCount
+            ? "Move meals into another category before deleting this one."
+            : "Delete this category now that nothing is assigned to it."
+        }
+        onClose={() => setCategoryDeleteState(null)}
+      >
+        {deletingCategory ? (
+          <div className="category-editor-form">
+            <p>
+              <strong>{deletingCategory.name}</strong> currently has{" "}
+              <strong>{deletingCategory.mealCount}</strong>{" "}
+              {deletingCategory.mealCount === 1 ? "meal" : "meals"} assigned.
+            </p>
+            {deletingCategory.mealCount > 0 ? (
+              <label>
+                <span>Replacement category</span>
+                <select
+                  value={categoryDeleteState?.replacementCategoryId ?? ""}
+                  onChange={(event) =>
+                    setCategoryDeleteState((current) =>
+                      current
+                        ? {
+                            ...current,
+                            replacementCategoryId: event.target.value,
+                          }
+                        : current,
+                    )
+                  }
+                >
+                  <option value="">Choose a replacement category</option>
+                  {categoryDeleteOptions.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name} ({category.mealCount} {category.mealCount === 1 ? "meal" : "meals"})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <p className="muted-text">No meals need to be migrated before deletion.</p>
+            )}
+            {categoryErrorMessage ? <p className="form-error-text">{categoryErrorMessage}</p> : null}
+            <div className="category-editor-actions">
+              <button
+                type="button"
+                className="primary-button"
+                disabled={
+                  isCategoryMutationPending ||
+                  (deletingCategory.mealCount > 0 && !categoryDeleteState?.replacementCategoryId)
+                }
+                onClick={handleDeleteCategory}
+              >
+                {deletingCategory.mealCount > 0 ? "Move meals and delete category" : "Delete category"}
+              </button>
+              <button type="button" className="secondary-button" onClick={() => setCategoryDeleteState(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
         ) : null}
       </Modal>
 

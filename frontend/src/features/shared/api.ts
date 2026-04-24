@@ -23,6 +23,7 @@ export type ApiCategory = {
   slotSlugs: string[];
   weeklyMinCount?: number;
   weeklyMaxCount?: number;
+  mealCount: number;
 };
 
 export type ApiPlanSlot = {
@@ -264,8 +265,16 @@ export function deletePlanSlot(planSlotId: string) {
   });
 }
 
-export function deleteCategory(categoryId: string) {
-  return fetch(apiUrl(`/categories/${categoryId}`), {
+export function deleteCategory(categoryId: string, replacementCategoryId?: string) {
+  const params = new URLSearchParams();
+
+  if (replacementCategoryId) {
+    params.set("replacementCategoryId", replacementCategoryId);
+  }
+
+  const path = `/categories/${categoryId}${params.toString() ? `?${params.toString()}` : ""}`;
+
+  return fetch(apiUrl(path), {
     method: "DELETE",
   }).then(async (response) => {
     if (response.status === 204) {

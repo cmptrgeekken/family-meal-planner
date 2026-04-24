@@ -24,6 +24,11 @@ const categoryInclude = {
       },
     },
   },
+  _count: {
+    select: {
+      meals: true,
+    },
+  },
 } satisfies Prisma.CategoryInclude;
 
 type CategoryWithSlots = {
@@ -34,6 +39,7 @@ type CategoryWithSlots = {
   weeklyMinCount: number | null;
   weeklyMaxCount: number | null;
   slotAssignments: Array<{ planSlot: { slug: string } }>;
+  _count: { meals: number };
 };
 
 function mapCategory(category: CategoryWithSlots): MealCategoryRecord {
@@ -45,6 +51,7 @@ function mapCategory(category: CategoryWithSlots): MealCategoryRecord {
     slotSlugs: category.slotAssignments.map((assignment) => assignment.planSlot.slug),
     weeklyMinCount: category.weeklyMinCount ?? undefined,
     weeklyMaxCount: category.weeklyMaxCount ?? undefined,
+    mealCount: category._count.meals,
   };
 }
 
@@ -166,13 +173,12 @@ export async function updateCategory(categoryId: string, input: UpsertCategoryIn
   }
 }
 
-export async function deleteCategory(categoryId: string) {
+export async function deleteCategory(categoryId: string, replacementCategoryId?: string) {
   const existing = await prisma.category.findUnique({
     where: { id: categoryId },
     include: {
       meals: {
         select: { id: true },
-        take: 1,
       },
     },
   });
@@ -182,12 +188,42 @@ export async function deleteCategory(categoryId: string) {
   }
 
   if (existing.meals.length > 0) {
-    return { deleted: false, reason: "in_use" as const };
+    if (!replacementCategoryId) {
+      return { deleted: false, reason: "replacement_required" as const };
+    }
+
+    if (replacementCategoryId === categoryId) {
+      return { deleted: false, reason: "invalid_replacement" as const };
+    }
+
+    const replacementCategory = await prisma.category.findUnique({
+      where: { id: replacementCategoryId },
+      select: { id: true },
+    });
+
+    if (!replacementCategory) {
+      return { deleted: false, reason: "invalid_replacement" as const };
+    }
+
+    await prisma.$transaction([
+      prisma.meal.updateMany({
+        where: { categoryId },
+        data: { categoryId: replacementCategoryId },
+      }),
+      prisma.category.delete({
+        where: { id: categoryId },
+      }),
+    ]);
+
+    return {
+      deleted: true as const,
+      migratedMealCount: existing.meals.length,
+    };
   }
 
   await prisma.category.delete({
     where: { id: categoryId },
   });
 
-  return { deleted: true as const };
+  return { deleted: true as const, migratedMealCount: 0 };
 }

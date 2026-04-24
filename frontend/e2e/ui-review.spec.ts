@@ -7,18 +7,18 @@ const planSlots = [
 ];
 
 const categories = [
-  { id: "cat_pasta", name: "Pasta", slug: "pasta-night", iconId: "168", slotSlugs: ["lunch", "dinner"] },
-  { id: "cat_rice", name: "Rice Bowls", slug: "rice-bowls", iconId: "115", slotSlugs: ["lunch", "dinner"] },
-  { id: "cat_chicken", name: "Chicken", slug: "chicken-night", iconId: "160", slotSlugs: ["lunch", "dinner"] },
-  { id: "cat_wraps", name: "Wraps & Tortillas", slug: "taco-night", iconId: "77", slotSlugs: ["breakfast", "lunch", "dinner"] },
-  { id: "cat_sandwiches", name: "Sandwiches", slug: "sandwich-night", iconId: "ai-blt", slotSlugs: ["breakfast", "lunch", "dinner"] },
-  { id: "cat_snacks", name: "Snack Plates", slug: "snack-plate", iconId: "ai-snackplate", slotSlugs: ["breakfast", "lunch", "dinner"] },
-  { id: "cat_pancakes", name: "Pancakes & Waffles", slug: "breakfast-dinner", iconId: "71", slotSlugs: ["breakfast", "lunch", "dinner"] },
-  { id: "cat_bagel", name: "Bagel Bar", slug: "bagel-bar", iconId: "73", slotSlugs: ["breakfast", "lunch"] },
-  { id: "cat_cereal", name: "Cereal Bowl", slug: "cereal-bowl", iconId: "256", slotSlugs: ["breakfast"] },
-  { id: "cat_yogurt", name: "Fruit & Yogurt", slug: "fruit-yogurt", iconId: "369", slotSlugs: ["breakfast"] },
-  { id: "cat_toast", name: "Toast & Toppings", slug: "toast-toppings", iconId: "79", slotSlugs: ["breakfast"] },
-  { id: "cat_pizza", name: "Pizza", slug: "pizza-night", iconId: "178", slotSlugs: ["lunch", "dinner"] },
+  { id: "cat_pasta", name: "Pasta", slug: "pasta-night", iconId: "168", slotSlugs: ["lunch", "dinner"], mealCount: 1 },
+  { id: "cat_rice", name: "Rice Bowls", slug: "rice-bowls", iconId: "115", slotSlugs: ["lunch", "dinner"], mealCount: 1 },
+  { id: "cat_chicken", name: "Chicken", slug: "chicken-night", iconId: "160", slotSlugs: ["lunch", "dinner"], mealCount: 1 },
+  { id: "cat_wraps", name: "Wraps & Tortillas", slug: "taco-night", iconId: "77", slotSlugs: ["breakfast", "lunch", "dinner"], mealCount: 0 },
+  { id: "cat_sandwiches", name: "Sandwiches", slug: "sandwich-night", iconId: "ai-blt", slotSlugs: ["breakfast", "lunch", "dinner"], mealCount: 1 },
+  { id: "cat_snacks", name: "Snack Plates", slug: "snack-plate", iconId: "ai-snackplate", slotSlugs: ["breakfast", "lunch", "dinner"], mealCount: 0 },
+  { id: "cat_pancakes", name: "Pancakes & Waffles", slug: "breakfast-dinner", iconId: "71", slotSlugs: ["breakfast", "lunch", "dinner"], mealCount: 1 },
+  { id: "cat_bagel", name: "Bagel Bar", slug: "bagel-bar", iconId: "73", slotSlugs: ["breakfast", "lunch"], mealCount: 1 },
+  { id: "cat_cereal", name: "Cereal Bowl", slug: "cereal-bowl", iconId: "256", slotSlugs: ["breakfast"], mealCount: 1 },
+  { id: "cat_yogurt", name: "Fruit & Yogurt", slug: "fruit-yogurt", iconId: "369", slotSlugs: ["breakfast"], mealCount: 0 },
+  { id: "cat_toast", name: "Toast & Toppings", slug: "toast-toppings", iconId: "79", slotSlugs: ["breakfast"], mealCount: 0 },
+  { id: "cat_pizza", name: "Pizza", slug: "pizza-night", iconId: "178", slotSlugs: ["lunch", "dinner"], mealCount: 1 },
   {
     id: "cat_special",
     name: "Special Dinner",
@@ -26,6 +26,7 @@ const categories = [
     iconId: "ai-steak",
     slotSlugs: ["dinner"],
     weeklyMaxCount: 1,
+    mealCount: 1,
   },
 ];
 

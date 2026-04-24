@@ -92,6 +92,7 @@ export type MealCategoryRecord = {
   slotSlugs: string[];
   weeklyMinCount?: number;
   weeklyMaxCount?: number;
+  mealCount: number;
 };
 
 export type GroceryUsageContext = {

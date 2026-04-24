@@ -35,6 +35,10 @@ const categoryParamsSchema = z.object({
   categoryId: z.string().min(1),
 });
 
+const categoryDeleteQuerySchema = z.object({
+  replacementCategoryId: z.string().min(1).optional(),
+});
+
 categoriesRouter.get(
   "/",
   asyncHandler(async (_request, response) => {
@@ -111,14 +115,19 @@ categoriesRouter.delete(
   "/:categoryId",
   asyncHandler(async (request, response) => {
     const params = categoryParamsSchema.parse(request.params);
-    const result = await deleteCategory(params.categoryId);
+    const query = categoryDeleteQuerySchema.parse(request.query);
+    const result = await deleteCategory(params.categoryId, query.replacementCategoryId);
 
     if (!result.deleted) {
       if (result.reason === "not_found") {
         throw new HttpError(404, "Category not found.");
       }
 
-      throw new HttpError(409, "Category cannot be deleted because it is used by one or more meals.");
+      if (result.reason === "replacement_required") {
+        throw new HttpError(409, "Category is used by one or more meals. Choose a replacement category to migrate them first.");
+      }
+
+      throw new HttpError(400, "Replacement category is invalid.");
     }
 
     response.status(204).send();

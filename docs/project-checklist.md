@@ -150,6 +150,7 @@ Next UI focus:
 - [x] Split settings into focused sections for meal slots, categories, and store tags.
 - [x] Move settings add/edit flows into modal dialogs.
 - [x] Move Icon Library out of the default Settings maintenance view.
+- [x] Allow categories to delete with bulk meal migration into a replacement category.
 - [ ] Improve icon search/filtering if the icon library remains large.
 - [ ] Add validation/reporting for categories referencing missing icon IDs.
 - [ ] Decide whether user-uploaded icons are out of scope permanently or deferred.
