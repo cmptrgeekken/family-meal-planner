@@ -38,6 +38,7 @@ export type ApiStoreTag = {
   id: string;
   name: string;
   slug: string;
+  ingredientCount: number;
 };
 
 export type ApiMealIngredient = {
@@ -326,8 +327,20 @@ export function updateStoreTag(storeTagId: string, payload: { name: string; slug
   });
 }
 
-export function deleteStoreTag(storeTagId: string) {
-  return fetch(apiUrl(`/store-tags/${storeTagId}`), {
+export function deleteStoreTag(storeTagId: string, options?: { replacementStoreTagId?: string; clearIngredients?: boolean }) {
+  const params = new URLSearchParams();
+
+  if (options?.replacementStoreTagId) {
+    params.set("replacementStoreTagId", options.replacementStoreTagId);
+  }
+
+  if (options?.clearIngredients) {
+    params.set("clearIngredients", "true");
+  }
+
+  const path = `/store-tags/${storeTagId}${params.toString() ? `?${params.toString()}` : ""}`;
+
+  return fetch(apiUrl(path), {
     method: "DELETE",
   }).then(async (response) => {
     if (response.status === 204) {

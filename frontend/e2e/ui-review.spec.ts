@@ -43,9 +43,9 @@ const meals = [
 ];
 
 const storeTags = [
-  { id: "store_costco", name: "Costco", slug: "costco" },
-  { id: "store_cub", name: "Cub", slug: "cub" },
-  { id: "store_other", name: "Other", slug: "other" },
+  { id: "store_costco", name: "Costco", slug: "costco", ingredientCount: 3 },
+  { id: "store_cub", name: "Cub", slug: "cub", ingredientCount: 2 },
+  { id: "store_other", name: "Other", slug: "other", ingredientCount: 0 },
 ];
 
 const weeklyPlan = {

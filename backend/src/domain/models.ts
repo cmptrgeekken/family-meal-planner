@@ -107,4 +107,5 @@ export type StoreTagRecord = {
   id: string;
   name: string;
   slug: string;
+  ingredientCount: number;
 };

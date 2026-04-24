@@ -22,6 +22,11 @@ const storeTagParamsSchema = z.object({
   storeTagId: z.string().min(1),
 });
 
+const storeTagDeleteQuerySchema = z.object({
+  replacementStoreTagId: z.string().min(1).optional(),
+  clearIngredients: z.coerce.boolean().optional(),
+});
+
 storeTagsRouter.get(
   "/",
   asyncHandler(async (_request, response) => {
@@ -93,14 +98,22 @@ storeTagsRouter.delete(
   "/:storeTagId",
   asyncHandler(async (request, response) => {
     const params = storeTagParamsSchema.parse(request.params);
-    const result = await deleteStoreTag(params.storeTagId);
+    const query = storeTagDeleteQuerySchema.parse(request.query);
+    const result = await deleteStoreTag(params.storeTagId, query.replacementStoreTagId, query.clearIngredients);
 
     if (!result.deleted) {
       if (result.reason === "not_found") {
         throw new HttpError(404, "Store tag not found.");
       }
 
-      throw new HttpError(409, "Store tag cannot be deleted because it is used by one or more ingredients.");
+      if (result.reason === "replacement_required") {
+        throw new HttpError(
+          409,
+          "Store tag is used by one or more ingredients. Choose a replacement tag or clear those ingredient tags first.",
+        );
+      }
+
+      throw new HttpError(400, "Replacement store tag is invalid.");
     }
 
     response.status(204).send();

@@ -65,6 +65,12 @@ type CategoryDeleteState = {
   replacementCategoryId: string;
 };
 
+type StoreTagDeleteState = {
+  storeTagId: string;
+  replacementStoreTagId: string;
+  mode: "replace" | "clear";
+};
+
 type SettingsSection = "plan-slots" | "categories" | "store-tags" | "icon-library";
 
 const emptyStoreTagDraft: StoreTagDraft = {
@@ -268,6 +274,7 @@ export function SettingsScreen() {
   const [categoryDeleteState, setCategoryDeleteState] = useState<CategoryDeleteState | null>(null);
   const [planSlotEditorId, setPlanSlotEditorId] = useState<string | null>(null);
   const [storeTagEditorId, setStoreTagEditorId] = useState<string | null>(null);
+  const [storeTagDeleteState, setStoreTagDeleteState] = useState<StoreTagDeleteState | null>(null);
   const [isCategoryCreateOpen, setIsCategoryCreateOpen] = useState(false);
   const [isPlanSlotCreateOpen, setIsPlanSlotCreateOpen] = useState(false);
   const [isStoreTagCreateOpen, setIsStoreTagCreateOpen] = useState(false);
@@ -389,8 +396,13 @@ export function SettingsScreen() {
     },
   });
   const deleteStoreTagMutation = useMutation({
-    mutationFn: deleteStoreTag,
+    mutationFn: (payload: { storeTagId: string; replacementStoreTagId?: string; clearIngredients?: boolean }) =>
+      deleteStoreTag(payload.storeTagId, {
+        replacementStoreTagId: payload.replacementStoreTagId,
+        clearIngredients: payload.clearIngredients,
+      }),
     onSuccess: () => {
+      setStoreTagDeleteState(null);
       void queryClient.invalidateQueries({ queryKey: ["store-tags"] });
       void queryClient.invalidateQueries({ queryKey: ["meals"] });
     },
@@ -606,6 +618,39 @@ export function SettingsScreen() {
     });
   }
 
+  function openStoreTagDeleteModal(storeTag: ApiStoreTag) {
+    setStoreTagDeleteState({
+      storeTagId: storeTag.id,
+      replacementStoreTagId: "",
+      mode: "replace",
+    });
+  }
+
+  function handleDeleteStoreTag() {
+    if (!storeTagDeleteState) {
+      return;
+    }
+
+    const storeTag = storeTags.find((entry) => entry.id === storeTagDeleteState.storeTagId);
+
+    if (!storeTag) {
+      return;
+    }
+
+    if (storeTag.ingredientCount > 0 && storeTagDeleteState.mode === "replace" && !storeTagDeleteState.replacementStoreTagId) {
+      return;
+    }
+
+    deleteStoreTagMutation.mutate({
+      storeTagId: storeTag.id,
+      replacementStoreTagId:
+        storeTag.ingredientCount > 0 && storeTagDeleteState.mode === "replace"
+          ? storeTagDeleteState.replacementStoreTagId
+          : undefined,
+      clearIngredients: storeTag.ingredientCount > 0 && storeTagDeleteState.mode === "clear",
+    });
+  }
+
   function handleSavePlanSlot(planSlot: ApiPlanSlot) {
     const draft = getPlanSlotDraft(planSlot, planSlotDrafts);
 
@@ -668,10 +713,14 @@ export function SettingsScreen() {
     : null;
   const editingPlanSlot = planSlotEditorId ? planSlots.find((planSlot) => planSlot.id === planSlotEditorId) ?? null : null;
   const editingStoreTag = storeTagEditorId ? storeTags.find((storeTag) => storeTag.id === storeTagEditorId) ?? null : null;
+  const deletingStoreTag = storeTagDeleteState
+    ? storeTags.find((storeTag) => storeTag.id === storeTagDeleteState.storeTagId) ?? null
+    : null;
   const editingCategoryDraft = editingCategory ? getCategoryDraft(editingCategory, categoryDrafts) : null;
   const editingPlanSlotDraft = editingPlanSlot ? getPlanSlotDraft(editingPlanSlot, planSlotDrafts) : null;
   const editingStoreTagDraft = editingStoreTag ? getStoreTagDraft(editingStoreTag, storeTagDrafts) : null;
   const categoryDeleteOptions = deletingCategory ? categories.filter((category) => category.id !== deletingCategory.id) : [];
+  const storeTagDeleteOptions = deletingStoreTag ? storeTags.filter((storeTag) => storeTag.id !== deletingStoreTag.id) : [];
   const settingsSections: Array<{ id: SettingsSection; label: string }> = [
     { id: "categories", label: "Categories" },
     { id: "plan-slots", label: "Meal Slots" },
@@ -857,6 +906,11 @@ export function SettingsScreen() {
                       <span className="muted-text">/{storeTag.slug}</span>
                     </div>
                   </div>
+                  <div className="settings-record-meta">
+                    <span className="pill-muted">
+                      {storeTag.ingredientCount} {storeTag.ingredientCount === 1 ? "ingredient" : "ingredients"}
+                    </span>
+                  </div>
                   <div className="category-editor-actions">
                     <button type="button" className="secondary-button" onClick={() => setStoreTagEditorId(storeTag.id)}>
                       Edit
@@ -865,11 +919,7 @@ export function SettingsScreen() {
                       type="button"
                       className="secondary-button danger-button"
                       disabled={isStoreTagMutationPending}
-                      onClick={() => {
-                        if (window.confirm(`Delete "${storeTag.name}"? Store tags used by ingredients cannot be deleted.`)) {
-                          deleteStoreTagMutation.mutate(storeTag.id);
-                        }
-                      }}
+                      onClick={() => openStoreTagDeleteModal(storeTag)}
                     >
                       Delete
                     </button>
@@ -1340,6 +1390,124 @@ export function SettingsScreen() {
               </button>
             </div>
           </form>
+        ) : null}
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(deletingStoreTag && storeTagDeleteState)}
+        title="Delete Store Tag"
+        description={
+          deletingStoreTag?.ingredientCount
+            ? "Reassign ingredient references or clear them before deleting this tag."
+            : "Delete this store tag now that nothing is using it."
+        }
+        onClose={() => setStoreTagDeleteState(null)}
+      >
+        {deletingStoreTag ? (
+          <div className="category-editor-form">
+            <p>
+              <strong>{deletingStoreTag.name}</strong> is used by{" "}
+              <strong>{deletingStoreTag.ingredientCount}</strong>{" "}
+              {deletingStoreTag.ingredientCount === 1 ? "ingredient" : "ingredients"}.
+            </p>
+            {deletingStoreTag.ingredientCount > 0 ? (
+              <>
+                <fieldset className="settings-fieldset">
+                  <legend>Delete behavior</legend>
+                  <div className="slot-checkbox-grid">
+                    <label className="checkbox-row">
+                      <input
+                        type="radio"
+                        name="store-tag-delete-mode"
+                        checked={storeTagDeleteState?.mode === "replace"}
+                        onChange={() =>
+                          setStoreTagDeleteState((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  mode: "replace",
+                                }
+                              : current,
+                          )
+                        }
+                      />
+                      <span>Move ingredients to another store tag</span>
+                    </label>
+                    <label className="checkbox-row">
+                      <input
+                        type="radio"
+                        name="store-tag-delete-mode"
+                        checked={storeTagDeleteState?.mode === "clear"}
+                        onChange={() =>
+                          setStoreTagDeleteState((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  mode: "clear",
+                                }
+                              : current,
+                          )
+                        }
+                      />
+                      <span>Clear the store tag on those ingredients</span>
+                    </label>
+                  </div>
+                </fieldset>
+                {storeTagDeleteState?.mode === "replace" ? (
+                  <label>
+                    <span>Replacement store tag</span>
+                    <select
+                      value={storeTagDeleteState?.replacementStoreTagId ?? ""}
+                      onChange={(event) =>
+                        setStoreTagDeleteState((current) =>
+                          current
+                            ? {
+                                ...current,
+                                replacementStoreTagId: event.target.value,
+                              }
+                            : current,
+                        )
+                      }
+                    >
+                      <option value="">Choose a replacement store tag</option>
+                      {storeTagDeleteOptions.map((storeTag) => (
+                        <option key={storeTag.id} value={storeTag.id}>
+                          {storeTag.name} ({storeTag.ingredientCount} {storeTag.ingredientCount === 1 ? "ingredient" : "ingredients"})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <p className="muted-text">Ingredients will remain usable, but their store tag reference will be cleared.</p>
+                )}
+              </>
+            ) : (
+              <p className="muted-text">No ingredient references need to be changed before deletion.</p>
+            )}
+            {storeTagErrorMessage ? <p className="form-error-text">{storeTagErrorMessage}</p> : null}
+            <div className="category-editor-actions">
+              <button
+                type="button"
+                className="primary-button"
+                disabled={
+                  isStoreTagMutationPending ||
+                  (deletingStoreTag.ingredientCount > 0 &&
+                    storeTagDeleteState?.mode === "replace" &&
+                    !storeTagDeleteState?.replacementStoreTagId)
+                }
+                onClick={handleDeleteStoreTag}
+              >
+                {deletingStoreTag.ingredientCount > 0
+                  ? storeTagDeleteState?.mode === "replace"
+                    ? "Move ingredients and delete tag"
+                    : "Clear ingredients and delete tag"
+                  : "Delete store tag"}
+              </button>
+              <button type="button" className="secondary-button" onClick={() => setStoreTagDeleteState(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
         ) : null}
       </Modal>
     </div>
