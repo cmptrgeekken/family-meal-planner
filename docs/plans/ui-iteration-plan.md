@@ -5,6 +5,21 @@
 This document defines the next UI cleanup pass for the Family Meal Planner app.
 It is intentionally prescriptive. The goal is to remove ambiguity before implementation starts.
 
+## Status
+
+The first major cleanup pass has landed across the desktop shell, meals, settings, grocery, planner, and magnet export screens.
+
+Implemented from this plan:
+
+- compact desktop shell with sticky desktop navigation
+- meals modal add/edit flow with full-width browsing
+- settings section navigation with modal maintenance flows
+- icon library moved out of the default settings maintenance view
+- first desktop planner density pass with day-by-slot scanning improvements
+- ongoing Playwright screenshot review for core screens
+
+What remains is follow-up polish rather than first-pass structure work.
+
 ## Problem Statement
 
 Playwright desktop screenshots showed that the app is now carrying significantly more content than its original mobile-first stacked layouts can comfortably support.
@@ -129,20 +144,16 @@ This order is now fixed for the next iteration cycle:
 4. Move Icon Library into its own Settings subsection.
 5. Refactor the planner into a desktop week grid.
 
-## Scope For The First Build Slice
+## Completed Slices
 
-The first implementation slice will include:
+Completed slices so far:
 
 1. compact desktop app shell
 2. Meals screen modal editing
-3. Playwright before/after screenshot comparison
-
-This is the first slice because it addresses the clearest workflow failure:
-
-- users browse meals in one place
-- they click `Edit`
-- they should edit immediately
-- they should not have to relocate themselves on the page
+3. Settings sectioning and modal maintenance flows
+4. Icon Library moved into its own Settings subsection
+5. first desktop planner density pass
+6. desktop polish passes for grocery and magnet export
 
 ## Acceptance Criteria
 
@@ -170,6 +181,25 @@ This is the first slice because it addresses the clearest workflow failure:
 
 - desktop week planning becomes more scannable than the current stacked-card layout
 - a user can visually compare multiple days without scrolling through repeated tall sections
+
+## Remaining UI Work
+
+The next UI steps are now narrower and more concrete:
+
+1. Planner interaction polish:
+   - reduce remaining vertical space inside populated slot cells
+   - make category and meal editing in a cell feel faster than the current stacked controls
+   - review the command bar and preview relationship after more real-data usage
+2. Navigation polish:
+   - revisit active-page highlighting in both expanded and compact sticky-nav states
+3. Settings follow-up polish:
+   - improve icon search/filtering if the icon library keeps growing
+   - add missing-icon validation/reporting
+4. Meals follow-up polish:
+   - add regression coverage around modal editing and ingredient interactions
+5. Cross-screen quality pass:
+   - richer loading, empty, and error states where screens still feel thin
+   - manual QA notes for the most visually sensitive workflows
 
 ## Validation
 

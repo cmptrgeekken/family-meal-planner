@@ -1,6 +1,6 @@
 # Family Meal Planner
 
-Family Meal Planner is a self-hosted app for answering "what's for dinner?" with less friction. It helps families maintain a meal catalog, build weekly dinner plans, involve kids through visual category choices, and generate grocery lists that are useful in a real shopping trip.
+Family Meal Planner is a self-hosted app for answering "what's for dinner?" with less friction. It helps families maintain a meal catalog, build weekly meal plans across configurable planning slots, involve kids through visual category choices, and generate grocery lists that are useful in a real shopping trip.
 
 The project is past initial scaffolding. The current app includes a React frontend, an Express/Prisma backend, PostgreSQL persistence, seeded starter data, backend test coverage, and Docker-oriented local development.
 
@@ -10,12 +10,14 @@ Implemented core flows:
 
 - Parent-managed meal categories, including icon assignment.
 - Meal create/edit/delete with category, cost tier, kid favorite, low effort, notes, ingredients, quantities, and store tags.
-- Dinner-first weekly planning with save, replace, and remove actions.
+- Configurable Breakfast/Lunch/Dinner-style planning slots with saved weekly plans, replace/remove actions, and category eligibility by slot.
 - Grocery generation from current or saved weekly plans, including deduplication, grouping, store tags, quantities, used-in diagnostics, and a persistent shopping checklist.
+- Grocery filtering by selected meal slots.
 - Child-friendly category/meal selection views.
 - Category magnet/button SVG and PNG export using curated frontend icon assets.
+- Desktop UI cleanup work has landed across the app shell, meals, settings, grocery, planner, and magnet export surfaces.
 
-Important remaining work is tracked in [docs/project-checklist.md](docs/project-checklist.md). Near-term themes include mobile/tablet usability polish, frontend interaction/E2E tests, production self-hosting docs, API error consistency, and magnet export refactoring/tests.
+Important remaining work is tracked in [docs/project-checklist.md](docs/project-checklist.md). Near-term themes include planner interaction polish, docs/checklist cleanup as UI work lands, API error consistency, stronger E2E coverage for top workflows, and follow-up export testing.
 
 ## Developer Starting Points
 
@@ -151,13 +153,14 @@ cd frontend
 npm run dev
 npm run typecheck
 npm run build
+npm run test:e2e
 ```
 
 ## Testing
 
-Backend tests are the strongest automated coverage today. `npm test` from `backend/` starts the dedicated `db-test` container, generates Prisma client code, applies migrations, seeds test data, runs Vitest, and stops the test database afterward.
+Backend tests are still the strongest automated coverage today. `npm test` from `backend/` starts the dedicated `db-test` container, generates Prisma client code, applies migrations, seeds test data, runs Vitest, and stops the test database afterward.
 
-Frontend TypeScript validation currently runs through the frontend build/typecheck scripts. Focused component tests and E2E coverage are still open checklist items.
+Frontend validation now includes TypeScript/build checks plus a Playwright UI review harness. The current Playwright coverage includes full-page desktop screenshots for the core screens and a focused planner interaction test using mocked API data.
 
 Before considering meaningful code done, run the checks relevant to the changed area and note anything that could not be verified.
 
@@ -170,7 +173,7 @@ Current model highlights:
 - Categories are data-driven and can reference a stable frontend `iconId`.
 - Store tags are first-class records used by ingredients.
 - Meals own meal-specific ingredient quantities through the join table.
-- Weekly planning is dinner-first, but API/domain shapes include `slot` so future meal occasions can be added deliberately.
+- Weekly planning is slot-aware, with configurable plan slots and per-slot category eligibility.
 - Grocery generation deduplicates ingredients from selected meals and keeps enough context to explain why each item appears.
 
 ## Working Agreements

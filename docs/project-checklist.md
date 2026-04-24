@@ -23,7 +23,7 @@ Next major planning expansion:
 
 Next UI focus:
 
-- [ ] Iterate on desktop layout, modal editing, settings organization, and planner density. See [plans/ui-iteration-plan.md](plans/ui-iteration-plan.md).
+- [ ] Continue UI polish after the first desktop/modal/settings/planner cleanup pass. See [plans/ui-iteration-plan.md](plans/ui-iteration-plan.md).
 
 ## MVP Critical Path
 
@@ -86,8 +86,8 @@ Next UI focus:
 - [x] Shared section, empty-state, and status-message components exist.
 - [x] Frontend build uses `@vitejs/plugin-react`.
 - [x] Review mobile/tablet ergonomics for meal management, weekly planning, and grocery flows.
-- [ ] Add desktop-specific app shell layout so internal screens use width efficiently.
-- [ ] Reduce the oversized internal header treatment on desktop.
+- [x] Add desktop-specific app shell layout so internal screens use width efficiently.
+- [x] Reduce the oversized internal header treatment on desktop.
 - [ ] Revisit active-page highlighting in the desktop primary navigation after the planner density pass.
 - [ ] Add richer loading, empty, and error states where screens are still thin.
 - [ ] Add accessible keyboard alternatives for any future drag/drop interactions.
@@ -101,7 +101,7 @@ Next UI focus:
 - [x] Add frontend meal create/edit/delete UI.
 - [x] Add parent-friendly ingredient editing.
 - [x] Add meal filtering/search beyond the current basic presentation.
-- [ ] Move meal add/edit flows into modal dialogs so list browsing remains full-width and editing does not require scrolling to the top.
+- [x] Move meal add/edit flows into modal dialogs so list browsing remains full-width and editing does not require scrolling to the top.
 - [ ] Add regression coverage for frontend meal interactions once editing exists.
 
 ## Weekly Planning
@@ -119,7 +119,7 @@ Next UI focus:
 - [x] Add configurable category weekly minimum/maximum counts.
 - [x] Disable or visually cross out category choices that have reached their weekly maximum.
 - [ ] Add fast parent weekly planning workflow polish.
-- [ ] Explore a desktop planner grid with days as rows and meal slots as columns.
+- [x] Explore a desktop planner grid with days as rows and meal slots as columns.
 - [ ] Add child-friendly visual meal picker/magnet board interactions. Category buttons exist; drag/drop magnet board remains deferred.
 - [x] Add non-drag accessible alternatives for assigning meals.
 - [x] Add visible rule explanations when a planning choice is blocked.
@@ -146,9 +146,9 @@ Next UI focus:
 - [x] Category icon assignments persist through the API.
 - [x] Add meal slot management.
 - [x] Add category-to-slot assignment.
-- [ ] Split settings into focused sections for meal slots, categories, and store tags.
-- [ ] Move settings add/edit flows into modal dialogs.
-- [ ] Move Icon Library out of the default Settings maintenance view.
+- [x] Split settings into focused sections for meal slots, categories, and store tags.
+- [x] Move settings add/edit flows into modal dialogs.
+- [x] Move Icon Library out of the default Settings maintenance view.
 - [ ] Improve icon search/filtering if the icon library remains large.
 - [ ] Add validation/reporting for categories referencing missing icon IDs.
 - [ ] Decide whether user-uploaded icons are out of scope permanently or deferred.
@@ -202,7 +202,7 @@ Deferred export ideas:
 - [x] Frontend TypeScript build check runs through the frontend build script.
 - [x] Dev/test scripts generate Prisma client before using it.
 - [x] Add focused frontend component or interaction tests.
-- [ ] Add E2E coverage for the highest-value flows.
+- [ ] Add broader E2E coverage for the highest-value flows. A Playwright screenshot harness and a focused planner interaction test already exist.
 - [x] Add regression tests for magnet export layout and generated SVG structure. Browser-level download behavior remains open.
 - [ ] Add linting if the project standardizes on a linter.
 - [ ] Add CI once repository hosting/branch workflow is settled.
