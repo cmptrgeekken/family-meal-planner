@@ -1440,22 +1440,83 @@ button:disabled {
 .grocery-item {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.85rem;
-  align-items: start;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.7rem;
 }
 
 .grocery-item-copy {
+  display: grid;
+  gap: 0.15rem;
   min-width: 0;
 }
 
-.grocery-store-tag {
-  grid-column: 2;
-  justify-self: start;
-  padding: 0.35rem 0.55rem;
+.grocery-item-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.grocery-info-button {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 1.35rem;
+  height: 1.35rem;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(85, 124, 153, 0.24);
   border-radius: 999px;
-  background: rgba(110, 141, 103, 0.1);
-  color: var(--accent-green);
-  text-align: left;
+  background: rgba(85, 124, 153, 0.1);
+  color: var(--accent-blue);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.grocery-store-list,
+.grocery-aisle-list,
+.grocery-group-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.grocery-store-section {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(112, 78, 44, 0.16);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.grocery-store-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.grocery-store-heading h3,
+.grocery-aisle-section h4 {
+  margin: 0;
+}
+
+.grocery-store-heading h3 {
+  font-size: 1.08rem;
+}
+
+.grocery-aisle-section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.grocery-aisle-section h4 {
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .grocery-progress-bar {
@@ -1500,10 +1561,6 @@ button:disabled {
   font-size: 0.88rem;
 }
 
-.grocery-item-grid {
-  align-items: start;
-}
-
 .slot-filter-row {
   display: flex;
   flex-wrap: wrap;
@@ -1520,22 +1577,6 @@ button:disabled {
   width: 1rem;
   height: 1rem;
   accent-color: var(--accent);
-}
-
-.grocery-diagnostics {
-  margin-top: 0.5rem;
-  color: var(--muted);
-  font-size: 0.86rem;
-}
-
-.grocery-diagnostics summary {
-  cursor: pointer;
-  color: var(--accent-blue);
-  font-weight: 700;
-}
-
-.grocery-diagnostics p {
-  margin-top: 0.35rem;
 }
 
 .grocery-item-checked {
@@ -1948,19 +1989,9 @@ button:disabled {
     backdrop-filter: none;
   }
 
-  .grocery-item {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-  }
-
-  .grocery-item-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .grocery-store-tag {
-    grid-column: auto;
-    justify-self: end;
-    text-align: right;
+  .grocery-aisle-list {
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    align-items: start;
   }
 
   .ingredient-editor-row {

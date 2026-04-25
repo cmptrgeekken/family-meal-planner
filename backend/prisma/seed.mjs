@@ -14,7 +14,7 @@ const categories = [
   { name: "Pasta", slug: "pasta-night", legacySlug: "pasta", iconId: "168", slotSlugs: ["lunch", "dinner"] },
   { name: "Rice Bowls", slug: "rice-bowls", iconId: "115", slotSlugs: ["lunch", "dinner"] },
   {
-    name: "Grill & Hot Dogs",
+    name: "Grill",
     slug: "grill-night",
     legacySlug: "ground-meat",
     iconId: "ai-grill",
@@ -44,7 +44,7 @@ const categories = [
     slotSlugs: ["breakfast", "lunch", "dinner"],
   },
   { name: "Pizza", slug: "pizza-night", iconId: "178", slotSlugs: ["lunch", "dinner"] },
-  { name: "Easy Dinner", slug: "easy-dinner", legacySlug: "fun-zero-cook", iconId: "ai-takeout", slotSlugs: ["dinner"] },
+  { name: "Takeout", slug: "takeout", legacySlug: "fun-zero-cook", iconId: "ai-takeout", slotSlugs: ["dinner"] },
   { name: "One-Pot Meal", slug: "one-pot-meal", iconId: "117", slotSlugs: ["dinner"] },
   {
     name: "Special Dinner",
@@ -228,7 +228,7 @@ const meals = [
   {
     name: "Frozen Dumpling Dinner",
     slug: "frozen-dumpling-dinner",
-    categorySlug: "easy-dinner",
+    categorySlug: "takeout",
     costTier: CostTier.STANDARD,
     kidFavorite: true,
     lowEffort: true,

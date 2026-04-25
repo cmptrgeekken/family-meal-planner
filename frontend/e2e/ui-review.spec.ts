@@ -66,7 +66,7 @@ const groceryList = [
   groceryItem("Bread", "carb", ["1 loaf"], ["Turkey & Cheese Sandwich"], weeklyPlan.selections[1]),
   groceryItem("Rice", "carb", ["2 cups"], ["Soy Chicken Rice Bowl"], weeklyPlan.selections[4]),
   groceryItem("Spaghetti", "carb", ["1 box"], ["Spaghetti Night"], weeklyPlan.selections[2]),
-  groceryItem("Chicken Nuggets", "protein", ["1 bag"], ["Chicken Nugget Night"], weeklyPlan.selections[5]),
+  groceryItem("Chicken Nuggets", "protein", ["1 bag"], ["Chicken Nugget Night"], weeklyPlan.selections[5], ["Cub"]),
 ];
 
 test.beforeEach(async ({ page }) => {
@@ -140,6 +140,25 @@ test("uses category-first planning and shows preview feedback in a modal", async
   await expect(page.locator('input[type="date"]').first()).toHaveValue("2026-05-04");
 });
 
+test("shows configured grocery filters and groups shopping items by store and ingredient group", async ({ page }) => {
+  await page.goto("/grocery");
+
+  await expect(page.getByLabel("Grocery meal slot filters").getByText("Breakfast")).toBeVisible();
+  await expect(page.getByLabel("Grocery meal slot filters").getByText("Lunch")).toBeVisible();
+  await expect(page.getByLabel("Grocery meal slot filters").getByText("Dinner")).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: "Costco" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Cub" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Carbs" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Protein" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Why Spaghetti is on the list" })).toBeVisible();
+  await expect(page.getByText("Why is this here?")).toHaveCount(0);
+
+  await page.getByLabel("Grocery meal slot filters").getByText("Dinner").click();
+  await expect(page.getByText("Spaghetti")).toHaveCount(0);
+  await expect(page.getByText("Pancake Mix", { exact: true })).toBeVisible();
+});
+
 function meal(
   id: string,
   slug: string,
@@ -174,12 +193,13 @@ function groceryItem(
   quantityLabels: string[],
   usedInMeals: string[],
   selection: { day: string; slot: string; slotSlug: string; mealId: string },
+  storeTags = ["Costco"],
 ) {
   return {
     name,
     group,
     quantityLabels,
-    storeTags: ["Costco"],
+    storeTags,
     usedInMeals,
     usedIn: [
       {

@@ -4,11 +4,30 @@ import { useQuery } from "@tanstack/react-query";
 import { EmptyState } from "../../components/EmptyState";
 import { SectionCard } from "../../components/SectionCard";
 import { StatusMessage } from "../../components/StatusMessage";
-import { getPlanSlots, getWeeklyPlan, type ApiPlanSlot, type ApiWeeklyPlan } from "../shared/api";
+import { getPlanSlots, getWeeklyPlan, type ApiGroceryListItem, type ApiPlanSlot, type ApiWeeklyPlan } from "../shared/api";
 
 type GroceryScreenProps = {
   weekStartDate: string;
 };
+
+type GroceryStoreSection = {
+  storeName: string;
+  itemCount: number;
+  groups: Array<{
+    group: ApiGroceryListItem["group"];
+    items: ApiGroceryListItem[];
+  }>;
+};
+
+const groceryGroupLabels: Record<ApiGroceryListItem["group"], string> = {
+  protein: "Protein",
+  carb: "Carbs",
+  veg: "Vegetables",
+  fruit: "Fruit",
+  extras: "Extras",
+};
+
+const groceryGroupOrder = Object.keys(groceryGroupLabels) as Array<ApiGroceryListItem["group"]>;
 
 export function GroceryScreen({ weekStartDate }: GroceryScreenProps) {
   const [selectedSlotSlugs, setSelectedSlotSlugs] = useState<Set<string>>(new Set());
@@ -40,7 +59,7 @@ export function GroceryScreen({ weekStartDate }: GroceryScreenProps) {
   });
   const groceryList = groceryQuery.data?.groceryList ?? [];
   const checkedCount = groceryList.filter((item) => checkedItems.has(getGroceryItemKey(item.group, item.name))).length;
-  const groceryGroups = useMemo(() => Array.from(new Set(groceryList.map((item) => item.group))), [groceryList]);
+  const groceryStoreSections = useMemo(() => getGroceryStoreSections(groceryList), [groceryList]);
 
   useEffect(() => {
     setSelectedSlotSlugs(new Set());
@@ -177,8 +196,8 @@ export function GroceryScreen({ weekStartDate }: GroceryScreenProps) {
                 <span>{checkedCount === 1 ? "item checked" : "items checked"}</span>
               </div>
               <div className="grocery-summary-card">
-                <strong>{groceryGroups.length}</strong>
-                <span>{groceryGroups.length === 1 ? "ingredient group" : "ingredient groups"}</span>
+                <strong>{groceryStoreSections.length}</strong>
+                <span>{groceryStoreSections.length === 1 ? "store section" : "store sections"}</span>
               </div>
               <div className="grocery-summary-card">
                 <strong>{selectedSlotSlugs.size}</strong>
@@ -188,34 +207,56 @@ export function GroceryScreen({ weekStartDate }: GroceryScreenProps) {
             <div className="grocery-progress-bar" aria-hidden="true">
               <span style={{ width: `${groceryList.length === 0 ? 0 : (checkedCount / groceryList.length) * 100}%` }} />
             </div>
-            <div className="grocery-group-list grocery-item-grid">
-              {groceryList.map((item) => {
-                const itemKey = getGroceryItemKey(item.group, item.name);
-                const isChecked = checkedItems.has(itemKey);
+            <div className="grocery-store-list">
+              {groceryStoreSections.map((storeSection) => {
+                const storeHeadingId = `store-${storeSection.storeName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
                 return (
-                  <article key={itemKey} className={isChecked ? "grocery-item grocery-item-checked" : "grocery-item"}>
-                    <label className="shopping-check">
-                      <input type="checkbox" checked={isChecked} onChange={() => toggleCheckedItem(itemKey)} />
-                      <span className="sr-only">Mark {item.name} as shopped</span>
-                    </label>
-                    <div className="grocery-item-copy">
-                      <strong>{item.name}</strong>
-                      <p>
-                        {item.group}
-                        {item.quantityLabels.length > 0 ? ` - ${item.quantityLabels.join(", ")}` : ""}
-                      </p>
-                      <p className="muted-text">{getUsageSummary(item.usedIn)}</p>
-                      <details className="grocery-diagnostics">
-                        <summary>Why is this here?</summary>
-                        <p>
-                          Included because {formatUsageList(item.usedIn)} use {item.name}
-                          {item.quantityLabels.length > 0 ? ` (${item.quantityLabels.join(", ")})` : ""}.
-                        </p>
-                      </details>
+                  <section key={storeSection.storeName} className="grocery-store-section" aria-labelledby={storeHeadingId}>
+                    <div className="grocery-store-heading">
+                      <h3 id={storeHeadingId}>{storeSection.storeName}</h3>
+                      <span className="pill-muted">
+                        {storeSection.itemCount} {storeSection.itemCount === 1 ? "item" : "items"}
+                      </span>
                     </div>
-                    <small className="grocery-store-tag">{item.storeTags.join(", ") || "Unassigned store"}</small>
-                  </article>
+                    <div className="grocery-aisle-list">
+                      {storeSection.groups.map((groupSection) => (
+                        <section key={`${storeSection.storeName}-${groupSection.group}`} className="grocery-aisle-section">
+                          <h4>{groceryGroupLabels[groupSection.group]}</h4>
+                          <div className="grocery-group-list">
+                            {groupSection.items.map((item) => {
+                              const itemKey = getGroceryItemKey(item.group, item.name);
+                              const isChecked = checkedItems.has(itemKey);
+                              const usageDetails = getUsageDetails(item);
+
+                              return (
+                                <article key={itemKey} className={isChecked ? "grocery-item grocery-item-checked" : "grocery-item"}>
+                                  <label className="shopping-check">
+                                    <input type="checkbox" checked={isChecked} onChange={() => toggleCheckedItem(itemKey)} />
+                                    <span className="sr-only">Mark {item.name} as shopped</span>
+                                  </label>
+                                  <div className="grocery-item-copy">
+                                    <div className="grocery-item-title-row">
+                                      <strong>{item.name}</strong>
+                                      <button
+                                        type="button"
+                                        className="grocery-info-button"
+                                        title={usageDetails}
+                                        aria-label={`Why ${item.name} is on the list`}
+                                      >
+                                        ?
+                                      </button>
+                                    </div>
+                                    <p>{item.quantityLabels.length > 0 ? item.quantityLabels.join(", ") : "Quantity as needed"}</p>
+                                  </div>
+                                </article>
+                              );
+                            })}
+                          </div>
+                        </section>
+                      ))}
+                    </div>
+                  </section>
                 );
               })}
             </div>
@@ -230,31 +271,102 @@ function getGroceryItemKey(group: string, name: string) {
   return `${group}:${name}`;
 }
 
-function getGrocerySlotOptions(planSlots: ApiPlanSlot[], weeklyPlan?: ApiWeeklyPlan) {
+export function getGrocerySlotOptions(planSlots: ApiPlanSlot[], weeklyPlan?: ApiWeeklyPlan) {
   if (!weeklyPlan) {
     return [];
   }
 
   const slotBySlug = new Map(planSlots.map((slot) => [slot.slug, slot]));
-  const slotOptions = new Map<string, { slug: string; name: string; sortOrder: number }>();
+  const slotOptions = new Map<string, { slug: string; name: string; sortOrder: number; isEnabled: boolean }>();
+
+  for (const slot of planSlots) {
+    if (!slot.isEnabled) {
+      continue;
+    }
+
+    slotOptions.set(slot.slug, {
+      slug: slot.slug,
+      name: slot.name,
+      sortOrder: slot.sortOrder,
+      isEnabled: slot.isEnabled,
+    });
+  }
 
   for (const selection of weeklyPlan.selections) {
     const slot = slotBySlug.get(selection.slotSlug);
-    slotOptions.set(selection.slotSlug, {
-      slug: selection.slotSlug,
-      name: slot?.name ?? selection.slot,
-      sortOrder: slot?.sortOrder ?? Number.MAX_SAFE_INTEGER,
-    });
+    if (!slotOptions.has(selection.slotSlug)) {
+      slotOptions.set(selection.slotSlug, {
+        slug: selection.slotSlug,
+        name: slot?.name ?? selection.slot,
+        sortOrder: slot?.sortOrder ?? Number.MAX_SAFE_INTEGER,
+        isEnabled: slot?.isEnabled ?? false,
+      });
+    }
   }
 
   return [...slotOptions.values()].sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
 }
 
-function getUsageSummary(usedIn: Array<{ day: string; slotName: string; mealName: string }>) {
-  const slotNames = [...new Set(usedIn.map((usage) => usage.slotName))];
-  const mealText = usedIn.length === 1 ? "1 meal" : `${usedIn.length} meals`;
+export function getGroceryStoreSections(groceryList: ApiGroceryListItem[]): GroceryStoreSection[] {
+  const stores = new Map<string, Map<ApiGroceryListItem["group"], ApiGroceryListItem[]>>();
 
-  return `Used in ${mealText}${slotNames.length > 0 ? ` across ${slotNames.join(", ")}` : ""}.`;
+  for (const item of groceryList) {
+    const storeName = getStoreSectionName(item.storeTags);
+    const storeGroups = stores.get(storeName) ?? new Map<ApiGroceryListItem["group"], ApiGroceryListItem[]>();
+    const groupItems = storeGroups.get(item.group) ?? [];
+
+    storeGroups.set(item.group, [...groupItems, item]);
+    stores.set(storeName, storeGroups);
+  }
+
+  return [...stores.entries()]
+    .sort(([left], [right]) => compareStoreNames(left, right))
+    .map(([storeName, groups]) => ({
+      storeName,
+      itemCount: [...groups.values()].reduce((count, items) => count + items.length, 0),
+      groups: [...groups.entries()]
+        .sort(([left], [right]) => groceryGroupOrder.indexOf(left) - groceryGroupOrder.indexOf(right))
+        .map(([group, items]) => ({
+          group,
+          items: [...items].sort((left, right) => left.name.localeCompare(right.name)),
+        })),
+    }));
+}
+
+function getStoreSectionName(storeTags: string[]) {
+  if (storeTags.length === 0) {
+    return "Unassigned store";
+  }
+
+  if (storeTags.length > 1) {
+    return "Multiple stores";
+  }
+
+  return storeTags[0] ?? "Unassigned store";
+}
+
+function compareStoreNames(left: string, right: string) {
+  if (left === "Unassigned store") {
+    return 1;
+  }
+
+  if (right === "Unassigned store") {
+    return -1;
+  }
+
+  if (left === "Multiple stores") {
+    return 1;
+  }
+
+  if (right === "Multiple stores") {
+    return -1;
+  }
+
+  return left.localeCompare(right);
+}
+
+function getUsageDetails(item: ApiGroceryListItem) {
+  return `Included for ${formatUsageList(item.usedIn)}${item.quantityLabels.length > 0 ? ` (${item.quantityLabels.join(", ")})` : ""}.`;
 }
 
 function formatUsageList(usedIn: Array<{ day: string; slotName: string; mealName: string }>) {

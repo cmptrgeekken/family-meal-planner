@@ -224,3 +224,11 @@ Deferred export ideas:
 - [x] Document backup and restore expectations for local PostgreSQL data.
 - [x] Add setup, deployment, backup, and troubleshooting docs as the self-hosting story matures.
 - [ ] Add manual QA notes for complex visual/export workflows.
+
+## Undocumented Features (Review and Prioritize These)
+- [ ] Ability to assign meals to meal slots not just categories. I like the reduced category set, but, e.g., I may want meals within categories to only show up within certain meal slots. This could be especially relevant for a Takeout / Restaurant category where the restaurants are only relevant for certain times of day.
+- [ ] Customizable ingredient groups, perhaps even linking to stores and store aisles. This would require some fleshing out and understandably could become more complicated than necessary.
+- [ ] First-class ingredients. Ingredients can still be added to meals by typing, but autocomplete kicks in and surfaces existing ingredients. Saving the meals will persist any ingredients not already defined.
+  - [ ] When specifying an ingredient, it can live in multiple stores, with different groups per store
+- [ ] An import / export feature would be handy, especially for exporting grocery lists. We should research common formats for that. Importing from common platforms or as plain-text input would be handy
+  - [ ] We could explore incorporating ChatGPT API's to parse the recipes and such into a structure import format. Note that I don't have a desire to turn this into an entire recipe management system.
