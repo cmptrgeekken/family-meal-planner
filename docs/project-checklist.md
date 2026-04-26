@@ -60,6 +60,8 @@ Next UI focus:
 - [x] Category records can store stable `iconId` values.
 - [x] Store tag options are modeled separately from ingredients.
 - [x] Add create/update/delete flows for all core records that need parent editing. Category, meal, meal-ingredient, and store-tag UI exists.
+- [ ] Add household-scoped data ownership with a default household. See [decisions/004-household-scoped-data-ownership.md](decisions/004-household-scoped-data-ownership.md).
+- [ ] Persist grocery checklist state in the database instead of browser local storage. See [decisions/005-database-backed-grocery-checklist-state.md](decisions/005-database-backed-grocery-checklist-state.md).
 - [ ] Add migration/backfill guidance once real user data exists.
 - [ ] Decide whether category display names and print labels should be separate fields.
 
@@ -77,7 +79,8 @@ Next UI focus:
 - [x] Server-side validation exists around API inputs.
 - [x] Add explicit API documentation updates for all current route contracts.
 - [ ] Add error response consistency review across all routes.
-- [ ] Add authentication/authorization only when multi-user household support becomes in scope.
+- [ ] Add default-household request/repository scoping before full multi-user authentication.
+- [ ] Add authentication/authorization only when multi-user household support or externally hosted access becomes in scope. See [decisions/007-authentication-and-hosted-access-posture.md](decisions/007-authentication-and-hosted-access-posture.md).
 
 ## Frontend App Shell
 
@@ -102,6 +105,7 @@ Next UI focus:
 - [x] Add parent-friendly ingredient editing.
 - [x] Add meal filtering/search beyond the current basic presentation.
 - [x] Move meal add/edit flows into modal dialogs so list browsing remains full-width and editing does not require scrolling to the top.
+- [ ] Improve fast-entry ingredient reuse with autocomplete and lightweight cleanup. See [decisions/008-fast-entry-first-ingredient-catalog.md](decisions/008-fast-entry-first-ingredient-catalog.md).
 - [ ] Add regression coverage for frontend meal interactions once editing exists.
 
 ## Weekly Planning
@@ -122,7 +126,8 @@ Next UI focus:
 - [x] Add shared week navigation for plan and grocery screens.
 - [ ] Add fast parent weekly planning workflow polish.
 - [x] Explore a desktop planner grid with days as rows and meal slots as columns.
-- [ ] Add child-friendly visual meal picker/magnet board interactions. Category buttons exist; drag/drop magnet board remains deferred.
+- [ ] Add child-friendly category suggestion flow on a dedicated `/kids` route. See [decisions/009-child-category-suggestion-flow.md](decisions/009-child-category-suggestion-flow.md).
+- [ ] Allow meal slots to opt in or out of child category suggestions.
 - [x] Add non-drag accessible alternatives for assigning meals.
 - [x] Add visible rule explanations when a planning choice is blocked.
 - [ ] Expand planning constraints such as repeat limits, premium limits, and balanced cost mix as product decisions settle.
@@ -139,6 +144,8 @@ Next UI focus:
 - [x] Add stronger UX for real store use on phones.
 - [x] Add diagnostics for why an item appears on the grocery list.
 - [x] Add grocery slot filters so shopping trips can include only selected planned meal slots.
+- [ ] Move shopping checklist checked state from `localStorage` to database persistence.
+- [ ] Keep grocery output live-derived from saved weekly plans and meal ingredients. See [decisions/006-live-derived-grocery-lists.md](decisions/006-live-derived-grocery-lists.md).
 
 ## Settings And Icon Assignment
 
